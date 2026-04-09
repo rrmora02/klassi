@@ -27,6 +27,20 @@ export async function canAddStudent(tenantId: string): Promise<boolean> {
 }
 
 /**
+ * Verifica si un tenant puede agregar más grupos según su plan.
+ */
+export async function canAddGroup(tenantId: string): Promise<boolean> {
+  const tenant = await db.tenant.findFirst({ where: { id: tenantId } });
+  if (!tenant) return false;
+
+  const limit = PLANS[tenant.plan].maxGroups;
+  if (limit === Infinity) return true;
+
+  const count = await db.group.count({ where: { tenantId, isActive: true } });
+  return count < limit;
+}
+
+/**
  * Verifica si un tenant puede agregar más disciplinas según su plan.
  */
 export async function canAddDiscipline(tenantId: string): Promise<boolean> {

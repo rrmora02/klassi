@@ -1,7 +1,8 @@
 import { createTRPCRouter } from "@/server/api/trpc";
-import { studentsRouter }   from "./routers/students";
+import { studentsRouter }    from "./routers/students";
 import { disciplinesRouter } from "./routers/disciplines";
-import { paymentsRouter }   from "./routers/payments";
+import { paymentsRouter }    from "./routers/payments";
+import { groupsRouter }      from "./routers/groups";
 
 /**
  * Raíz del router de tRPC.
@@ -11,8 +12,8 @@ export const appRouter = createTRPCRouter({
   students:    studentsRouter,
   disciplines: disciplinesRouter,
   payments:    paymentsRouter,
+  groups:      groupsRouter,
   // próximos:
-  // groups:       groupsRouter,
   // instructors:  instructorsRouter,
   // attendance:   attendanceRouter,
   // announcements: announcementsRouter,
