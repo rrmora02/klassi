@@ -1,7 +1,7 @@
 "use client";
 
 import { useOrganizationList } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 /**
  * Página de onboarding post-registro.
@@ -9,23 +9,10 @@ import { useEffect, useState } from "react";
  * Clerk dispara organization.created → nuestro webhook crea el Tenant.
  */
 export default function OnboardingPage() {
-  const { createOrganization, setActive, isLoaded, userMemberships } = useOrganizationList({
-    userMemberships: { infinite: true },
-  });
+  const { createOrganization, setActive, isLoaded } = useOrganizationList();
   const [name, setName]     = useState("");
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Si el usuario ya tiene una organización activa, ir directo al dashboard
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (userMemberships?.data && userMemberships.data.length > 0) {
-      const firstOrg = userMemberships.data[0]!.organization;
-      setActive({ organization: firstOrg.id }).then(() => {
-        window.location.href = "/dashboard";
-      });
-    }
-  }, [isLoaded, userMemberships?.data, setActive]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
