@@ -48,6 +48,7 @@ prisma/dev.db-journal
 dist/
 .turbo/
 .vercel/
+*.tsbuildinfo
 
 # macOS
 .AppleDouble
