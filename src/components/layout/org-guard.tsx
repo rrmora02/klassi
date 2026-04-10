@@ -1,29 +1,41 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
+import { useOrganizationList } from "@clerk/nextjs";
 import { useEffect } from "react";
 
 /**
- * Verifica del lado del cliente si hay una org activa en la sesión de Clerk.
- * Si la encuentra, recarga la página para que el servidor pueda leerla del JWT.
- * Si no, redirige al onboarding.
+ * Mostrado cuando el servidor no encontró orgId en el JWT (race condition post-setActive).
  *
- * Se usa cuando el servidor no encontró orgId (típico race condition después de setActive).
+ * Lógica:
+ *  - Si el usuario tiene orgs pero ninguna está activa → activa la primera y recarga.
+ *  - Si no tiene ninguna org → redirige a /onboarding para crearla.
+ *
+ * Esto rompe el loop: antes OrgGuard redirigía a /onboarding cuando orgId era null
+ * aunque la org SÍ existía (solo no estaba activa en la sesión actual).
  */
 export function OrgGuard() {
-  const { orgId, isLoaded } = useAuth();
+  const { userMemberships, setActive, isLoaded } = useOrganizationList({
+    userMemberships: { infinite: true },
+  });
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || userMemberships.isLoading) return;
 
-    if (orgId) {
-      // El cliente sí tiene la org — recargar para que el servidor vea el JWT actualizado
-      window.location.reload();
+    const memberships = userMemberships.data ?? [];
+
+    if (memberships.length > 0) {
+      // Tiene orgs — activar la primera y recargar para que el servidor lea el JWT
+      setActive({ organization: memberships[0]!.organization.id })
+        .then(() => window.location.reload())
+        .catch(() => {
+          // Si falla setActive, al menos recargar para que el servidor intente de nuevo
+          window.location.reload();
+        });
     } else {
-      // Realmente no hay org — ir a onboarding
+      // Genuinamente no tiene escuela — ir a crearla
       window.location.href = "/onboarding";
     }
-  }, [isLoaded, orgId]);
+  }, [isLoaded, userMemberships.isLoading, userMemberships.data, setActive]);
 
   return (
     <div className="flex h-full items-center justify-center">
