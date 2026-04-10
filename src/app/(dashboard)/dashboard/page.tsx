@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { formatCurrency } from "@/lib/utils";
 
@@ -31,8 +31,21 @@ export default async function DashboardPage() {
   const { orgId } = await auth();
   if (!orgId) return null;
 
-  const tenant = await db.tenant.findFirst({ where: { clerkOrgId: orgId } });
-  if (!tenant) return null;
+  let tenant = await db.tenant.findFirst({ where: { clerkOrgId: orgId } });
+
+  // Auto-provisionar tenant si no existe (p.ej. en dev local donde el webhook no llega)
+  if (!tenant) {
+    const client = await clerkClient();
+    const org    = await client.organizations.getOrganization({ organizationId: orgId });
+    tenant = await db.tenant.create({
+      data: {
+        clerkOrgId: orgId,
+        name:       org.name,
+        plan:       "STARTER",
+        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      },
+    });
+  }
 
   const stats = await getDashboardStats(tenant.id);
 
