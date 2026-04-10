@@ -1,8 +1,7 @@
 "use client";
 
-import { useOrganizationList, useOrganization } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useOrganizationList } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
 /**
  * Página de onboarding post-registro.
@@ -10,11 +9,23 @@ import { useState } from "react";
  * Clerk dispara organization.created → nuestro webhook crea el Tenant.
  */
 export default function OnboardingPage() {
-  const { createOrganization, setActive, isLoaded } = useOrganizationList();
-  const router = useRouter();
+  const { createOrganization, setActive, isLoaded, userMemberships } = useOrganizationList({
+    userMemberships: { infinite: true },
+  });
   const [name, setName]     = useState("");
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Si el usuario ya tiene una organización activa, ir directo al dashboard
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (userMemberships?.data && userMemberships.data.length > 0) {
+      const firstOrg = userMemberships.data[0]!.organization;
+      setActive({ organization: firstOrg.id }).then(() => {
+        window.location.href = "/dashboard";
+      });
+    }
+  }, [isLoaded, userMemberships?.data, setActive]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -27,8 +38,9 @@ export default function OnboardingPage() {
       const org = await createOrganization({ name: name.trim() });
       // Activar la organización recién creada en la sesión actual
       await setActive({ organization: org.id });
-      // El webhook ya habrá creado el Tenant en BD en segundos.
-      router.push("/dashboard");
+      // Usamos hard-redirect para que el servidor reciba la cookie actualizada de Clerk
+      // (router.push puede navegar antes de que la cookie esté escrita)
+      window.location.href = "/dashboard";
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al crear la escuela";
       setError(msg);

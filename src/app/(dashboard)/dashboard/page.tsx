@@ -35,27 +35,42 @@ export default async function DashboardPage() {
 
   // Auto-provisionar tenant si no existe (p.ej. en dev local donde el webhook no llega)
   if (!tenant) {
-    const client = await clerkClient();
-    const org    = await client.organizations.getOrganization({ organizationId: orgId });
+    try {
+      const client = await clerkClient();
+      const org    = await client.organizations.getOrganization({ organizationId: orgId });
 
-    // Generar slug único a partir del nombre de la org
-    const baseSlug = org.name
-      .toLowerCase()
-      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quitar acentos
-      .replace(/[^a-z0-9\s-]/g, "")
-      .trim()
-      .replace(/\s+/g, "-");
-    const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+      // Generar slug único a partir del nombre de la org
+      const baseSlug = org.name
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quitar acentos
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-");
+      const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
 
-    tenant = await db.tenant.create({
-      data: {
-        clerkOrgId:  orgId,
-        name:        org.name,
-        slug,
-        plan:        "STARTER",
-        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      },
-    });
+      tenant = await db.tenant.create({
+        data: {
+          clerkOrgId:  orgId,
+          name:        org.name,
+          slug,
+          plan:        "STARTER",
+          trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        },
+      });
+    } catch (err) {
+      console.error("[Dashboard] Error auto-provisionando tenant:", err);
+      return (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+          <p className="font-medium">No se pudo conectar con la base de datos.</p>
+          <p className="mt-1 text-xs text-red-500">
+            Verifica que DATABASE_URL y DIRECT_URL estén configuradas correctamente en .env.local
+          </p>
+          <pre className="mt-2 overflow-auto rounded bg-red-100 p-2 text-xs">
+            {err instanceof Error ? err.message : String(err)}
+          </pre>
+        </div>
+      );
+    }
   }
 
   const stats = await getDashboardStats(tenant.id);
