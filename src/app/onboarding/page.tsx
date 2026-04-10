@@ -10,7 +10,7 @@ import { useState } from "react";
  * Clerk dispara organization.created → nuestro webhook crea el Tenant.
  */
 export default function OnboardingPage() {
-  const { createOrganization, isLoaded } = useOrganizationList();
+  const { createOrganization, setActive, isLoaded } = useOrganizationList();
   const router = useRouter();
   const [name, setName]     = useState("");
   const [error, setError]   = useState("");
@@ -24,8 +24,9 @@ export default function OnboardingPage() {
     setError("");
 
     try {
-      await createOrganization({ name: name.trim() });
-      // Clerk activa la org automáticamente.
+      const org = await createOrganization({ name: name.trim() });
+      // Activar la organización recién creada en la sesión actual
+      await setActive({ organization: org.id });
       // El webhook ya habrá creado el Tenant en BD en segundos.
       router.push("/dashboard");
     } catch (err: unknown) {
