@@ -1,41 +1,31 @@
 "use client";
 
-import { useOrganizationList } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { useEffect } from "react";
 
 /**
- * Mostrado cuando el servidor no encontró orgId en el JWT (race condition post-setActive).
+ * Mostrado cuando el servidor no encontró orgId en el JWT.
+ * Espera a que Clerk termine de cargar del lado del cliente:
+ *  - Si hay org activa → la sesión ya tiene org pero el JWT aún no llegó al servidor;
+ *    recargamos para que el servidor lo lea.
+ *  - Si no hay org → redirigir a /onboarding para crearla.
  *
- * Lógica:
- *  - Si el usuario tiene orgs pero ninguna está activa → activa la primera y recarga.
- *  - Si no tiene ninguna org → redirige a /onboarding para crearla.
- *
- * Esto rompe el loop: antes OrgGuard redirigía a /onboarding cuando orgId era null
- * aunque la org SÍ existía (solo no estaba activa en la sesión actual).
+ * NO llamamos setActive aquí para evitar loops. La activación la hace
+ * Clerk internamente cuando el usuario crea/selecciona la org en onboarding.
  */
 export function OrgGuard() {
-  const { userMemberships, setActive, isLoaded } = useOrganizationList({
-    userMemberships: { infinite: true },
-  });
+  const { orgId, isLoaded } = useAuth();
 
   useEffect(() => {
-    if (!isLoaded || userMemberships.isLoading) return;
+    if (!isLoaded) return;
 
-    const memberships = userMemberships.data ?? [];
-
-    if (memberships.length > 0) {
-      // Tiene orgs — activar la primera y recargar para que el servidor lea el JWT
-      setActive({ organization: memberships[0]!.organization.id })
-        .then(() => window.location.reload())
-        .catch(() => {
-          // Si falla setActive, al menos recargar para que el servidor intente de nuevo
-          window.location.reload();
-        });
+    if (orgId) {
+      // JWT del cliente tiene org pero el servidor aún no lo vio → recargar una vez
+      window.location.reload();
     } else {
-      // Genuinamente no tiene escuela — ir a crearla
       window.location.href = "/onboarding";
     }
-  }, [isLoaded, userMemberships.isLoading, userMemberships.data, setActive]);
+  }, [isLoaded, orgId]);
 
   return (
     <div className="flex h-full items-center justify-center">
