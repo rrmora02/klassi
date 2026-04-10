@@ -1,38 +1,85 @@
 "use client";
 
-import { CreateOrganization } from "@clerk/nextjs";
+import { useOrganizationList } from "@clerk/nextjs";
+import { useState } from "react";
 
 /**
- * Onboarding: el usuario crea su escuela (organización Clerk).
- * Usamos el componente oficial <CreateOrganization> para que Clerk maneje
- * internamente la actualización del JWT antes de redirigir — evita todos los
- * race conditions que ocurren al llamar createOrganization + setActive manualmente.
+ * Onboarding post-registro: el usuario crea su escuela (organización Clerk).
+ * Requiere que "Organizations" esté habilitado en el Clerk Dashboard.
  */
 export default function OnboardingPage() {
+  const { createOrganization, setActive, isLoaded } = useOrganizationList();
+  const [name, setName]       = useState("");
+  const [error, setError]     = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!isLoaded || !name.trim()) return;
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const org = await createOrganization({ name: name.trim() });
+      await setActive({ organization: org.id });
+      // Hard-redirect para que el servidor reciba la cookie de Clerk actualizada
+      window.location.href = "/dashboard";
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg || "Error al crear la escuela");
+      setLoading(false);
+    }
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50">
-      {/* Header encima del widget de Clerk */}
-      <div className="flex w-full max-w-md flex-col items-center gap-6">
-        <div className="text-center">
+      <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8">
+        {/* Header */}
+        <div className="mb-8 text-center">
           <span className="text-2xl font-semibold text-blue-900">Klassi</span>
+          <h1 className="mt-4 text-xl font-semibold text-gray-900">Crea tu escuela</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Sin tarjeta de crédito · 14 días gratis · Cancela cuando quieras
+            Esto es lo único que necesitas para empezar. Tienes 14 días gratis.
           </p>
         </div>
 
-        <CreateOrganization
-          afterCreateOrganizationUrl="/dashboard"
-          appearance={{
-            elements: {
-              rootBox:   "w-full",
-              card:      "rounded-2xl border border-gray-200 shadow-none w-full",
-              headerTitle:    "text-gray-900",
-              headerSubtitle: "text-gray-500",
-              formButtonPrimary:
-                "bg-blue-900 hover:bg-blue-800 text-sm normal-case",
-            },
-          }}
-        />
+        {/* Form */}
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-gray-700">
+              Nombre de tu escuela
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej: Academia de Ballet Monterrey"
+              required
+              className="w-full rounded-lg border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+            />
+            <p className="mt-1 text-xs text-gray-400">
+              Puedes cambiarlo después desde configuración.
+            </p>
+          </div>
+
+          {error && (
+            <p className="rounded-lg bg-red-50 px-4 py-2 text-sm text-red-700">{error}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || !name.trim()}
+            className="w-full rounded-lg bg-blue-900 py-2.5 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50"
+          >
+            {loading ? "Creando tu escuela..." : "Crear escuela y entrar"}
+          </button>
+        </form>
+
+        {/* Trial note */}
+        <p className="mt-6 text-center text-xs text-gray-400">
+          Sin tarjeta de crédito · 14 días gratis · Cancela cuando quieras
+        </p>
       </div>
     </main>
   );
