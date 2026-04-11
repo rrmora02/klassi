@@ -7,9 +7,9 @@ export function TopBar() {
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
       <div className="flex items-center gap-3">
         <OrganizationSwitcher
-          hidePersonal
           afterSelectOrganizationUrl="/dashboard"
-          afterCreateOrganizationUrl="/onboarding"
+          afterCreateOrganizationUrl="/dashboard"
+          afterLeaveOrganizationUrl="/onboarding"
           appearance={{
             elements: {
               rootBox:             "flex items-center",

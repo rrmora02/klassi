@@ -23,7 +23,8 @@ export default function OnboardingPage() {
     try {
       const org = await createOrganization({ name: name.trim() });
       await setActive({ organization: org.id });
-      // Hard-redirect para que el servidor reciba la cookie de Clerk actualizada
+      // Pequeño delay para que Clerk termine de escribir la cookie antes de navegar
+      await new Promise((r) => setTimeout(r, 800));
       window.location.href = "/dashboard";
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
