@@ -1,17 +1,35 @@
 "use client";
 
-import { useOrganizationList } from "@clerk/nextjs";
-import { useState } from "react";
+import { useOrganizationList, useAuth } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
 
 /**
- * Onboarding post-registro: el usuario crea su escuela (organización Clerk).
- * Requiere que "Organizations" esté habilitado en el Clerk Dashboard.
+ * Onboarding post-registro: el usuario crea su escuela.
+ *
+ * Flujo:
+ *  1. createOrganization + setActive
+ *  2. Esperar a que useAuth().orgId aparezca en el cliente
+ *     (esto confirma que el JWT cookie ya fue escrito por Clerk)
+ *  3. Solo entonces navegar a /dashboard
+ *
+ * Evita el race condition donde window.location.href dispara antes de
+ * que el cookie esté listo, causando que el servidor vea orgId=null.
  */
 export default function OnboardingPage() {
   const { createOrganization, setActive, isLoaded } = useOrganizationList();
-  const [name, setName]       = useState("");
-  const [error, setError]     = useState("");
-  const [loading, setLoading] = useState(false);
+  const { orgId } = useAuth();
+
+  const [name, setName]           = useState("");
+  const [error, setError]         = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [waitingOrg, setWaitingOrg] = useState(false);
+
+  // Navegar en cuanto Clerk confirme el orgId en el cliente
+  useEffect(() => {
+    if (waitingOrg && orgId) {
+      window.location.href = "/dashboard";
+    }
+  }, [waitingOrg, orgId]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -23,9 +41,8 @@ export default function OnboardingPage() {
     try {
       const org = await createOrganization({ name: name.trim() });
       await setActive({ organization: org.id });
-      // Pequeño delay para que Clerk termine de escribir la cookie antes de navegar
-      await new Promise((r) => setTimeout(r, 800));
-      window.location.href = "/dashboard";
+      // No navegar aún — esperar a que useAuth().orgId se actualice
+      setWaitingOrg(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || "Error al crear la escuela");
@@ -36,7 +53,6 @@ export default function OnboardingPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8">
-        {/* Header */}
         <div className="mb-8 text-center">
           <span className="text-2xl font-semibold text-blue-900">Klassi</span>
           <h1 className="mt-4 text-xl font-semibold text-gray-900">Crea tu escuela</h1>
@@ -45,7 +61,6 @@ export default function OnboardingPage() {
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">
@@ -73,11 +88,10 @@ export default function OnboardingPage() {
             disabled={loading || !name.trim()}
             className="w-full rounded-lg bg-blue-900 py-2.5 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50"
           >
-            {loading ? "Creando tu escuela..." : "Crear escuela y entrar"}
+            {loading || waitingOrg ? "Creando tu escuela..." : "Crear escuela y entrar"}
           </button>
         </form>
 
-        {/* Trial note */}
         <p className="mt-6 text-center text-xs text-gray-400">
           Sin tarjeta de crédito · 14 días gratis · Cancela cuando quieras
         </p>
