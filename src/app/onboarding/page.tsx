@@ -1,35 +1,14 @@
 "use client";
 
-import { useOrganizationList, useAuth } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useOrganizationList } from "@clerk/nextjs";
+import { useState } from "react";
+import { getSessionOrgId } from "./actions";
 
-/**
- * Onboarding post-registro: el usuario crea su escuela.
- *
- * Flujo:
- *  1. createOrganization + setActive
- *  2. Esperar a que useAuth().orgId aparezca en el cliente
- *     (esto confirma que el JWT cookie ya fue escrito por Clerk)
- *  3. Solo entonces navegar a /dashboard
- *
- * Evita el race condition donde window.location.href dispara antes de
- * que el cookie esté listo, causando que el servidor vea orgId=null.
- */
 export default function OnboardingPage() {
   const { createOrganization, setActive, isLoaded } = useOrganizationList();
-  const { orgId } = useAuth();
-
-  const [name, setName]           = useState("");
-  const [error, setError]         = useState("");
-  const [loading, setLoading]     = useState(false);
-  const [waitingOrg, setWaitingOrg] = useState(false);
-
-  // Navegar en cuanto Clerk confirme el orgId en el cliente
-  useEffect(() => {
-    if (waitingOrg && orgId) {
-      window.location.href = "/dashboard";
-    }
-  }, [waitingOrg, orgId]);
+  const [name, setName]       = useState("");
+  const [error, setError]     = useState("");
+  const [loading, setLoading] = useState(false);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -41,8 +20,23 @@ export default function OnboardingPage() {
     try {
       const org = await createOrganization({ name: name.trim() });
       await setActive({ organization: org.id });
-      // No navegar aún — esperar a que useAuth().orgId se actualice
-      setWaitingOrg(true);
+
+      // Hacer polling al servidor hasta que confirme que el JWT cookie
+      // llegó con orgId. Sin esto, window.location.href llega antes que
+      // el cookie y el servidor ve orgId=null.
+      let confirmed = false;
+      for (let i = 0; i < 20; i++) {
+        await new Promise((r) => setTimeout(r, 300)); // 300ms × 20 = 6s máx
+        const serverOrgId = await getSessionOrgId();
+        if (serverOrgId) { confirmed = true; break; }
+      }
+
+      if (confirmed) {
+        window.location.href = "/dashboard";
+      } else {
+        setError("El servidor tardó demasiado en actualizar la sesión. Intenta recargar la página.");
+        setLoading(false);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg || "Error al crear la escuela");
@@ -88,7 +82,7 @@ export default function OnboardingPage() {
             disabled={loading || !name.trim()}
             className="w-full rounded-lg bg-blue-900 py-2.5 text-sm font-medium text-white hover:bg-blue-800 disabled:opacity-50"
           >
-            {loading || waitingOrg ? "Creando tu escuela..." : "Crear escuela y entrar"}
+            {loading ? "Creando tu escuela..." : "Crear escuela y entrar"}
           </button>
         </form>
 
