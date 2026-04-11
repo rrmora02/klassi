@@ -4,8 +4,9 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/topbar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { userId } = await auth();
+  const { userId, orgId } = await auth();
   if (!userId) redirect("/sign-in");
+  if (!orgId)  redirect("/select-org");
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">

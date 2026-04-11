@@ -1,7 +1,6 @@
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { formatCurrency } from "@/lib/utils";
-import { OrgGuard } from "@/components/layout/org-guard";
 
 async function getDashboardStats(tenantId: string) {
   const now   = new Date();
@@ -30,8 +29,7 @@ async function getDashboardStats(tenantId: string) {
 
 export default async function DashboardPage() {
   const { orgId } = await auth();
-  // Si el servidor no ve el orgId (race condition post-setActive), el cliente lo detecta y recarga
-  if (!orgId) return <OrgGuard />;
+  if (!orgId) return null; // El layout ya redirigió — esto no debería ocurrir
 
   let tenant = await db.tenant.findFirst({ where: { clerkOrgId: orgId } });
 
