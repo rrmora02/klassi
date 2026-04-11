@@ -2,18 +2,16 @@
 
 import { useOrganizationList } from "@clerk/nextjs";
 import { useEffect, useRef } from "react";
-import { getSessionOrgId } from "@/app/onboarding/actions";
 
 /**
  * Mostrado cuando el servidor no encontró orgId en el JWT.
- * Ocurre en usuarios que regresan y cuya sesión no tiene org activa.
+ * Caso típico: usuario regresa con sesión sin org activa.
  *
- * Estrategia:
- *  - useRef garantiza que la lógica corre UNA sola vez (evita doble-disparo
- *    por actualizaciones de userMemberships.isLoading con infinite:true).
- *  - Usa el mismo server action que onboarding: polling hasta que el servidor
- *    confirme el orgId en el JWT cookie antes de recargar.
- *  - Si no hay membresías → /onboarding.
+ * Llama setActive con la primera membresía y recarga.
+ * El reload hace un GET completo → Clerk middleware ejecuta el handshake
+ * → auth() en el servidor ve el orgId correctamente.
+ *
+ * useRef evita que el efecto se dispare más de una vez.
  */
 export function OrgGuard() {
   const { userMemberships, setActive, isLoaded } = useOrganizationList({
@@ -33,28 +31,15 @@ export function OrgGuard() {
       return;
     }
 
-    const orgId = memberships[0]!.organization.id;
-
-    setActive({ organization: orgId })
-      .then(async () => {
-        // Esperar confirmación del servidor (mismo mecanismo que onboarding)
-        for (let i = 0; i < 20; i++) {
-          await new Promise((r) => setTimeout(r, 300));
-          const serverOrgId = await getSessionOrgId();
-          if (serverOrgId) break;
-        }
-        window.location.reload();
-      })
-      .catch(() => {
-        window.location.href = "/onboarding";
-      });
-  // Solo disparar cuando termina de cargar
+    setActive({ organization: memberships[0]!.organization.id })
+      .then(() => window.location.reload())
+      .catch(() => { window.location.href = "/onboarding"; });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded, userMemberships.isLoading]);
 
   return (
     <div className="flex h-full items-center justify-center">
-      <div className="text-sm text-gray-400">Cargando tu escuela…</div>
+      <p className="text-sm text-gray-400">Cargando tu escuela…</p>
     </div>
   );
 }
