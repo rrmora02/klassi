@@ -27,6 +27,7 @@ export default function OnboardingPage() {
         </div>
 
         <CreateOrganization
+          routing="hash"
           afterCreateOrganizationUrl="/dashboard"
           skipInvitationScreen
           appearance={{
