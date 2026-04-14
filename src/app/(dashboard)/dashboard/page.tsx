@@ -1,69 +1,115 @@
+import Link from "next/link";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
+import { StatCard } from "@/components/shared";
+import {
+  Users,
+  BookOpen,
+  CreditCard,
+  AlertTriangle,
+  Plus,
+  ChevronRight,
+  Clock,
+} from "lucide-react";
 
-async function getDashboardStats(tenantId: string) {
-  const now   = new Date();
-  const month = now.getMonth();
-  const year  = now.getFullYear();
-  const from  = new Date(year, month, 1);
-  const to    = new Date(year, month + 1, 0, 23, 59, 59);
+// ─── Data ────────────────────────────────────────────────────────
 
-  const [totalStudents, activeGroups, monthRevenue, overdueCount] = await Promise.all([
+async function getDashboardData(tenantId: string) {
+  const now        = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+  const [
+    totalStudents,
+    activeGroups,
+    monthRevenue,
+    overdueCount,
+    overduePayments,
+    recentStudents,
+  ] = await Promise.all([
     db.student.count({ where: { tenantId, status: "ACTIVE" } }),
+
     db.group.count({ where: { tenantId, isActive: true } }),
+
     db.payment.aggregate({
-      where: { tenantId, status: "PAID", paidAt: { gte: from, lte: to } },
+      where: { tenantId, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } },
       _sum: { amount: true },
     }),
+
     db.payment.count({ where: { tenantId, status: "OVERDUE" } }),
+
+    db.payment.findMany({
+      where:   { tenantId, status: "OVERDUE" },
+      include: { student: { select: { id: true, firstName: true, lastName: true, phone: true } } },
+      orderBy: { dueDate: "asc" },
+      take:    6,
+    }),
+
+    db.student.findMany({
+      where:   { tenantId },
+      orderBy: { createdAt: "desc" },
+      take:    6,
+      select: {
+        id: true, firstName: true, lastName: true, status: true, createdAt: true,
+        enrollments: {
+          where:   { status: "ACTIVE" },
+          include: { group: { select: { discipline: { select: { name: true, color: true } } } } },
+          take:    1,
+        },
+      },
+    }),
   ]);
 
   return {
-    totalStudents,
-    activeGroups,
-    monthRevenue: monthRevenue._sum.amount ?? 0,
-    overdueCount,
+    stats: {
+      totalStudents,
+      activeGroups,
+      monthRevenue: monthRevenue._sum.amount ?? 0,
+      overdueCount,
+    },
+    overduePayments,
+    recentStudents,
   };
 }
 
+function daysOverdue(dueDate: Date): number {
+  return Math.max(0, Math.floor((Date.now() - dueDate.getTime()) / 86_400_000));
+}
+
+function trialDaysLeft(trialEndsAt: Date): number {
+  return Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86_400_000));
+}
+
+// ─── Page ────────────────────────────────────────────────────────
+
 export default async function DashboardPage() {
   const { orgId } = await auth();
-  if (!orgId) return null; // El layout ya redirigió — esto no debería ocurrir
+  if (!orgId) return null;
 
+  // Auto-provisionar tenant si el webhook no llegó (útil en dev local)
   let tenant = await db.tenant.findFirst({ where: { clerkOrgId: orgId } });
-
-  // Auto-provisionar tenant si no existe (p.ej. en dev local donde el webhook no llega)
   if (!tenant) {
     try {
       const client = await clerkClient();
       const org    = await client.organizations.getOrganization({ organizationId: orgId });
-
-      // Generar slug único a partir del nombre de la org
-      const baseSlug = org.name
-        .toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quitar acentos
-        .replace(/[^a-z0-9\s-]/g, "")
-        .trim()
-        .replace(/\s+/g, "-");
-      const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
-
+      const base   = org.name
+        .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-");
       tenant = await db.tenant.create({
         data: {
-          clerkOrgId:  orgId,
-          name:        org.name,
-          slug,
-          plan:        "STARTER",
+          clerkOrgId: orgId, name: org.name,
+          slug: `${base}-${Math.random().toString(36).slice(2, 6)}`,
+          plan: "STARTER",
           trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         },
       });
     } catch (err) {
-      console.error("[Dashboard] Error auto-provisionando tenant:", err);
       return (
         <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
           <p className="font-medium">No se pudo conectar con la base de datos.</p>
           <p className="mt-1 text-xs text-red-500">
-            Verifica que DATABASE_URL y DIRECT_URL estén configuradas correctamente en .env.local
+            Verifica que DATABASE_URL y DIRECT_URL estén configurados en .env.local
           </p>
           <pre className="mt-2 overflow-auto rounded bg-red-100 p-2 text-xs">
             {err instanceof Error ? err.message : String(err)}
@@ -73,34 +119,246 @@ export default async function DashboardPage() {
     }
   }
 
-  const stats = await getDashboardStats(tenant.id);
+  const { stats, overduePayments, recentStudents } = await getDashboardData(tenant.id);
 
-  const cards = [
-    { label: "Alumnos activos",    value: stats.totalStudents.toString(),              hint: "Total inscritos" },
-    { label: "Grupos activos",     value: stats.activeGroups.toString(),               hint: "Con clases programadas" },
-    { label: "Ingresos del mes",   value: formatCurrency(stats.monthRevenue),          hint: "Pagos recibidos este mes" },
-    { label: "Adeudos pendientes", value: stats.overdueCount.toString(),               hint: "Alumnos con pago vencido", alert: stats.overdueCount > 0 },
-  ];
+  const showTrialBanner =
+    tenant.status === "TRIAL" && tenant.trialEndsAt && trialDaysLeft(tenant.trialEndsAt) >= 0;
+  const daysLeft = tenant.trialEndsAt ? trialDaysLeft(tenant.trialEndsAt) : 0;
 
   return (
-    <div>
-      <h1 className="mb-6 text-2xl font-semibold text-gray-900">Inicio</h1>
+    <div className="space-y-6">
+
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold text-gray-900">Inicio</h1>
+        <p className="mt-0.5 text-sm text-gray-500">{tenant.name}</p>
+      </div>
+
+      {/* Trial banner */}
+      {showTrialBanner && (
+        <div className={`flex items-center justify-between rounded-xl px-5 py-4 ${
+          daysLeft <= 3
+            ? "border border-red-200 bg-red-50"
+            : "border border-amber-200 bg-amber-50"
+        }`}>
+          <div className="flex items-center gap-3">
+            <Clock className={`h-5 w-5 flex-shrink-0 ${daysLeft <= 3 ? "text-red-500" : "text-amber-500"}`} />
+            <p className={`text-sm font-medium ${daysLeft <= 3 ? "text-red-800" : "text-amber-800"}`}>
+              {daysLeft === 0
+                ? "Tu período de prueba vence hoy."
+                : `Tu período de prueba vence en ${daysLeft} ${daysLeft === 1 ? "día" : "días"}.`}
+            </p>
+          </div>
+          <span className="ml-4 rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
+            Actualizar plan
+          </span>
+        </div>
+      )}
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {cards.map((card) => (
-          <div
-            key={card.label}
-            className={`rounded-xl border p-5 ${card.alert ? "border-red-200 bg-red-50" : "border-gray-200 bg-white"}`}
-          >
-            <p className="text-sm text-gray-500">{card.label}</p>
-            <p className={`mt-1 text-3xl font-semibold ${card.alert ? "text-red-700" : "text-gray-900"}`}>
-              {card.value}
-            </p>
-            <p className="mt-1 text-xs text-gray-400">{card.hint}</p>
-          </div>
-        ))}
+        <StatCard
+          label="Alumnos activos"
+          value={stats.totalStudents}
+          hint="Total inscritos"
+        />
+        <StatCard
+          label="Grupos activos"
+          value={stats.activeGroups}
+          hint="Con clases programadas"
+        />
+        <StatCard
+          label="Ingresos del mes"
+          value={formatCurrency(stats.monthRevenue)}
+          hint="Pagos recibidos este mes"
+        />
+        <StatCard
+          label="Adeudos vencidos"
+          value={stats.overdueCount}
+          hint={stats.overdueCount === 0 ? "Sin adeudos pendientes" : "Requieren atención"}
+          alert={stats.overdueCount > 0}
+        />
       </div>
+
+      {/* Main content: two columns */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+
+        {/* Adeudos vencidos */}
+        <section className="lg:col-span-3 rounded-xl border border-gray-200 bg-white">
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-500" />
+              <h2 className="text-sm font-semibold text-gray-900">Adeudos vencidos</h2>
+              {stats.overdueCount > 0 && (
+                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                  {stats.overdueCount}
+                </span>
+              )}
+            </div>
+            {stats.overdueCount > 0 && (
+              <Link
+                href="/dashboard/pagos?status=OVERDUE"
+                className="flex items-center gap-1 text-xs text-blue-700 hover:underline"
+              >
+                Ver todos <ChevronRight className="h-3 w-3" />
+              </Link>
+            )}
+          </div>
+
+          {overduePayments.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
+                <CreditCard className="h-5 w-5 text-green-600" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-gray-700">Sin adeudos vencidos</p>
+              <p className="mt-0.5 text-xs text-gray-400">Todos los pagos están al corriente</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-50">
+              {overduePayments.map((p) => {
+                const days = p.dueDate ? daysOverdue(p.dueDate) : 0;
+                return (
+                  <li key={p.id} className="flex items-center gap-3 px-5 py-3.5">
+                    {/* Avatar */}
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700">
+                      {initials(p.student.firstName, p.student.lastName)}
+                    </span>
+
+                    {/* Info */}
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/dashboard/alumnos/${p.student.id}`}
+                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                      >
+                        {fullName(p.student.firstName, p.student.lastName)}
+                      </Link>
+                      <p className="truncate text-xs text-gray-400">{p.concept}</p>
+                    </div>
+
+                    {/* Amount */}
+                    <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                      {formatCurrency(p.amount)}
+                    </span>
+
+                    {/* Days overdue */}
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      days > 30
+                        ? "bg-red-100 text-red-700"
+                        : days > 7
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}>
+                      {days}d
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        {/* Alumnos recientes */}
+        <section className="lg:col-span-2 rounded-xl border border-gray-200 bg-white">
+          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-blue-500" />
+              <h2 className="text-sm font-semibold text-gray-900">Alumnos recientes</h2>
+            </div>
+            <Link
+              href="/dashboard/alumnos"
+              className="flex items-center gap-1 text-xs text-blue-700 hover:underline"
+            >
+              Ver todos <ChevronRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          {recentStudents.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
+                <Users className="h-5 w-5 text-blue-600" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-gray-700">Sin alumnos aún</p>
+              <Link
+                href="/dashboard/alumnos/nuevo"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800"
+              >
+                <Plus className="h-3.5 w-3.5" /> Agregar alumno
+              </Link>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-50">
+              {recentStudents.map((s) => {
+                const disc = s.enrollments[0]?.group.discipline;
+                return (
+                  <li key={s.id} className="flex items-center gap-3 px-5 py-3.5">
+                    {/* Avatar */}
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-800">
+                      {initials(s.firstName, s.lastName)}
+                    </span>
+
+                    {/* Info */}
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        href={`/dashboard/alumnos/${s.id}`}
+                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                      >
+                        {fullName(s.firstName, s.lastName)}
+                      </Link>
+                      {disc ? (
+                        <p className="text-xs text-gray-400">{disc.name}</p>
+                      ) : (
+                        <p className="text-xs text-gray-400">Sin grupo activo</p>
+                      )}
+                    </div>
+
+                    {/* Date */}
+                    <span className="flex-shrink-0 text-xs text-gray-400 tabular-nums">
+                      {formatDate(s.createdAt)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      {/* Quick actions */}
+      <section>
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          Acciones rápidas
+        </h2>
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/dashboard/alumnos/nuevo"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+          >
+            <Plus className="h-4 w-4" /> Nuevo alumno
+          </Link>
+          <Link
+            href="/dashboard/grupos/nuevo"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+          >
+            <BookOpen className="h-4 w-4" /> Nuevo grupo
+          </Link>
+          <Link
+            href="/dashboard/alumnos"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+          >
+            <Users className="h-4 w-4" /> Ver alumnos
+          </Link>
+          {stats.overdueCount > 0 && (
+            <Link
+              href="/dashboard/pagos?status=OVERDUE"
+              className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm transition hover:border-red-300"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              {stats.overdueCount} {stats.overdueCount === 1 ? "adeudo vencido" : "adeudos vencidos"}
+            </Link>
+          )}
+        </div>
+      </section>
+
     </div>
   );
 }
