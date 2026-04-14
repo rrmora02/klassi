@@ -1,25 +1,17 @@
 "use client";
 
 import { OrganizationList } from "@clerk/nextjs";
-import { useAuth } from "@clerk/nextjs";
-import { useEffect } from "react";
 
 /**
  * Página de selección de organización — ruta catch-all para que los
- * sub-paths internos de Clerk (create, etc.) no lancen errores.
+ * sub-paths internos de Clerk (create, etc.) no lancen errores de routing.
  *
- * Si el estado cliente de Clerk ya tiene orgId (setActive completó),
- * redirigimos directamente al dashboard sin necesidad del handshake JWT.
+ * <OrganizationList> maneja internamente setActive + navegación a
+ * afterSelectOrganizationUrl usando el router de Next.js (soft navigation),
+ * lo que preserva el estado cliente de Clerk (orgId) sin necesitar
+ * un page reload completo que resetearía ese estado.
  */
 export default function SelectOrgPage() {
-  const { isLoaded, orgId } = useAuth();
-
-  useEffect(() => {
-    if (isLoaded && orgId) {
-      window.location.href = "/dashboard";
-    }
-  }, [isLoaded, orgId]);
-
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="flex w-full max-w-md flex-col items-center gap-6">

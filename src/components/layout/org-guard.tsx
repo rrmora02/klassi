@@ -1,25 +1,27 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 /**
  * Guard client-side para el dashboard.
  *
- * Lee el orgId desde el estado en memoria de Clerk (siempre actualizado
- * después de setActive), en lugar del JWT cookie httpOnly que el middleware
- * lee. Esto resuelve la race condition: después de setActive() el JWT aún
- * no refleja el nuevo orgId (el "handshake" de Clerk es asíncrono), pero
- * el estado cliente de Clerk sí lo tiene inmediatamente.
+ * Usa router.replace (soft navigation) en lugar de window.location.href
+ * para preservar el estado en memoria de Clerk entre rutas. Con una
+ * navegación hard (window.location.href), Clerk se reinicializa desde el
+ * JWT cookie — que puede estar desactualizado después de setActive() —
+ * provocando un loop. Con soft navigation el estado del cliente persiste.
  */
 export function OrgGuard({ children }: { children: React.ReactNode }) {
   const { isLoaded, userId, orgId } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!userId) { window.location.href = "/sign-in"; return; }
-    if (!orgId)  { window.location.href = "/select-org"; return; }
-  }, [isLoaded, userId, orgId]);
+    if (!userId) { router.replace("/sign-in"); return; }
+    if (!orgId)  { router.replace("/select-org"); return; }
+  }, [isLoaded, userId, orgId, router]);
 
   if (!isLoaded || !orgId) {
     return (
