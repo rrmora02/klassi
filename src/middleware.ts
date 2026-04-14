@@ -18,17 +18,18 @@ export default clerkMiddleware((auth, request) => {
 
   const { userId, orgId } = auth();
 
+  // Redirect unauthenticated users to sign-in
   if (!userId) {
     auth().protect();
     return;
   }
 
+  // If the JWT already has an orgId and the user is on a setup route,
+  // send them straight to the dashboard (fast path for returning users).
+  // Note: after setActive() the JWT may not reflect the new org yet —
+  // that case is handled client-side by OrgGuard inside the dashboard layout.
   if (orgId && isOrgSetupRoute(request)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  if (!orgId && !isOrgSetupRoute(request)) {
-    return NextResponse.redirect(new URL("/select-org", request.url));
   }
 
   return NextResponse.next();

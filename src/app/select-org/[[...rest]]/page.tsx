@@ -3,13 +3,13 @@
 import { OrganizationList } from "@clerk/nextjs";
 
 /**
- * Página de selección de organización.
- * Aparece cuando el usuario está autenticado pero no tiene una org activa
- * en su sesión (ej: primera visita, sesión expirada, etc.)
+ * Página de selección de organización — ruta catch-all para que los
+ * sub-paths internos de Clerk (create, etc.) no lancen errores de routing.
  *
- * <OrganizationList> maneja el handshake de Clerk internamente antes de
- * redirigir — igual que <CreateOrganization>. Esto garantiza que el
- * servidor vea el orgId en el siguiente request.
+ * <OrganizationList> maneja internamente setActive + navegación a
+ * afterSelectOrganizationUrl usando el router de Next.js (soft navigation),
+ * lo que preserva el estado cliente de Clerk (orgId) sin necesitar
+ * un page reload completo que resetearía ese estado.
  */
 export default function SelectOrgPage() {
   return (
@@ -17,7 +17,9 @@ export default function SelectOrgPage() {
       <div className="flex w-full max-w-md flex-col items-center gap-6">
         <div className="text-center">
           <span className="text-2xl font-semibold text-blue-900">Klassi</span>
-          <p className="mt-1 text-sm text-gray-500">Selecciona tu escuela para continuar</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Selecciona tu escuela para continuar
+          </p>
         </div>
 
         <OrganizationList
