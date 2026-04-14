@@ -1,19 +1,25 @@
 "use client";
 
 import { OrganizationList } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
+import { useEffect } from "react";
 
 /**
- * Página de selección de organización.
+ * Página de selección de organización — ruta catch-all para que los
+ * sub-paths internos de Clerk (create, etc.) no lancen errores.
  *
- * Usa <OrganizationList> de Clerk con routing="hash" para que el componente
- * maneje internamente el handshake de Clerk (que actualiza el JWT cookie con
- * el orgId) antes de redirigir al dashboard.
- *
- * Ruta catch-all ([[...rest]]) para que los sub-paths internos de Clerk
- * (ej. /select-org/create) funcionen sin errores de "route is not catch-all".
- * El middleware ya cubre /select-org(.*) así que ningún sub-path queda sin proteger.
+ * Si el estado cliente de Clerk ya tiene orgId (setActive completó),
+ * redirigimos directamente al dashboard sin necesidad del handshake JWT.
  */
 export default function SelectOrgPage() {
+  const { isLoaded, orgId } = useAuth();
+
+  useEffect(() => {
+    if (isLoaded && orgId) {
+      window.location.href = "/dashboard";
+    }
+  }, [isLoaded, orgId]);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="flex w-full max-w-md flex-col items-center gap-6">
