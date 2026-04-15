@@ -7,11 +7,18 @@ import { db } from "@/server/db";
 // ─── Contexto ────────────────────────────────────────────────────
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const { userId, orgId } = await auth();
+  const { userId } = await auth();
+  
+  let tenantId = null;
+  if (userId) {
+    const user = await db.user.findUnique({ where: { clerkId: userId }, select: { activeTenantId: true } });
+    tenantId = user?.activeTenantId ?? null;
+  }
+
   return {
     db,
     userId,
-    tenantId: orgId, // Clerk orgId = tenantId en Klassi
+    tenantId,
     ...opts,
   };
 };

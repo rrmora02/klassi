@@ -2,15 +2,6 @@ import { db } from "@/server/db";
 import { PLANS, type Plan } from "@/config/plans";
 import type { Tenant } from "@prisma/client";
 
-/**
- * Obtiene un tenant por su clerkOrgId.
- * Lanza error si no existe.
- */
-export async function getTenantByOrgId(clerkOrgId: string): Promise<Tenant> {
-  const tenant = await db.tenant.findFirst({ where: { clerkOrgId } });
-  if (!tenant) throw new Error(`Tenant no encontrado para orgId: ${clerkOrgId}`);
-  return tenant;
-}
 
 /**
  * Verifica si un tenant puede agregar más alumnos según su plan.
@@ -74,7 +65,7 @@ export async function getTenantLimits(tenantId: string) {
   const [studentCount, disciplineCount, userCount] = await Promise.all([
     db.student.count({ where: { tenantId, status: "ACTIVE" } }),
     db.discipline.count({ where: { tenantId, isActive: true } }),
-    db.user.count({ where: { tenantId } }),
+    db.tenantUser.count({ where: { tenantId } }),
   ]);
 
   return {

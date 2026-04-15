@@ -1,22 +1,36 @@
-"use client";
+import { UserButton } from "@clerk/nextjs";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/server/db";
+import { TenantSwitcher } from "./tenant-switcher";
 
-import { UserButton, OrganizationSwitcher } from "@clerk/nextjs";
+export async function TopBar() {
+  const { userId } = auth(); // Clerk auth cacheado en layout
+  let tenants: any[] = [];
+  let user = null;
 
-export function TopBar() {
+  if (userId) {
+    user = await db.user.findUnique({
+      where: { clerkId: userId },
+      include: {
+        activeTenant: true,
+        memberships: {
+          include: { tenant: true },
+        },
+      },
+    });
+
+    if (user) {
+      tenants = user.memberships.map((m) => ({
+        id: m.tenant.id,
+        name: m.tenant.name,
+      }));
+    }
+  }
+
   return (
     <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
       <div className="flex items-center gap-3">
-        <OrganizationSwitcher
-          afterSelectOrganizationUrl="/dashboard"
-          afterCreateOrganizationUrl="/dashboard"
-          afterLeaveOrganizationUrl="/onboarding"
-          appearance={{
-            elements: {
-              rootBox:             "flex items-center",
-              organizationSwitcherTrigger: "rounded-lg border border-gray-200 px-3 py-2 text-sm hover:bg-gray-50",
-            },
-          }}
-        />
+        {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} />}
       </div>
       <UserButton afterSignOutUrl="/" />
     </header>

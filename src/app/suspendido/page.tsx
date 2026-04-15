@@ -3,9 +3,9 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 
 export default async function SuspendidoPage() {
-  const { orgId } = await auth();
-  const tenant = orgId
-    ? await db.tenant.findFirst({ where: { clerkOrgId: orgId }, select: { name: true, plan: true } })
+  const { userId } = await auth();
+  const tenant = userId
+    ? await db.user.findUnique({ where: { clerkId: userId } }).then(u => u?.activeTenantId ? db.tenant.findUnique({ where: { id: u.activeTenantId }, select: { name: true, plan: true } }) : null)
     : null;
 
   return (

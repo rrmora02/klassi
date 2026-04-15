@@ -6,11 +6,15 @@ import { StudentForm } from "./student-form";
 import type { StudentFormValues } from "@/lib/schemas/student.schema";
 import type { Student } from "@prisma/client";
 
-interface Props { student: Student; }
+interface Props {
+  student: Student & { parents?: { relationship: string | null; user: { name: string; email: string; } }[] };
+}
 
 export function StudentEditForm({ student }: Props) {
   const router  = useRouter();
   const update  = api.students.update.useMutation();
+
+  const primaryParent = student.parents?.[0];
 
   // Mapear los datos del alumno al formato del formulario
   const defaultValues: Partial<StudentFormValues> = {
@@ -23,6 +27,9 @@ export function StudentEditForm({ student }: Props) {
     phone:      student.phone  ?? "",
     email:      student.email  ?? "",
     notes:      student.notes  ?? "",
+    tutorName:  primaryParent?.user.name ?? "",
+    tutorEmail: primaryParent?.user.email ?? "",
+    tutorRelationship: (primaryParent?.relationship as any) ?? undefined,
   };
 
   async function handleSubmit(data: StudentFormValues) {

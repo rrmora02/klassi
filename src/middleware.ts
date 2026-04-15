@@ -8,15 +8,10 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
 ]);
 
-const isOrgSetupRoute = createRouteMatcher([
-  "/onboarding(.*)",
-  "/select-org(.*)",
-]);
-
 export default clerkMiddleware((auth, request) => {
   if (isPublicRoute(request)) return NextResponse.next();
 
-  const { userId, orgId } = auth();
+  const { userId } = auth();
 
   // Redirect unauthenticated users to sign-in
   if (!userId) {
@@ -24,14 +19,9 @@ export default clerkMiddleware((auth, request) => {
     return;
   }
 
-  // If the JWT already has an orgId and the user is on a setup route,
-  // send them straight to the dashboard (fast path for returning users).
-  // Note: after setActive() the JWT may not reflect the new org yet —
-  // that case is handled client-side by OrgGuard inside the dashboard layout.
-  if (orgId && isOrgSetupRoute(request)) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
+  // La lógica de redirección a /onboarding o /dashboard ocurre a nivel
+  // de Layout (Server Components), leyendo el activeTenantId de PostgreSQL.
+  // Esto evita problemas de caché de cookies en middleware.
   return NextResponse.next();
 });
 

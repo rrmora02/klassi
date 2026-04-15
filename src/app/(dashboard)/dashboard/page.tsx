@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { auth, clerkClient } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
 import { StatCard } from "@/components/shared";
@@ -84,40 +84,29 @@ function trialDaysLeft(trialEndsAt: Date): number {
 // ─── Page ────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const { orgId } = await auth();
-  if (!orgId) return null;
+  const { userId } = await auth();
+  if (!userId) return null;
 
-  // Auto-provisionar tenant si el webhook no llegó (útil en dev local)
-  let tenant = await db.tenant.findFirst({ where: { clerkOrgId: orgId } });
-  if (!tenant) {
-    try {
-      const client = await clerkClient();
-      const org    = await client.organizations.getOrganization({ organizationId: orgId });
-      const base   = org.name
-        .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-");
-      tenant = await db.tenant.create({
-        data: {
-          clerkOrgId: orgId, name: org.name,
-          slug: `${base}-${Math.random().toString(36).slice(2, 6)}`,
-          plan: "STARTER",
-          trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        },
-      });
-    } catch (err) {
-      return (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-          <p className="font-medium">No se pudo conectar con la base de datos.</p>
-          <p className="mt-1 text-xs text-red-500">
-            Verifica que DATABASE_URL y DIRECT_URL estén configurados en .env.local
-          </p>
-          <pre className="mt-2 overflow-auto rounded bg-red-100 p-2 text-xs">
-            {err instanceof Error ? err.message : String(err)}
-          </pre>
-        </div>
-      );
-    }
+  let user;
+  try {
+    user = await db.user.findUnique({
+      where: { clerkId: userId },
+      include: { activeTenant: true }
+    });
+  } catch (err) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+        <p className="font-medium">No se pudo conectar con la base de datos o hubo un error.</p>
+        <p className="mt-1 text-xs text-red-500">
+          Revisa tu conexión a Supabase. {String(err)}
+        </p>
+      </div>
+    );
   }
+
+  if (!user || !user.activeTenant) return null; // DashboardLayout redirects this to /onboarding
+
+  const tenant = user.activeTenant;
 
   const { stats, overduePayments, recentStudents } = await getDashboardData(tenant.id);
 

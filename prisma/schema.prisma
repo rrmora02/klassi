@@ -18,7 +18,7 @@ datasource db {
 
 enum TenantStatus {
   ACTIVE
-  SUSPENDED    // impago de suscripción
+  SUSPENDED // impago de suscripción
   CANCELLED
   TRIAL
 }
@@ -30,11 +30,11 @@ enum SubscriptionPlan {
 }
 
 enum UserRole {
-  SUPER_ADMIN   // equipo Klassi — sin tenantId
-  ADMIN         // administrador de escuela
-  RECEPTIONIST  // recepcionista
+  SUPER_ADMIN // equipo Klassi — sin tenantId
+  ADMIN // administrador de escuela
+  RECEPTIONIST // recepcionista
   INSTRUCTOR
-  PARENT        // padre / tutor
+  PARENT // padre / tutor
 }
 
 enum StudentStatus {
@@ -91,49 +91,49 @@ enum GroupLevel {
 // ─── Tenant (Escuela) ─────────────────────────────────────────────
 
 model Tenant {
-  id               String         @id @default(cuid())
-  clerkOrgId       String         @unique  // ID de organización en Clerk
+  id               String           @id @default(cuid())
   name             String
-  slug             String         @unique  // subdomain: slug.klassi.io
-  logo             String?        // URL en Supabase Storage
-  primaryColor     String?        @default("#1D3557")
+  slug             String           @unique // subdomain: slug.klassi.io
+  logo             String? // URL en Supabase Storage
+  primaryColor     String?          @default("#1D3557")
   plan             SubscriptionPlan @default(STARTER)
-  status           TenantStatus   @default(TRIAL)
-  stripeCustomerId String?        @unique
-  stripeSubId      String?        @unique  // Stripe subscription ID
+  status           TenantStatus     @default(TRIAL)
+  stripeCustomerId String?          @unique
+  stripeSubId      String?          @unique // Stripe subscription ID
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   // Relaciones
-  users            User[]
-  disciplines      Discipline[]
-  students         Student[]
-  instructors      Instructor[]
-  groups           Group[]
-  payments         Payment[]
-  announcements    Announcement[]
-  subscription     Subscription[]
+  members       TenantUser[]
+  activeUsers   User[]           @relation("ActiveTenant")
+  invitations   TeamInvitation[]
+  disciplines   Discipline[]
+  students      Student[]
+  instructors   Instructor[]
+  groups        Group[]
+  payments      Payment[]
+  announcements Announcement[]
+  subscription  Subscription[]
 
   @@index([slug])
-  @@index([clerkOrgId])
 }
 
 // ─── Suscripción (historial de pagos al SaaS) ─────────────────────
 
 model Subscription {
-  id              String   @id @default(cuid())
+  id              String           @id @default(cuid())
   tenantId        String
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   plan            SubscriptionPlan
   stripeInvoiceId String?
-  amount          Int      // en centavos
-  currency        String   @default("usd")
-  status          String   // paid | unpaid | void
+  amount          Int // en centavos
+  currency        String           @default("usd")
+  status          String // paid | unpaid | void
   periodStart     DateTime
   periodEnd       DateTime
-  createdAt       DateTime @default(now())
+  createdAt       DateTime         @default(now())
 
   @@index([tenantId])
 }
@@ -141,45 +141,79 @@ model Subscription {
 // ─── Usuario ──────────────────────────────────────────────────────
 
 model User {
-  id         String   @id @default(cuid())
-  clerkId    String   @unique
-  tenantId   String?  // null solo para SUPER_ADMIN
-  tenant     Tenant?  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  role       UserRole @default(RECEPTIONIST)
-  email      String
-  name       String
-  avatar     String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id             String   @id @default(cuid())
+  clerkId        String   @unique
+  activeTenantId String?
+  activeTenant   Tenant?  @relation("ActiveTenant", fields: [activeTenantId], references: [id])
+  email          String
+  name           String
+  avatar         String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relaciones
-  instructor       Instructor?
-  parentOf         ParentStudent[]
-  attendanceLogs   Attendance[]
+  memberships     TenantUser[]
+  instructor      Instructor?
+  parentOf        ParentStudent[]
+  attendanceLogs  Attendance[]
+  invitationsSent TeamInvitation[] @relation("SentInvitations")
 
-  @@index([tenantId])
   @@index([clerkId])
+}
+
+// ─── Membresía (Usuario <-> Escuela) ─────────────────────────────
+
+model TenantUser {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      UserRole @default(RECEPTIONIST)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tenantId, userId])
+  @@index([userId])
+}
+
+// ─── Invitación a Staff ──────────────────────────────────────────
+
+model TeamInvitation {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email     String
+  role      UserRole @default(RECEPTIONIST)
+  status    String   @default("PENDING") // PENDING, ACCEPTED, REVOKED
+  token     String   @unique
+  invitedBy String?
+  inviter   User?    @relation("SentInvitations", fields: [invitedBy], references: [id])
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, email])
 }
 
 // ─── Disciplina ──────────────────────────────────────────────────
 // Catálogo global — cada tenant activa las que ofrece
 
 model Discipline {
-  id           String   @id @default(cuid())
-  tenantId     String
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  name         String   // "Fútbol", "Ballet", "Salsa"
-  description  String?
-  color        String?  // color para UI
-  icon         String?  // nombre de icono
-  isActive     Boolean  @default(true)
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name           String // "Fútbol", "Ballet", "Salsa"
+  description    String?
+  color          String? // color para UI
+  icon           String? // nombre de icono
+  isActive       Boolean  @default(true)
   // Definición de campos extendidos: [{ key, label, type, required, options? }]
-  extraFieldsDef Json   @default("[]")
-  sortOrder    Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  extraFieldsDef Json     @default("[]")
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  groups       Group[]
+  groups Group[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -188,18 +222,18 @@ model Discipline {
 // ─── Instructor ───────────────────────────────────────────────────
 
 model Instructor {
-  id          String   @id @default(cuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id])
-  bio         String?
-  phone       String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  bio       String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  groups      Group[]
+  groups Group[]
 
   @@index([tenantId])
 }
@@ -207,24 +241,24 @@ model Instructor {
 // ─── Grupo ────────────────────────────────────────────────────────
 
 model Group {
-  id           String     @id @default(cuid())
+  id           String      @id @default(cuid())
   tenantId     String
-  tenant       Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   disciplineId String
-  discipline   Discipline @relation(fields: [disciplineId], references: [id])
+  discipline   Discipline  @relation(fields: [disciplineId], references: [id])
   instructorId String?
   instructor   Instructor? @relation(fields: [instructorId], references: [id])
   name         String
-  level        GroupLevel @default(BEGINNER)
-  capacity     Int        @default(20)
-  room         String?    // aula o cancha
-  schedule     Json       // [{ day: DayOfWeek, startTime, endTime }]
-  isActive     Boolean    @default(true)
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  level        GroupLevel  @default(BEGINNER)
+  capacity     Int         @default(20)
+  room         String? // aula o cancha
+  schedule     Json // [{ day: DayOfWeek, startTime, endTime }]
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
 
-  enrollments  Enrollment[]
-  sessions     ClassSession[]
+  enrollments Enrollment[]
+  sessions    ClassSession[]
 
   @@index([tenantId])
   @@index([disciplineId])
@@ -233,24 +267,24 @@ model Group {
 // ─── Alumno ───────────────────────────────────────────────────────
 
 model Student {
-  id          String        @id @default(cuid())
-  tenantId    String
-  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  firstName   String
-  lastName    String
-  birthDate   DateTime?
-  gender      String?
-  phone       String?
-  email       String?
-  avatarUrl   String?
-  status      StudentStatus @default(ACTIVE)
-  notes       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id        String        @id @default(cuid())
+  tenantId  String
+  tenant    Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  firstName String
+  lastName  String
+  birthDate DateTime?
+  gender    String?
+  phone     String?
+  email     String?
+  avatarUrl String?
+  status    StudentStatus @default(ACTIVE)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
-  enrollments  Enrollment[]
-  parents      ParentStudent[]
-  payments     Payment[]
+  enrollments Enrollment[]
+  parents     ParentStudent[]
+  payments    Payment[]
 
   @@index([tenantId])
   @@index([tenantId, lastName])
@@ -259,14 +293,14 @@ model Student {
 // ─── Padre / Tutor <-> Alumno ─────────────────────────────────────
 
 model ParentStudent {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  studentId   String
-  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   relationship String? // "madre", "padre", "tutor"
-  isPrimary   Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
 
   @@unique([userId, studentId])
   @@index([studentId])
@@ -284,14 +318,14 @@ model Enrollment {
   status       EnrollmentStatus @default(ACTIVE)
   startDate    DateTime         @default(now())
   endDate      DateTime?
-  discount     Int              @default(0)  // porcentaje 0-100
+  discount     Int              @default(0) // porcentaje 0-100
   discountNote String?
   // Campos extendidos según la disciplina del grupo
   extraFields  Json             @default("{}")
   createdAt    DateTime         @default(now())
   updatedAt    DateTime         @updatedAt
 
-  attendances  Attendance[]
+  attendances Attendance[]
 
   @@unique([studentId, groupId])
   @@index([groupId])
@@ -302,14 +336,14 @@ model Enrollment {
 // Cada clase impartida (instancia de Group en una fecha)
 
 model ClassSession {
-  id          String   @id @default(cuid())
-  groupId     String
-  group       Group    @relation(fields: [groupId], references: [id])
-  date        DateTime
-  startTime   String
-  endTime     String
-  notes       String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id])
+  date      DateTime
+  startTime String
+  endTime   String
+  notes     String?
+  createdAt DateTime @default(now())
 
   attendances Attendance[]
 
@@ -320,16 +354,16 @@ model ClassSession {
 // ─── Asistencia ───────────────────────────────────────────────────
 
 model Attendance {
-  id             String           @id @default(cuid())
-  enrollmentId   String
-  enrollment     Enrollment       @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
-  sessionId      String
-  session        ClassSession     @relation(fields: [sessionId], references: [id])
-  status         AttendanceStatus @default(PRESENT)
-  justification  String?
-  recordedById   String?
-  recordedBy     User?            @relation(fields: [recordedById], references: [id])
-  createdAt      DateTime         @default(now())
+  id            String           @id @default(cuid())
+  enrollmentId  String
+  enrollment    Enrollment       @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  sessionId     String
+  session       ClassSession     @relation(fields: [sessionId], references: [id])
+  status        AttendanceStatus @default(PRESENT)
+  justification String?
+  recordedById  String?
+  recordedBy    User?            @relation(fields: [recordedById], references: [id])
+  createdAt     DateTime         @default(now())
 
   @@unique([enrollmentId, sessionId])
   @@index([sessionId])
@@ -340,23 +374,23 @@ model Attendance {
 // Separado de los pagos de suscripción al SaaS
 
 model Payment {
-  id          String        @id @default(cuid())
-  tenantId    String
-  tenant      Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  studentId   String
-  student     Student       @relation(fields: [studentId], references: [id])
-  concept     String        // "Mensualidad Enero 2026"
-  amount      Int           // en centavos para evitar flotantes
-  currency    String        @default("MXN")
-  method      PaymentMethod @default(CASH)
-  status      PaymentStatus @default(PENDING)
-  dueDate     DateTime?
-  paidAt      DateTime?
-  receiptUrl  String?       // URL en Supabase Storage
-  reference   String?
-  notes       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id         String        @id @default(cuid())
+  tenantId   String
+  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    Student       @relation(fields: [studentId], references: [id])
+  concept    String // "Mensualidad Enero 2026"
+  amount     Int // en centavos para evitar flotantes
+  currency   String        @default("MXN")
+  method     PaymentMethod @default(CASH)
+  status     PaymentStatus @default(PENDING)
+  dueDate    DateTime?
+  paidAt     DateTime?
+  receiptUrl String? // URL en Supabase Storage
+  reference  String?
+  notes      String?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   @@index([tenantId])
   @@index([studentId])
@@ -367,15 +401,15 @@ model Payment {
 // ─── Comunicados ──────────────────────────────────────────────────
 
 model Announcement {
-  id          String   @id @default(cuid())
-  tenantId    String
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  title       String
-  body        String
-  targetAll   Boolean  @default(true)   // false = solo ciertos grupos
-  targetGroups Json    @default("[]")   // [groupId, ...]
-  sentAt      DateTime?
-  createdAt   DateTime @default(now())
+  id           String    @id @default(cuid())
+  tenantId     String
+  tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  title        String
+  body         String
+  targetAll    Boolean   @default(true) // false = solo ciertos grupos
+  targetGroups Json      @default("[]") // [groupId, ...]
+  sentAt       DateTime?
+  createdAt    DateTime  @default(now())
 
   @@index([tenantId])
 }

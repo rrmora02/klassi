@@ -1,17 +1,49 @@
 "use client";
 
-import { OrganizationList } from "@clerk/nextjs";
+import { OrganizationList, useAuth } from "@clerk/nextjs";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
-/**
- * Página de selección de organización — ruta catch-all para que los
- * sub-paths internos de Clerk (create, etc.) no lancen errores de routing.
- *
- * <OrganizationList> maneja internamente setActive + navegación a
- * afterSelectOrganizationUrl usando el router de Next.js (soft navigation),
- * lo que preserva el estado cliente de Clerk (orgId) sin necesitar
- * un page reload completo que resetearía ese estado.
- */
 export default function SelectOrgPage() {
+  const { orgId, getToken } = useAuth();
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  useEffect(() => {
+    // Cuando el usuario selecciona o crea una organización, Clerk actualiza
+    // orgId en la memoria del cliente.
+    if (orgId && !isNavigating) {
+      setIsNavigating(true);
+      
+      // Aseguramos que la cookie de sesión esté sincronizada con el backend
+      // ANTES de navegar al dashboard. Esto soluciona los problemas de Server
+      // Components (RSC) recibiendo un estado stale de Clerk en navegación suave.
+      const syncAndNavigate = async () => {
+        try {
+          await getToken({ skipCache: true });
+        } catch (e) {
+          console.error("Error renovando token", e);
+        }
+        // Navegación dura para forzar que Next.js lea la nueva cookie
+        window.location.assign("/dashboard");
+      };
+
+      syncAndNavigate();
+    }
+  }, [orgId, isNavigating, getToken]);
+
+  // Si estamos en proceso de navegación, mostrar un estado de carga en
+  // lugar de la lista de organizaciones
+  if (isNavigating) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
+          <p className="text-sm font-medium text-gray-500">Preparando tu entorno...</p>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="flex w-full max-w-md flex-col items-center gap-6">
@@ -23,8 +55,6 @@ export default function SelectOrgPage() {
         </div>
 
         <OrganizationList
-          afterSelectOrganizationUrl="/dashboard"
-          afterCreateOrganizationUrl="/dashboard"
           hideSlug
           appearance={{
             elements: {

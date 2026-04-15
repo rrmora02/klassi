@@ -24,48 +24,65 @@ function Field({ label, error, required, children }: {
   );
 }
 
-function Input({ error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }) {
-  return (
-    <input
-      {...props}
-      style={{
-        width: "100%",
-        border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
-        borderRadius: 8,
-        padding: "8px 12px",
-        fontSize: 14,
-        background: "var(--color-background-primary)",
-        color: "var(--color-text-primary)",
-        outline: "none",
-        boxSizing: "border-box",
-        ...(props.style ?? {}),
-      }}
-      onFocus={e => { e.target.style.borderColor = error ? "#fc8181" : "#378ADD"; e.target.style.boxShadow = "0 0 0 3px rgba(55,138,221,.12)"; }}
-      onBlur={e  => { e.target.style.borderColor = error ? "#fc8181" : "var(--color-border-secondary)"; e.target.style.boxShadow = "none"; }}
-    />
-  );
-}
+import React from "react";
 
-function Select({ error, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }) {
-  return (
-    <select
-      {...props}
-      style={{
-        width: "100%",
-        border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
-        borderRadius: 8,
-        padding: "8px 12px",
-        fontSize: 14,
-        background: "var(--color-background-primary)",
-        color: "var(--color-text-primary)",
-        outline: "none",
-        boxSizing: "border-box",
-      }}
-    >
-      {children}
-    </select>
-  );
-}
+const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(
+  ({ error, ...props }, ref) => {
+    return (
+      <input
+        {...props}
+        ref={ref}
+        style={{
+          width: "100%",
+          border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
+          borderRadius: 8,
+          padding: "8px 12px",
+          fontSize: 14,
+          background: "var(--color-background-primary)",
+          color: "var(--color-text-primary)",
+          outline: "none",
+          boxSizing: "border-box",
+          ...(props.style ?? {}),
+        }}
+        onFocus={e => { e.target.style.borderColor = error ? "#fc8181" : "#378ADD"; e.target.style.boxShadow = "0 0 0 3px rgba(55,138,221,.12)"; }}
+        onBlur={e  => { 
+          e.target.style.borderColor = error ? "#fc8181" : "var(--color-border-secondary)"; 
+          e.target.style.boxShadow = "none";
+          props.onBlur?.(e);
+        }}
+      />
+    );
+  }
+);
+Input.displayName = "Input";
+
+const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }>(
+  ({ error, children, ...props }, ref) => {
+    return (
+      <select
+        {...props}
+        ref={ref}
+        style={{
+          width: "100%",
+          border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
+          borderRadius: 8,
+          padding: "8px 12px",
+          fontSize: 14,
+          background: "var(--color-background-primary)",
+          color: "var(--color-text-primary)",
+          outline: "none",
+          boxSizing: "border-box",
+        }}
+        onBlur={(e) => {
+           props.onBlur?.(e);
+        }}
+      >
+        {children}
+      </select>
+    );
+  }
+);
+Select.displayName = "Select";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (

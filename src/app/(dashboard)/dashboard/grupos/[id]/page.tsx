@@ -16,9 +16,10 @@ const DAY_LABELS: Record<string, string> = {
 };
 
 export default async function GrupoDetailPage({ params }: { params: { id: string } }) {
-  const { orgId } = await auth();
-  if (!orgId) return null;
-  const tenant = await db.tenant.findFirst({ where: { clerkOrgId: orgId } });
+  const { userId } = await auth();
+  if (!userId) return null;
+  const user = await db.user.findUnique({ where: { clerkId: userId } });
+  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
   if (!tenant) return null;
 
   const group = await db.group.findFirst({

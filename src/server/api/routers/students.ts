@@ -95,7 +95,7 @@ export const studentsRouter = createTRPCRouter({
       const { tenantId, db } = ctx;
       const skip = (input.page - 1) * input.pageSize;
 
-      const where: Parameters<typeof db.student.findMany>[0]["where"] = {
+      const where: import("@prisma/client").Prisma.StudentWhereInput = {
         tenantId,
         ...(input.status && { status: input.status }),
         ...(input.search && {
@@ -224,6 +224,32 @@ export const studentsRouter = createTRPCRouter({
         },
       });
 
+      // Crear o vincular tutor si se proporcionaron datos
+      if (tutorName || tutorEmail) {
+        const contactEmail = tutorEmail || `tutor_${student.id}@klassi.local`;
+        const contactName = tutorName || "Tutor de " + student.firstName;
+        
+        let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
+        if (!parentUser) {
+          parentUser = await db.user.create({
+            data: {
+              clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
+              email: contactEmail,
+              name: contactName,
+            }
+          });
+        }
+
+        await db.parentStudent.create({
+          data: {
+            userId: parentUser.id,
+            studentId: student.id,
+            relationship: tutorRelationship,
+            isPrimary: true,
+          }
+        });
+      }
+
       // Crear primera mensualidad automáticamente si tiene grupo
       // (se hace desde el módulo de inscripciones, no aquí)
 
@@ -266,7 +292,7 @@ export const studentsRouter = createTRPCRouter({
         }
       }
 
-      return db.student.update({
+      const updatedStudent = await db.student.update({
         where: { id },
         data:  {
           ...data,
@@ -275,6 +301,56 @@ export const studentsRouter = createTRPCRouter({
           avatarUrl: data.avatarUrl || null,
         },
       });
+
+      // Actualizar 1er tutor principal si se proporcionaron datos
+      if (tutorName || tutorEmail || tutorRelationship) {
+        const existingParentLink = await db.parentStudent.findFirst({
+          where: { studentId: id },
+          include: { user: true },
+          orderBy: { createdAt: "asc" }
+        });
+
+        if (existingParentLink) {
+            // Update existiendo user y relationship
+            await db.user.update({
+              where: { id: existingParentLink.userId },
+              data: {
+                name: tutorName || existingParentLink.user.name,
+                email: tutorEmail || existingParentLink.user.email,
+              }
+            });
+            if (tutorRelationship) {
+              await db.parentStudent.update({
+                where: { id: existingParentLink.id },
+                data: { relationship: tutorRelationship }
+              });
+            }
+        } else if (tutorName || tutorEmail) {
+            // O crearlo si antes no tenía
+            const contactEmail = tutorEmail || `tutor_${id}@klassi.local`;
+            const contactName = tutorName || "Tutor de " + data.firstName;
+            let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
+            if (!parentUser) {
+              parentUser = await db.user.create({
+                data: {
+                  clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
+                  email: contactEmail,
+                  name: contactName,
+                }
+              });
+            }
+            await db.parentStudent.create({
+              data: {
+                userId: parentUser.id,
+                studentId: id,
+                relationship: tutorRelationship,
+                isPrimary: true,
+              }
+            });
+        }
+      }
+
+      return updatedStudent;
     }),
 
   // ── Cambiar estado (activar / desactivar / suspender) ─────────

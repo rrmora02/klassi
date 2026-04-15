@@ -7,10 +7,11 @@ import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 import { StudentActions } from "@/components/alumnos/student-actions";
 
 export default async function AlumnoDetailPage({ params }: { params: { id: string } }) {
-  const { orgId } = await auth();
-  if (!orgId) return null;
+  const { userId } = await auth();
+  if (!userId) return null;
 
-  const tenant = await db.tenant.findFirst({ where: { clerkOrgId: orgId } });
+  const user = await db.user.findUnique({ where: { clerkId: userId } });
+  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
   if (!tenant) return null;
 
   const student = await db.student.findFirst({

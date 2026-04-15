@@ -9,9 +9,10 @@ interface PageProps {
 }
 
 export default async function AlumnosPage({ searchParams }: PageProps) {
-  const { orgId } = await auth();
-  if (!orgId) return null;
-  const tenant = await db.tenant.findFirst({ where: { clerkOrgId: orgId } });
+  const { userId } = await auth();
+  if (!userId) return null;
+  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
+  const tenant = user?.activeTenant;
   if (!tenant) return null;
 
   const page     = Math.max(1, Number(searchParams.page ?? 1));

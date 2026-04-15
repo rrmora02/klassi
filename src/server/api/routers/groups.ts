@@ -1,7 +1,17 @@
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { GroupLevel, DayOfWeek, type Prisma } from "@prisma/client";
+import { GroupLevel, type Prisma } from "@prisma/client";
+
+export enum DayOfWeek {
+  MON = "MON",
+  TUE = "TUE",
+  WED = "WED",
+  THU = "THU",
+  FRI = "FRI",
+  SAT = "SAT",
+  SUN = "SUN",
+}
 import { canAddGroup } from "@/server/services/tenant.service";
 
 // ─── Tipos locales ────────────────────────────────────────────────
@@ -72,7 +82,7 @@ export const groupsRouter = createTRPCRouter({
       const { tenantId, db } = ctx;
       const skip = (input.page - 1) * input.pageSize;
 
-      const where: Parameters<typeof db.group.findMany>[0]["where"] = {
+      const where: Prisma.GroupWhereInput = {
         tenantId,
         ...(input.isActive !== undefined && { isActive: input.isActive }),
         ...(input.level && { level: input.level }),
