@@ -12,13 +12,21 @@ function Field({ label, error, required, children }: {
   label: string; error?: string; required?: boolean; children: React.ReactNode;
 }) {
   return (
-    <div>
-      <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>
-        {label}{required && <span style={{ color: "#e53e3e", marginLeft: 2 }}>*</span>}
+    <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+      <label
+        style={{
+          fontSize: 12,
+          fontWeight: 500,
+          color: "var(--color-text-secondary)",
+          letterSpacing: "0.01em",
+        }}
+      >
+        {label}
+        {required && <span style={{ color: "#f87171", marginLeft: 3 }}>*</span>}
       </label>
       {children}
       {error && (
-        <p style={{ fontSize: 12, color: "#c53030", marginTop: 4 }}>{error}</p>
+        <p style={{ fontSize: 11.5, color: "var(--color-error)", marginTop: 1 }}>{error}</p>
       )}
     </div>
   );
@@ -26,27 +34,32 @@ function Field({ label, error, required, children }: {
 
 import React from "react";
 
+const inputBaseStyle = (error?: boolean): React.CSSProperties => ({
+  width: "100%",
+  border: `1px solid ${error ? "var(--input-error-border)" : "var(--input-border)"}`,
+  borderRadius: 8,
+  padding: "9px 12px",
+  fontSize: 14,
+  background: "var(--input-bg)",
+  color: "var(--input-text)",
+  outline: "none",
+  boxSizing: "border-box",
+  transition: "border-color 0.15s, box-shadow 0.15s",
+});
+
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(
   ({ error, ...props }, ref) => {
     return (
       <input
         {...props}
         ref={ref}
-        style={{
-          width: "100%",
-          border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
-          borderRadius: 8,
-          padding: "8px 12px",
-          fontSize: 14,
-          background: "var(--color-background-primary)",
-          color: "var(--color-text-primary)",
-          outline: "none",
-          boxSizing: "border-box",
-          ...(props.style ?? {}),
+        style={{ ...inputBaseStyle(error), ...(props.style ?? {}) }}
+        onFocus={e => {
+          e.target.style.borderColor = error ? "var(--input-error-border)" : "var(--input-focus-border)";
+          e.target.style.boxShadow = error ? "0 0 0 3px var(--input-error-ring)" : "0 0 0 3px var(--input-focus-ring)";
         }}
-        onFocus={e => { e.target.style.borderColor = error ? "#fc8181" : "#378ADD"; e.target.style.boxShadow = "0 0 0 3px rgba(55,138,221,.12)"; }}
-        onBlur={e  => { 
-          e.target.style.borderColor = error ? "#fc8181" : "var(--color-border-secondary)"; 
+        onBlur={e => {
+          e.target.style.borderColor = error ? "var(--input-error-border)" : "var(--input-border)";
           e.target.style.boxShadow = "none";
           props.onBlur?.(e);
         }}
@@ -63,18 +76,22 @@ const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HT
         {...props}
         ref={ref}
         style={{
-          width: "100%",
-          border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
-          borderRadius: 8,
-          padding: "8px 12px",
-          fontSize: 14,
-          background: "var(--color-background-primary)",
-          color: "var(--color-text-primary)",
-          outline: "none",
-          boxSizing: "border-box",
+          ...inputBaseStyle(error),
+          cursor: "pointer",
+          appearance: "none",
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 12px center",
+          paddingRight: 36,
+        }}
+        onFocus={e => {
+          e.target.style.borderColor = "var(--input-focus-border)";
+          e.target.style.boxShadow = "0 0 0 3px var(--input-focus-ring)";
         }}
         onBlur={(e) => {
-           props.onBlur?.(e);
+          e.target.style.borderColor = error ? "var(--input-error-border)" : "var(--input-border)";
+          e.target.style.boxShadow = "none";
+          props.onBlur?.(e);
         }}
       >
         {children}
@@ -86,11 +103,18 @@ Select.displayName = "Select";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{
-      fontSize: 12, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.06em",
-      color: "var(--color-text-tertiary)", paddingBottom: 10,
-      borderBottom: "0.5px solid var(--color-border-tertiary)", marginBottom: 16,
-    }}>
+    <div
+      style={{
+        fontSize: 11,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.08em",
+        color: "var(--color-text-tertiary)",
+        paddingBottom: 12,
+        borderBottom: "1px solid var(--color-border-tertiary)",
+        marginBottom: 20,
+      }}
+    >
       {children}
     </div>
   );
@@ -143,16 +167,29 @@ export function StudentForm({
     }
   }
 
+  const disabled = isSubmitting || (isEdit && !isDirty);
+
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} noValidate>
 
       {/* Error global del servidor */}
       {serverError && (
-        <div style={{
-          background: "#fff5f5", border: "0.5px solid #fc8181", borderRadius: 8,
-          padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#c53030",
-        }}>
-          {serverError}
+        <div
+          style={{
+            background: "var(--color-error-bg)",
+            border: "1px solid rgba(239,68,68,0.2)",
+            borderRadius: 10,
+            padding: "12px 16px",
+            marginBottom: 24,
+            fontSize: 13,
+            color: "var(--color-error-text)",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+          }}
+        >
+          <span style={{ fontSize: 15, flexShrink: 0 }}>⚠</span>
+          <span>{serverError}</span>
         </div>
       )}
 
@@ -176,7 +213,7 @@ export function StudentForm({
         </Field>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
         <Field label="Fecha de nacimiento" error={errors.birthDate?.message}>
           <Input
             {...register("birthDate")}
@@ -203,7 +240,7 @@ export function StudentForm({
         </Field>
       </div>
 
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 28 }}>
         <Field label="Correo electrónico" error={errors.email?.message}>
           <Input
             {...register("email")}
@@ -236,7 +273,7 @@ export function StudentForm({
         </Field>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 28 }}>
         <Field label="Teléfono del tutor" error={errors.tutorPhone?.message}>
           <Input
             {...register("tutorPhone")}
@@ -257,24 +294,17 @@ export function StudentForm({
 
       {/* ── Notas internas ───────────────────────────── */}
       <SectionTitle>Notas internas</SectionTitle>
-      <div style={{ marginBottom: 28 }}>
+      <div style={{ marginBottom: 32 }}>
         <Field label="Observaciones" error={errors.notes?.message}>
           <textarea
             {...register("notes")}
             placeholder="Alergias, condiciones médicas relevantes, observaciones del instructor..."
             rows={3}
             style={{
-              width: "100%",
-              border: `0.5px solid ${errors.notes ? "#fc8181" : "var(--color-border-secondary)"}`,
-              borderRadius: 8,
-              padding: "8px 12px",
-              fontSize: 14,
-              background: "var(--color-background-primary)",
-              color: "var(--color-text-primary)",
-              outline: "none",
+              ...inputBaseStyle(!!errors.notes),
               resize: "vertical",
-              boxSizing: "border-box",
               fontFamily: "inherit",
+              lineHeight: 1.5,
             }}
           />
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
@@ -284,26 +314,49 @@ export function StudentForm({
       </div>
 
       {/* ── Acciones ─────────────────────────────────── */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 16, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: 10,
+          paddingTop: 20,
+          borderTop: "1px solid var(--color-border-tertiary)",
+        }}
+      >
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
           style={{
-            border: "0.5px solid var(--color-border-secondary)",
-            borderRadius: 8, padding: "8px 20px", fontSize: 13,
-            background: "transparent", color: "var(--color-text-secondary)", cursor: "pointer",
+            border: "1px solid var(--color-border-secondary)",
+            borderRadius: 8,
+            padding: "9px 20px",
+            fontSize: 13,
+            fontWeight: 500,
+            background: "transparent",
+            color: "var(--color-text-secondary)",
+            cursor: "pointer",
+            transition: "all 0.15s",
           }}
         >
           Cancelar
         </button>
         <button
           type="submit"
-          disabled={isSubmitting || (isEdit && !isDirty)}
+          disabled={disabled}
           style={{
-            background: isSubmitting || (isEdit && !isDirty) ? "#94a3b8" : "#1e3a5f",
-            color: "#fff", border: "none", borderRadius: 8,
-            padding: "8px 24px", fontSize: 13, fontWeight: 500, cursor: isSubmitting ? "wait" : "pointer",
+            background: disabled
+              ? "var(--color-border-secondary)"
+              : "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+            color: disabled ? "var(--color-text-tertiary)" : "#fff",
+            border: "none",
+            borderRadius: 8,
+            padding: "9px 24px",
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: isSubmitting ? "wait" : disabled ? "not-allowed" : "pointer",
+            boxShadow: disabled ? "none" : "0 2px 8px rgba(99,102,241,0.35)",
+            transition: "all 0.15s",
           }}
         >
           {isSubmitting ? "Guardando..." : submitLabel}

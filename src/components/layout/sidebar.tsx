@@ -37,14 +37,66 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-60 flex-col border-r border-gray-200 bg-white">
+    <aside
+      className="flex flex-col"
+      style={{
+        width: 240,
+        flexShrink: 0,
+        background: "var(--sidebar-bg)",
+        borderRight: "1px solid var(--sidebar-border)",
+      }}
+    >
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-gray-200 px-6">
-        <span className="text-xl font-semibold text-blue-900">Klassi</span>
+      <div
+        style={{
+          height: 64,
+          display: "flex",
+          alignItems: "center",
+          padding: "0 20px",
+          borderBottom: "1px solid var(--sidebar-border)",
+          flexShrink: 0,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              background: "linear-gradient(135deg, #818cf8 0%, #4f46e5 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 2px 8px rgba(99,102,241,0.45)",
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ color: "#fff", fontSize: 14, fontWeight: 700, lineHeight: 1 }}>K</span>
+          </div>
+          <span
+            style={{
+              color: "#fff",
+              fontSize: 16,
+              fontWeight: 600,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Klassi
+          </span>
+        </div>
       </div>
 
       {/* Nav principal */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
+      <nav
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          padding: "10px 8px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 1,
+        }}
+      >
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
           const active = pathname === href;
           return (
@@ -52,21 +104,42 @@ export function Sidebar() {
               key={href}
               href={href}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150",
                 active
-                  ? "bg-blue-50 text-blue-900"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "text-white"
+                  : "text-white/60 hover:text-white/90 hover:bg-white/5"
               )}
+              style={
+                active
+                  ? { background: "var(--sidebar-active-bg)" }
+                  : undefined
+              }
             >
-              <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-blue-700" : "text-gray-400")} />
+              <Icon
+                className="flex-shrink-0"
+                size={15}
+                style={{
+                  color: active ? "var(--sidebar-icon-active)" : "var(--sidebar-icon)",
+                  transition: "color 0.15s",
+                }}
+              />
               {label}
             </Link>
           );
         })}
 
         {/* Configuración */}
-        <div className="pt-4">
-          <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <div style={{ marginTop: 16 }}>
+          <p
+            style={{
+              padding: "0 12px 8px",
+              fontSize: 10,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.09em",
+              color: "var(--sidebar-section-label)",
+            }}
+          >
             Configuración
           </p>
           {CONFIG_ITEMS.map(({ label, href, icon: Icon }) => {
@@ -76,13 +149,25 @@ export function Sidebar() {
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                  "flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-150",
                   active
-                    ? "bg-blue-50 text-blue-900"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    ? "text-white"
+                    : "text-white/60 hover:text-white/90 hover:bg-white/5"
                 )}
+                style={
+                  active
+                    ? { background: "var(--sidebar-active-bg)" }
+                    : undefined
+                }
               >
-                <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-blue-700" : "text-gray-400")} />
+                <Icon
+                  className="flex-shrink-0"
+                  size={15}
+                  style={{
+                    color: active ? "var(--sidebar-icon-active)" : "var(--sidebar-icon)",
+                    transition: "color 0.15s",
+                  }}
+                />
                 {label}
               </Link>
             );

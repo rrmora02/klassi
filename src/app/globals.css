@@ -9,3 +9,121 @@
 body {
   @apply bg-background text-foreground;
 }
+
+/* ─── Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --border: 214.3 31.8% 91.4%;
+
+  /* Primary – Indigo */
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-light: #eef2ff;
+  --color-primary-ring: rgba(99, 102, 241, 0.15);
+
+  /* Text hierarchy */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #94a3b8;
+
+  /* Surfaces */
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f8fafc;
+  --color-background-tertiary: #f1f5f9;
+
+  /* Borders */
+  --color-border-primary: #cbd5e1;
+  --color-border-secondary: #e2e8f0;
+  --color-border-tertiary: #f1f5f9;
+
+  /* Semantic */
+  --color-success: #10b981;
+  --color-success-bg: #ecfdf5;
+  --color-success-text: #065f46;
+  --color-warning: #f59e0b;
+  --color-warning-bg: #fffbeb;
+  --color-warning-text: #92400e;
+  --color-error: #ef4444;
+  --color-error-bg: #fef2f2;
+  --color-error-text: #991b1b;
+  --color-info: #3b82f6;
+  --color-info-bg: #eff6ff;
+  --color-info-text: #1e40af;
+
+  /* Sidebar (dark) */
+  --sidebar-bg: #0f172a;
+  --sidebar-text: rgba(255, 255, 255, 0.6);
+  --sidebar-text-active: #ffffff;
+  --sidebar-active-bg: rgba(99, 102, 241, 0.2);
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+  --sidebar-icon: rgba(255, 255, 255, 0.32);
+  --sidebar-icon-active: #a5b4fc;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-section-label: rgba(255, 255, 255, 0.22);
+
+  /* Inputs */
+  --input-border: #e2e8f0;
+  --input-focus-border: #6366f1;
+  --input-focus-ring: rgba(99, 102, 241, 0.12);
+  --input-error-border: #f87171;
+  --input-error-ring: rgba(239, 68, 68, 0.1);
+  --input-bg: #ffffff;
+  --input-text: #0f172a;
+  --input-placeholder: #94a3b8;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.06);
+}
+
+/* ─── Date / Time Input Color Scheme ──────────────────────────── */
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="week"] {
+  color-scheme: light;
+}
+
+/* ─── Placeholders ────────────────────────────────────────────── */
+input::placeholder,
+textarea::placeholder {
+  color: var(--input-placeholder);
+}
+
+/* ─── Checkbox / Radio accent ─────────────────────────────────── */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--color-primary);
+}
+
+/* ─── Custom Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* ─── Text Selection ──────────────────────────────────────────── */
+::selection {
+  background: rgba(99, 102, 241, 0.15);
+  color: #0f172a;
+}
+
+/* ─── Link transitions ────────────────────────────────────────── */
+a {
+  transition: color 0.15s ease, opacity 0.15s ease;
+}

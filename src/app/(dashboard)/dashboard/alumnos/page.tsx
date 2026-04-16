@@ -56,92 +56,297 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Alumnos</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{total} {total === 1 ? "alumno" : "alumnos"}</p>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 600,
+              color: "var(--color-text-primary)",
+              letterSpacing: "-0.02em",
+              margin: 0,
+            }}
+          >
+            Alumnos
+          </h1>
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>
+            {total} {total === 1 ? "alumno registrado" : "alumnos registrados"}
+          </p>
         </div>
-        <Link href="/dashboard/alumnos/nuevo" style={{ background: "#1e3a5f", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+        <Link
+          href="/dashboard/alumnos/nuevo"
+          style={{
+            background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+            color: "#fff",
+            borderRadius: 8,
+            padding: "9px 18px",
+            fontSize: 13,
+            fontWeight: 500,
+            textDecoration: "none",
+            boxShadow: "0 2px 8px rgba(99,102,241,0.35)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
           + Nuevo alumno
         </Link>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 0,
+          marginBottom: 18,
+          borderBottom: "1px solid var(--color-border-secondary)",
+        }}
+      >
         {[
-          { label: "Todos", value: undefined, count: Object.values(countMap).reduce((a: number, b: number) => a + b, 0) },
-          { label: "Activos", value: "ACTIVE", count: countMap.ACTIVE ?? 0 },
+          { label: "Todos",     value: undefined, count: Object.values(countMap).reduce((a: number, b: number) => a + b, 0) },
+          { label: "Activos",   value: "ACTIVE",   count: countMap.ACTIVE ?? 0 },
           { label: "Inactivos", value: "INACTIVE", count: countMap.INACTIVE ?? 0 },
         ].map(tab => {
           const active = tab.value === status || (!tab.value && !status);
           return (
-            <Link key={tab.label} href={buildUrl({ status: tab.value, page: "1" })} style={{
-              padding: "8px 16px", fontSize: 13, textDecoration: "none",
-              color: active ? "#1e3a5f" : "var(--color-text-secondary)",
-              fontWeight: active ? 500 : 400,
-              borderBottom: active ? "2px solid #1e3a5f" : "2px solid transparent",
-              marginBottom: -1,
-            }}>
-              {tab.label} <span style={{ fontSize: 11 }}>{tab.count}</span>
+            <Link
+              key={tab.label}
+              href={buildUrl({ status: tab.value, page: "1" })}
+              style={{
+                padding: "9px 16px",
+                fontSize: 13,
+                textDecoration: "none",
+                color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
+                fontWeight: active ? 600 : 400,
+                borderBottom: active ? "2px solid var(--color-primary)" : "2px solid transparent",
+                marginBottom: -1,
+                transition: "all 0.15s",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              {tab.label}
+              <span
+                style={{
+                  fontSize: 11,
+                  padding: "1px 7px",
+                  borderRadius: 999,
+                  background: active ? "var(--color-primary-light)" : "var(--color-background-tertiary)",
+                  color: active ? "var(--color-primary)" : "var(--color-text-tertiary)",
+                  fontWeight: 500,
+                }}
+              >
+                {tab.count}
+              </span>
             </Link>
           );
         })}
       </div>
 
       {/* Filtros */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
         <form style={{ flex: 1, minWidth: 200, maxWidth: 320 }}>
-          <input name="q" defaultValue={search} placeholder="Buscar nombre, email, teléfono..." style={{ width: "100%", border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "7px 12px", fontSize: 13, background: "var(--color-background-primary)", color: "var(--color-text-primary)", outline: "none", boxSizing: "border-box" }} />
+          <div style={{ position: "relative" }}>
+            <span
+              style={{
+                position: "absolute",
+                left: 10,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--color-text-tertiary)",
+                pointerEvents: "none",
+                fontSize: 14,
+              }}
+            >
+              🔍
+            </span>
+            <input
+              name="q"
+              defaultValue={search}
+              placeholder="Buscar nombre, email, teléfono..."
+              style={{
+                width: "100%",
+                border: "1px solid var(--input-border)",
+                borderRadius: 8,
+                padding: "8px 12px 8px 32px",
+                fontSize: 13,
+                background: "var(--input-bg)",
+                color: "var(--input-text)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+          </div>
         </form>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-          {[{ id: undefined, name: "Todas" }, ...disciplines].map(d => (
-            <Link key={d.id ?? "all"} href={buildUrl({ disc: d.id, page: "1" })} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: discId === d.id || (!discId && !d.id) ? "#1e3a5f" : "var(--color-background-primary)", color: discId === d.id || (!discId && !d.id) ? "#fff" : "var(--color-text-secondary)" }}>
-              {d.name}
-            </Link>
-          ))}
+          {[{ id: undefined, name: "Todas" }, ...disciplines].map(d => {
+            const isActive = discId === d.id || (!discId && !d.id);
+            return (
+              <Link
+                key={d.id ?? "all"}
+                href={buildUrl({ disc: d.id, page: "1" })}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 999,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  textDecoration: "none",
+                  border: `1px solid ${isActive ? "var(--color-primary)" : "var(--color-border-secondary)"}`,
+                  background: isActive ? "var(--color-primary-light)" : "var(--color-background-primary)",
+                  color: isActive ? "var(--color-primary)" : "var(--color-text-secondary)",
+                  transition: "all 0.15s",
+                }}
+              >
+                {d.name}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
       {/* Tabla */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
+      <div
+        style={{
+          background: "var(--color-background-primary)",
+          border: "1px solid var(--color-border-tertiary)",
+          borderRadius: 12,
+          overflow: "hidden",
+          boxShadow: "var(--shadow-xs)",
+        }}
+      >
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
-            <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+            <tr
+              style={{
+                background: "var(--color-background-secondary)",
+                borderBottom: "1px solid var(--color-border-tertiary)",
+              }}
+            >
               {["Alumno", "Edad", "Disciplinas", "Contacto", "Estado", ""].map(h => (
-                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>{h}</th>
+                <th
+                  key={h}
+                  style={{
+                    padding: "11px 14px",
+                    textAlign: "left",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.07em",
+                    color: "var(--color-text-tertiary)",
+                  }}
+                >
+                  {h}
+                </th>
               ))}
             </tr>
           </thead>
           <tbody>
             {students.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: "center", padding: "48px 0", color: "var(--color-text-tertiary)" }}>No se encontraron alumnos</td></tr>
+              <tr>
+                <td
+                  colSpan={6}
+                  style={{ textAlign: "center", padding: "52px 0", color: "var(--color-text-tertiary)", fontSize: 13 }}
+                >
+                  No se encontraron alumnos
+                </td>
+              </tr>
             )}
             {students.map(s => (
-              <tr key={s.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                <td style={{ padding: "11px 14px" }}>
+              <tr
+                key={s.id}
+                style={{ borderBottom: "1px solid var(--color-border-tertiary)" }}
+              >
+                <td style={{ padding: "12px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#dbeafe", color: "#1d4ed8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, flexShrink: 0 }}>
+                    <div
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: "50%",
+                        background: "var(--color-primary-light)",
+                        color: "var(--color-primary)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        flexShrink: 0,
+                        border: "1px solid rgba(99,102,241,0.15)",
+                      }}
+                    >
                       {s.firstName[0]}{s.lastName[0]}
                     </div>
                     <div>
-                      <Link href={`/dashboard/alumnos/${s.id}`} style={{ fontWeight: 500, color: "var(--color-text-primary)", textDecoration: "none" }}>{fullName(s.firstName, s.lastName)}</Link>
-                      {s.email && <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: 0 }}>{s.email}</p>}
+                      <Link
+                        href={`/dashboard/alumnos/${s.id}`}
+                        style={{
+                          fontWeight: 500,
+                          color: "var(--color-text-primary)",
+                          textDecoration: "none",
+                          fontSize: 13,
+                        }}
+                      >
+                        {fullName(s.firstName, s.lastName)}
+                      </Link>
+                      {s.email && (
+                        <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: 0, marginTop: 1 }}>
+                          {s.email}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)" }}>{calcAge(s.birthDate) ?? "—"}</td>
-                <td style={{ padding: "11px 14px" }}>
+                <td style={{ padding: "12px 14px", color: "var(--color-text-secondary)" }}>
+                  {calcAge(s.birthDate) ?? "—"}
+                </td>
+                <td style={{ padding: "12px 14px" }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                    {s.enrollments.length === 0 && <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>Sin grupo</span>}
+                    {s.enrollments.length === 0 && (
+                      <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>Sin grupo</span>
+                    )}
                     {s.enrollments.map(e => (
-                      <span key={e.id} style={{ background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>{e.group.discipline.name}</span>
+                      <span
+                        key={e.id}
+                        style={{
+                          background: "#eff6ff",
+                          color: "#1d4ed8",
+                          borderRadius: 999,
+                          padding: "2px 8px",
+                          fontSize: 11,
+                          fontWeight: 500,
+                          border: "1px solid #bfdbfe",
+                        }}
+                      >
+                        {e.group.discipline.name}
+                      </span>
                     ))}
                   </div>
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>{s.phone ?? s.email ?? "—"}</td>
-                <td style={{ padding: "11px 14px" }}><StudentStatusBadge status={s.status} /></td>
-                <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${s.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Ver →</Link>
+                <td style={{ padding: "12px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>
+                  {s.phone ?? s.email ?? "—"}
+                </td>
+                <td style={{ padding: "12px 14px" }}>
+                  <StudentStatusBadge status={s.status} />
+                </td>
+                <td style={{ padding: "12px 14px", textAlign: "right" }}>
+                  <Link
+                    href={`/dashboard/alumnos/${s.id}`}
+                    style={{
+                      fontSize: 12,
+                      color: "var(--color-primary)",
+                      textDecoration: "none",
+                      fontWeight: 500,
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      border: "1px solid rgba(99,102,241,0.2)",
+                      background: "var(--color-primary-light)",
+                      display: "inline-block",
+                    }}
+                  >
+                    Ver →
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -151,14 +356,70 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
 
       {/* Paginación */}
       {pages > 1 && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
-          <span>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</span>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: 16,
+            fontSize: 13,
+            color: "var(--color-text-secondary)",
+          }}
+        >
+          <span>
+            Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}
+          </span>
           <div style={{ display: "flex", gap: 4 }}>
-            {page > 1 && <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>← Ant</Link>}
-            {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
-              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#1e3a5f" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
-            ))}
-            {page < pages && <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>Sig →</Link>}
+            {page > 1 && (
+              <Link
+                href={buildUrl({ page: String(page - 1) })}
+                style={{
+                  padding: "6px 12px",
+                  border: "1px solid var(--color-border-secondary)",
+                  borderRadius: 7,
+                  textDecoration: "none",
+                  color: "var(--color-text-secondary)",
+                  fontSize: 13,
+                }}
+              >
+                ← Ant
+              </Link>
+            )}
+            {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2))
+              .filter(p => p <= pages)
+              .map(p => (
+                <Link
+                  key={p}
+                  href={buildUrl({ page: String(p) })}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: 7,
+                    textDecoration: "none",
+                    border: "1px solid var(--color-border-secondary)",
+                    background: p === page ? "var(--color-primary)" : "transparent",
+                    color: p === page ? "#fff" : "var(--color-text-secondary)",
+                    fontSize: 13,
+                    fontWeight: p === page ? 600 : 400,
+                  }}
+                >
+                  {p}
+                </Link>
+              ))}
+            {page < pages && (
+              <Link
+                href={buildUrl({ page: String(page + 1) })}
+                style={{
+                  padding: "6px 12px",
+                  border: "1px solid var(--color-border-secondary)",
+                  borderRadius: 7,
+                  textDecoration: "none",
+                  color: "var(--color-text-secondary)",
+                  fontSize: 13,
+                }}
+              >
+                Sig →
+              </Link>
+            )}
           </div>
         </div>
       )}

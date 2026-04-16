@@ -28,7 +28,16 @@ export async function TopBar() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <header
+      className="flex items-center justify-between px-6"
+      style={{
+        height: 64,
+        background: "#ffffff",
+        borderBottom: "1px solid var(--color-border-tertiary)",
+        boxShadow: "0 1px 0 0 #f1f5f9",
+        flexShrink: 0,
+      }}
+    >
       <div className="flex items-center gap-3">
         {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} />}
       </div>

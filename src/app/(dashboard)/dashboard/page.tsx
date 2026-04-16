@@ -95,9 +95,18 @@ export default async function DashboardPage() {
     });
   } catch (err) {
     return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
-        <p className="font-medium">No se pudo conectar con la base de datos o hubo un error.</p>
-        <p className="mt-1 text-xs text-red-500">
+      <div
+        style={{
+          borderRadius: 12,
+          border: "1px solid #fecaca",
+          background: "#fef2f2",
+          padding: 24,
+          fontSize: 13,
+          color: "#991b1b",
+        }}
+      >
+        <p style={{ fontWeight: 600, margin: 0 }}>No se pudo conectar con la base de datos o hubo un error.</p>
+        <p style={{ marginTop: 6, fontSize: 12, color: "#b91c1c" }}>
           Revisa tu conexión a Supabase. {String(err)}
         </p>
       </div>
@@ -119,26 +128,58 @@ export default async function DashboardPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Inicio</h1>
-        <p className="mt-0.5 text-sm text-gray-500">{tenant.name}</p>
+        <h1
+          style={{
+            fontSize: 22,
+            fontWeight: 600,
+            color: "var(--color-text-primary)",
+            letterSpacing: "-0.02em",
+            margin: 0,
+          }}
+        >
+          Inicio
+        </h1>
+        <p style={{ marginTop: 4, fontSize: 13, color: "var(--color-text-secondary)" }}>
+          {tenant.name}
+        </p>
       </div>
 
       {/* Trial banner */}
       {showTrialBanner && (
-        <div className={`flex items-center justify-between rounded-xl px-5 py-4 ${
-          daysLeft <= 3
-            ? "border border-red-200 bg-red-50"
-            : "border border-amber-200 bg-amber-50"
-        }`}>
+        <div
+          className={`flex items-center justify-between rounded-xl px-5 py-4`}
+          style={{
+            background: daysLeft <= 3 ? "#fef2f2" : "#fffbeb",
+            border: `1px solid ${daysLeft <= 3 ? "#fecaca" : "#fde68a"}`,
+          }}
+        >
           <div className="flex items-center gap-3">
-            <Clock className={`h-5 w-5 flex-shrink-0 ${daysLeft <= 3 ? "text-red-500" : "text-amber-500"}`} />
-            <p className={`text-sm font-medium ${daysLeft <= 3 ? "text-red-800" : "text-amber-800"}`}>
+            <Clock
+              className="h-5 w-5 flex-shrink-0"
+              style={{ color: daysLeft <= 3 ? "#ef4444" : "#f59e0b" }}
+            />
+            <p
+              className="text-sm font-medium"
+              style={{ color: daysLeft <= 3 ? "#991b1b" : "#92400e" }}
+            >
               {daysLeft === 0
                 ? "Tu período de prueba vence hoy."
                 : `Tu período de prueba vence en ${daysLeft} ${daysLeft === 1 ? "día" : "días"}.`}
             </p>
           </div>
-          <span className="ml-4 rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
+          <span
+            style={{
+              marginLeft: 16,
+              borderRadius: 8,
+              background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+              padding: "5px 14px",
+              fontSize: 12,
+              fontWeight: 500,
+              color: "#fff",
+              whiteSpace: "nowrap",
+              boxShadow: "0 2px 6px rgba(99,102,241,0.3)",
+            }}
+          >
             Actualizar plan
           </span>
         </div>
@@ -170,16 +211,38 @@ export default async function DashboardPage() {
       </div>
 
       {/* Main content: two columns */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
 
         {/* Adeudos vencidos */}
-        <section className="lg:col-span-3 rounded-xl border border-gray-200 bg-white">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <section
+          className="lg:col-span-3 rounded-xl"
+          style={{
+            background: "#fff",
+            border: "1px solid var(--color-border-tertiary)",
+            boxShadow: "var(--shadow-xs)",
+          }}
+        >
+          <div
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: "1px solid var(--color-border-tertiary)" }}
+          >
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-500" />
-              <h2 className="text-sm font-semibold text-gray-900">Adeudos vencidos</h2>
+              <AlertTriangle className="h-4 w-4" style={{ color: "#ef4444" }} />
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>
+                Adeudos vencidos
+              </h2>
               {stats.overdueCount > 0 && (
-                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                <span
+                  style={{
+                    borderRadius: 999,
+                    background: "#fef2f2",
+                    color: "#b91c1c",
+                    border: "1px solid #fecaca",
+                    padding: "1px 7px",
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
                   {stats.overdueCount}
                 </span>
               )}
@@ -187,7 +250,8 @@ export default async function DashboardPage() {
             {stats.overdueCount > 0 && (
               <Link
                 href="/dashboard/pagos?status=OVERDUE"
-                className="flex items-center gap-1 text-xs text-blue-700 hover:underline"
+                className="flex items-center gap-1"
+                style={{ fontSize: 12, color: "var(--color-primary)", textDecoration: "none", fontWeight: 500 }}
               >
                 Ver todos <ChevronRight className="h-3 w-3" />
               </Link>
@@ -196,20 +260,54 @@ export default async function DashboardPage() {
 
           {overduePayments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
-                <CreditCard className="h-5 w-5 text-green-600" />
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  background: "#ecfdf5",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <CreditCard className="h-5 w-5" style={{ color: "#10b981" }} />
               </div>
-              <p className="mt-3 text-sm font-medium text-gray-700">Sin adeudos vencidos</p>
-              <p className="mt-0.5 text-xs text-gray-400">Todos los pagos están al corriente</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>
+                Sin adeudos vencidos
+              </p>
+              <p style={{ marginTop: 4, fontSize: 13, color: "var(--color-text-tertiary)" }}>
+                Todos los pagos están al corriente
+              </p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-50">
+            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
               {overduePayments.map((p) => {
                 const days = p.dueDate ? daysOverdue(p.dueDate) : 0;
                 return (
-                  <li key={p.id} className="flex items-center gap-3 px-5 py-3.5">
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-3 px-5 py-3.5"
+                    style={{ borderBottom: "1px solid var(--color-border-tertiary)" }}
+                  >
                     {/* Avatar */}
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700">
+                    <span
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: "50%",
+                        background: "#fef2f2",
+                        color: "#b91c1c",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                        border: "1px solid #fecaca",
+                      }}
+                    >
                       {initials(p.student.firstName, p.student.lastName)}
                     </span>
 
@@ -217,26 +315,37 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/alumnos/${p.student.id}`}
-                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "var(--color-text-primary)",
+                          textDecoration: "none",
+                        }}
                       >
                         {fullName(p.student.firstName, p.student.lastName)}
                       </Link>
-                      <p className="truncate text-xs text-gray-400">{p.concept}</p>
+                      <p className="truncate" style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: 0 }}>
+                        {p.concept}
+                      </p>
                     </div>
 
                     {/* Amount */}
-                    <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>
                       {formatCurrency(p.amount)}
                     </span>
 
                     {/* Days overdue */}
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      days > 30
-                        ? "bg-red-100 text-red-700"
-                        : days > 7
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}>
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: "2px 8px",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        background: days > 30 ? "#fef2f2" : days > 7 ? "#fff7ed" : "#fffbeb",
+                        color: days > 30 ? "#b91c1c" : days > 7 ? "#9a3412" : "#92400e",
+                        border: `1px solid ${days > 30 ? "#fecaca" : days > 7 ? "#fed7aa" : "#fde68a"}`,
+                      }}
+                    >
                       {days}d
                     </span>
                   </li>
@@ -247,15 +356,28 @@ export default async function DashboardPage() {
         </section>
 
         {/* Alumnos recientes */}
-        <section className="lg:col-span-2 rounded-xl border border-gray-200 bg-white">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <section
+          className="lg:col-span-2 rounded-xl"
+          style={{
+            background: "#fff",
+            border: "1px solid var(--color-border-tertiary)",
+            boxShadow: "var(--shadow-xs)",
+          }}
+        >
+          <div
+            className="flex items-center justify-between px-5 py-4"
+            style={{ borderBottom: "1px solid var(--color-border-tertiary)" }}
+          >
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
-              <h2 className="text-sm font-semibold text-gray-900">Alumnos recientes</h2>
+              <Users className="h-4 w-4" style={{ color: "var(--color-primary)" }} />
+              <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>
+                Alumnos recientes
+              </h2>
             </div>
             <Link
               href="/dashboard/alumnos"
-              className="flex items-center gap-1 text-xs text-blue-700 hover:underline"
+              className="flex items-center gap-1"
+              style={{ fontSize: 12, color: "var(--color-primary)", textDecoration: "none", fontWeight: 500 }}
             >
               Ver todos <ChevronRight className="h-3 w-3" />
             </Link>
@@ -263,25 +385,67 @@ export default async function DashboardPage() {
 
           {recentStudents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
-                <Users className="h-5 w-5 text-blue-600" />
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  background: "var(--color-primary-light)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <Users className="h-5 w-5" style={{ color: "var(--color-primary)" }} />
               </div>
-              <p className="mt-3 text-sm font-medium text-gray-700">Sin alumnos aún</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>
+                Sin alumnos aún
+              </p>
               <Link
                 href="/dashboard/alumnos/nuevo"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800"
+                className="inline-flex items-center gap-1.5 mt-4"
+                style={{
+                  borderRadius: 8,
+                  background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+                  padding: "6px 14px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "#fff",
+                  textDecoration: "none",
+                  boxShadow: "0 2px 6px rgba(99,102,241,0.3)",
+                }}
               >
                 <Plus className="h-3.5 w-3.5" /> Agregar alumno
               </Link>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-50">
+            <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
               {recentStudents.map((s) => {
                 const disc = s.enrollments[0]?.group.discipline;
                 return (
-                  <li key={s.id} className="flex items-center gap-3 px-5 py-3.5">
+                  <li
+                    key={s.id}
+                    className="flex items-center gap-3 px-5 py-3.5"
+                    style={{ borderBottom: "1px solid var(--color-border-tertiary)" }}
+                  >
                     {/* Avatar */}
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-800">
+                    <span
+                      style={{
+                        width: 34,
+                        height: 34,
+                        borderRadius: "50%",
+                        background: "var(--color-primary-light)",
+                        color: "var(--color-primary)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                        border: "1px solid rgba(99,102,241,0.15)",
+                      }}
+                    >
                       {initials(s.firstName, s.lastName)}
                     </span>
 
@@ -289,19 +453,28 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/alumnos/${s.id}`}
-                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "var(--color-text-primary)",
+                          textDecoration: "none",
+                        }}
                       >
                         {fullName(s.firstName, s.lastName)}
                       </Link>
                       {disc ? (
-                        <p className="text-xs text-gray-400">{disc.name}</p>
+                        <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: 0 }}>
+                          {disc.name}
+                        </p>
                       ) : (
-                        <p className="text-xs text-gray-400">Sin grupo activo</p>
+                        <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: 0 }}>
+                          Sin grupo activo
+                        </p>
                       )}
                     </div>
 
                     {/* Date */}
-                    <span className="flex-shrink-0 text-xs text-gray-400 tabular-nums">
+                    <span style={{ flexShrink: 0, fontSize: 11, color: "var(--color-text-tertiary)" }}>
                       {formatDate(s.createdAt)}
                     </span>
                   </li>
@@ -314,32 +487,89 @@ export default async function DashboardPage() {
 
       {/* Quick actions */}
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <h2
+          style={{
+            marginBottom: 12,
+            fontSize: 11,
+            fontWeight: 600,
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            color: "var(--color-text-tertiary)",
+          }}
+        >
           Acciones rápidas
         </h2>
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard/alumnos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2"
+            style={{
+              borderRadius: 10,
+              border: "1px solid var(--color-border-secondary)",
+              background: "#fff",
+              padding: "10px 16px",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--color-text-secondary)",
+              textDecoration: "none",
+              boxShadow: "var(--shadow-xs)",
+              transition: "all 0.15s",
+            }}
           >
-            <Plus className="h-4 w-4" /> Nuevo alumno
+            <Plus className="h-4 w-4" style={{ color: "var(--color-primary)" }} /> Nuevo alumno
           </Link>
           <Link
             href="/dashboard/grupos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2"
+            style={{
+              borderRadius: 10,
+              border: "1px solid var(--color-border-secondary)",
+              background: "#fff",
+              padding: "10px 16px",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--color-text-secondary)",
+              textDecoration: "none",
+              boxShadow: "var(--shadow-xs)",
+              transition: "all 0.15s",
+            }}
           >
-            <BookOpen className="h-4 w-4" /> Nuevo grupo
+            <BookOpen className="h-4 w-4" style={{ color: "var(--color-primary)" }} /> Nuevo grupo
           </Link>
           <Link
             href="/dashboard/alumnos"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2"
+            style={{
+              borderRadius: 10,
+              border: "1px solid var(--color-border-secondary)",
+              background: "#fff",
+              padding: "10px 16px",
+              fontSize: 13,
+              fontWeight: 500,
+              color: "var(--color-text-secondary)",
+              textDecoration: "none",
+              boxShadow: "var(--shadow-xs)",
+              transition: "all 0.15s",
+            }}
           >
-            <Users className="h-4 w-4" /> Ver alumnos
+            <Users className="h-4 w-4" style={{ color: "var(--color-primary)" }} /> Ver alumnos
           </Link>
           {stats.overdueCount > 0 && (
             <Link
               href="/dashboard/pagos?status=OVERDUE"
-              className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 shadow-sm transition hover:border-red-300"
+              className="inline-flex items-center gap-2"
+              style={{
+                borderRadius: 10,
+                border: "1px solid #fecaca",
+                background: "#fef2f2",
+                padding: "10px 16px",
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#b91c1c",
+                textDecoration: "none",
+                boxShadow: "var(--shadow-xs)",
+                transition: "all 0.15s",
+              }}
             >
               <AlertTriangle className="h-4 w-4" />
               {stats.overdueCount} {stats.overdueCount === 1 ? "adeudo vencido" : "adeudos vencidos"}
