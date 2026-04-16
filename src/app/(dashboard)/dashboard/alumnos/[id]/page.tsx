@@ -5,6 +5,8 @@ import Link from "next/link";
 import { fullName, formatDate, calcAge, formatCurrency } from "@/lib/utils";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 import { StudentActions } from "@/components/alumnos/student-actions";
+import { EnrollToGroupModal } from "@/components/alumnos/enroll-to-group-modal";
+import { TransferGroupModal } from "@/components/alumnos/transfer-group-modal";
 
 export default async function AlumnoDetailPage({ params }: { params: { id: string } }) {
   const { userId } = await auth();
@@ -147,7 +149,10 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
 
         {/* Inscripciones activas */}
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 500, margin: "0 0 14px" }}>Inscripciones activas</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Inscripciones activas</h2>
+            <EnrollToGroupModal studentId={student.id} />
+          </div>
           {activeEnrollments.length === 0 && (
             <p style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>Sin inscripciones activas</p>
           )}
@@ -161,9 +166,12 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
                     {e.group.instructor?.user.name ?? "Sin instructor"} · Desde {formatDate(e.startDate)}
                   </p>
                 </div>
-                {e.discount > 0 && (
-                  <span style={{ background: "#fef3c7", color: "#b45309", borderRadius: 20, padding: "2px 8px", fontSize: 11 }}>{e.discount}% desc.</span>
-                )}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+                  {e.discount > 0 && (
+                    <span style={{ background: "#fef3c7", color: "#b45309", borderRadius: 20, padding: "2px 8px", fontSize: 11 }}>{e.discount}% desc.</span>
+                  )}
+                  <TransferGroupModal studentId={student.id} currentEnrollmentId={e.id} />
+                </div>
               </div>
             </div>
           ))}

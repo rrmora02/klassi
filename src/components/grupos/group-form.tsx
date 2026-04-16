@@ -1,9 +1,9 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import React, { useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { groupFormSchema, groupFormDefaults, type GroupFormValues } from "@/lib/schemas/group.schema";
-import { useState } from "react";
 
 // ─── Etiquetas de día ─────────────────────────────────────────────
 
@@ -40,9 +40,10 @@ function Field({ label, error, required, children }: {
   );
 }
 
-function Input({ error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }) {
+const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(({ error, ...props }, ref) => {
   return (
     <input
+      ref={ref}
       {...props}
       style={{
         width: "100%", border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
@@ -54,11 +55,13 @@ function Input({ error, ...props }: React.InputHTMLAttributes<HTMLInputElement> 
       onBlur={e  => { e.target.style.borderColor = error ? "#fc8181" : "var(--color-border-secondary)"; e.target.style.boxShadow = "none"; }}
     />
   );
-}
+});
+Input.displayName = "Input";
 
-function Select({ error, children, ...props }: React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }) {
+const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }>(({ error, children, ...props }, ref) => {
   return (
     <select
+      ref={ref}
       {...props}
       style={{
         width: "100%", border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
@@ -70,7 +73,8 @@ function Select({ error, children, ...props }: React.SelectHTMLAttributes<HTMLSe
       {children}
     </select>
   );
-}
+});
+Select.displayName = "Select";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -99,7 +103,7 @@ interface GroupFormProps {
   instructors:    Instructor[];
 }
 
-// ─── Componente ───────────────────────────────────────────────────
+// ─── Componente principal ─────────────────────────────────────────
 
 export function GroupForm({
   defaultValues,
@@ -117,6 +121,7 @@ export function GroupForm({
     register,
     control,
     handleSubmit,
+    watch,
     formState: { errors, isDirty },
   } = useForm<GroupFormValues>({
     resolver:      zodResolver(groupFormSchema),
@@ -124,19 +129,18 @@ export function GroupForm({
     mode:          "onBlur",
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "schedule" });
-
   async function handleFormSubmit(data: GroupFormValues) {
     setIsSubmitting(true);
     setServerError(null);
     try {
       await onSubmit(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error inesperado";
+      const msg = err instanceof Error ? err.message : "Error inesperado a guardar.";
       setServerError(msg);
-      setIsSubmitting(false);
     }
   }
+
+  const currentType = watch("type");
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} noValidate>
@@ -153,20 +157,53 @@ export function GroupForm({
       {/* ── Datos generales ──────────────────────────── */}
       <SectionTitle>Datos generales</SectionTitle>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <Field label="Nombre del grupo" required error={errors.name?.message}>
-          <Input
-            {...register("name")}
-            placeholder="Ej: Ballet Intermedio A"
-            error={!!errors.name}
-            autoFocus={!isEdit}
-          />
-        </Field>
-        <Field label="Nivel" required error={errors.level?.message}>
-          <Select {...register("level")} error={!!errors.level}>
-            {LEVEL_OPTIONS.map(o => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </Select>
+        <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          <Field label="Nombre del grupo" required error={errors.name?.message}>
+            <Input
+              {...register("name")}
+              placeholder="Ej: Ballet Intermedio A"
+              error={!!errors.name}
+              autoFocus={!isEdit}
+            />
+          </Field>
+          <Field label="Nivel Inicial" required error={errors.level?.message}>
+            <Select {...register("level")} error={!!errors.level}>
+              {LEVEL_OPTIONS.map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </Select>
+          </Field>
+        </div>
+
+        <Field label="Modalidad Estratégica" error={errors.type?.message} style={{ gridColumn: "1 / -1" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <label style={{
+              border: "1.5px solid var(--color-border-secondary)", borderRadius: 10, padding: 14, cursor: "pointer",
+              background: currentType === "FIXED" ? "#f0f7ff" : "var(--color-background-primary)",
+              borderColor: currentType === "FIXED" ? "#378ADD" : "var(--color-border-secondary)"
+            }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <input type="radio" value="FIXED" {...register("type")} style={{ marginTop: 2 }} />
+                <div>
+                  <h4 style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>Estación Fija (Recomendado)</h4>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", lineHeight: 1.4 }}>El nivel del grupo NO cambia. Los alumnos avanzan mudándose (transfiriéndose) a otros grupos de mayor nivel.</p>
+                </div>
+              </div>
+            </label>
+            <label style={{
+              border: "1.5px solid var(--color-border-secondary)", borderRadius: 10, padding: 14, cursor: "pointer",
+              background: currentType === "PROGRESSIVE" ? "#f0f7ff" : "var(--color-background-primary)",
+              borderColor: currentType === "PROGRESSIVE" ? "#378ADD" : "var(--color-border-secondary)"
+            }}>
+              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                <input type="radio" value="PROGRESSIVE" {...register("type")} style={{ marginTop: 2 }} />
+                <div>
+                  <h4 style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>Generacional</h4>
+                  <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", lineHeight: 1.4 }}>Todos los alumnos avanzan juntos. El operador de Klassi subirá manualmente el nivel general de este grupo en navidad o fin de ciclo.</p>
+                </div>
+              </div>
+            </label>
+          </div>
         </Field>
       </div>
 
@@ -212,97 +249,95 @@ export function GroupForm({
         </Field>
       </div>
 
-      {/* ── Horario ──────────────────────────────────── */}
-      <SectionTitle>Horario</SectionTitle>
+      {/* ── Horario (Cuadrícula Semanal UX) ──────────── */}
+      <SectionTitle>Horario de Clases</SectionTitle>
       <div style={{
         background: "var(--color-background-secondary)",
         border: "0.5px solid var(--color-border-tertiary)",
-        borderRadius: 10, padding: 16, marginBottom: 24,
+        borderRadius: 10, padding: 20, marginBottom: 24,
       }}>
-        {fields.map((field, index) => (
-          <div key={field.id} style={{ display: "flex", gap: 8, alignItems: "flex-start", marginBottom: 10 }}>
-            <div style={{ flex: "0 0 140px" }}>
-              <select
-                {...register(`schedule.${index}.day`)}
-                style={{
-                  width: "100%", border: "0.5px solid var(--color-border-secondary)",
-                  borderRadius: 8, padding: "8px 10px", fontSize: 13,
-                  background: "var(--color-background-primary)", color: "var(--color-text-primary)",
-                  outline: "none",
-                }}
-              >
-                {DAY_OPTIONS.map(d => (
-                  <option key={d.value} value={d.value}>{d.label}</option>
-                ))}
-              </select>
-            </div>
+        <Controller
+          control={control}
+          name="schedule"
+          render={({ field }) => {
+            const handleToggleDay = (dayValue: string, isChecked: boolean) => {
+               if (isChecked) {
+                  const newSlot = { day: dayValue as any, startTime: "16:00", endTime: "17:00" };
+                  
+                  // Copiar horario del último día agregado (si existe) para acelerar data-entry
+                  if (field.value.length > 0) {
+                     const lastSlot = field.value[field.value.length - 1];
+                     newSlot.startTime = lastSlot.startTime;
+                     newSlot.endTime = lastSlot.endTime;
+                  }
+                  
+                  field.onChange([...field.value, newSlot]);
+               } else {
+                  field.onChange(field.value.filter(s => s.day !== dayValue));
+               }
+            };
 
-            <div style={{ flex: 1 }}>
-              <input
-                {...register(`schedule.${index}.startTime`)}
-                type="time"
-                style={{
-                  width: "100%", border: `0.5px solid ${errors.schedule?.[index]?.startTime ? "#fc8181" : "var(--color-border-secondary)"}`,
-                  borderRadius: 8, padding: "8px 10px", fontSize: 13,
-                  background: "var(--color-background-primary)", color: "var(--color-text-primary)",
-                  outline: "none", boxSizing: "border-box",
-                }}
-              />
-            </div>
+            const handleTimeChange = (dayValue: string, key: "startTime" | "endTime", val: string) => {
+               field.onChange(field.value.map(s => s.day === dayValue ? { ...s, [key]: val } : s));
+            };
 
-            <span style={{ fontSize: 16, color: "var(--color-text-tertiary)", paddingTop: 8, flexShrink: 0 }}>–</span>
+            return (
+               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                 {DAY_OPTIONS.map((d) => {
+                    const slot = field.value.find(s => s.day === d.value);
+                    const isChecked = !!slot;
+                    return (
+                      <div key={d.value} style={{ display: "flex", alignItems: "center", minHeight: 38 }}>
+                         {/* Checkbox y Día */}
+                         <label style={{ display: "flex", gap: 10, alignItems: "center", width: 140, cursor: "pointer", opacity: isChecked ? 1 : 0.6 }}>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => handleToggleDay(d.value, e.target.checked)}
+                              style={{ width: 16, height: 16, cursor: "pointer" }}
+                            />
+                            <span style={{ fontSize: 13, color: "var(--color-text-primary)", fontWeight: isChecked ? 600 : 400 }}>
+                              {d.label}
+                            </span>
+                         </label>
 
-            <div style={{ flex: 1 }}>
-              <input
-                {...register(`schedule.${index}.endTime`)}
-                type="time"
-                style={{
-                  width: "100%", border: `0.5px solid ${errors.schedule?.[index]?.endTime ? "#fc8181" : "var(--color-border-secondary)"}`,
-                  borderRadius: 8, padding: "8px 10px", fontSize: 13,
-                  background: "var(--color-background-primary)", color: "var(--color-text-primary)",
-                  outline: "none", boxSizing: "border-box",
-                }}
-              />
-              {errors.schedule?.[index]?.endTime && (
-                <p style={{ fontSize: 11, color: "#c53030", marginTop: 2 }}>
-                  {errors.schedule[index].endTime?.message}
-                </p>
-              )}
-            </div>
+                         {/* Entradas de Tiempo */}
+                         {isChecked && slot && (
+                            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", padding: "4px 8px", borderRadius: 8, border: "0.5px solid var(--color-border-secondary)" }}>
+                               <input
+                                 type="time"
+                                 value={slot.startTime}
+                                 onChange={(e) => handleTimeChange(d.value, "startTime", e.target.value)}
+                                 style={{ padding: "4px", fontSize: 13, outline: "none", border: "none", color: "var(--color-text-primary)" }}
+                               />
+                               <span style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>a</span>
+                               <input
+                                 type="time"
+                                 value={slot.endTime}
+                                 onChange={(e) => handleTimeChange(d.value, "endTime", e.target.value)}
+                                 style={{ padding: "4px", fontSize: 13, outline: "none", border: "none", color: "var(--color-text-primary)" }}
+                               />
+                            </div>
+                         )}
+                      </div>
+                    );
+                 })}
 
-            <button
-              type="button"
-              onClick={() => remove(index)}
-              disabled={fields.length === 1}
-              style={{
-                border: "0.5px solid var(--color-border-secondary)", borderRadius: 8,
-                padding: "8px 10px", fontSize: 13, background: "transparent",
-                color: fields.length === 1 ? "var(--color-text-tertiary)" : "#dc2626",
-                cursor: fields.length === 1 ? "not-allowed" : "pointer", flexShrink: 0,
-              }}
-            >
-              ×
-            </button>
-          </div>
-        ))}
-
-        {errors.schedule?.message && (
-          <p style={{ fontSize: 12, color: "#c53030", marginBottom: 8 }}>
-            {errors.schedule.message}
-          </p>
-        )}
-
-        <button
-          type="button"
-          onClick={() => append({ day: "MON", startTime: "", endTime: "" })}
-          style={{
-            border: "0.5px dashed var(--color-border-secondary)", borderRadius: 8,
-            padding: "7px 16px", fontSize: 13, background: "transparent",
-            color: "var(--color-text-secondary)", cursor: "pointer", width: "100%",
+                 {/* Mostrar validaciones o fallos directamente ligados a `schedule` */}
+                 {errors.schedule?.message && (
+                    <p style={{ fontSize: 12, color: "#c53030", marginTop: 8 }}>
+                      {errors.schedule.message}
+                    </p>
+                 )}
+                 {Array.isArray(errors.schedule) && errors.schedule.find(e => e?.endTime?.message) && (
+                     <p style={{ fontSize: 12, color: "#c53030", marginTop: 4 }}>
+                       Hay un error en las horas de algunos días (la hora de fin debe ser mayor a la de inicio).
+                     </p>
+                 )}
+               </div>
+            );
           }}
-        >
-          + Agregar horario
-        </button>
+        />
       </div>
 
       {/* ── Acciones ─────────────────────────────────── */}

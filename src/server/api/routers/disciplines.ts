@@ -22,6 +22,16 @@ export const disciplinesRouter = createTRPCRouter({
       })
     ),
 
+  byId: tenantProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .query(async ({ ctx, input }) => {
+      const resp = await ctx.db.discipline.findFirst({
+        where: { id: input.id, tenantId: ctx.tenantId },
+      });
+      if (!resp) throw new TRPCError({ code: "NOT_FOUND", message: "Disciplina no encontrada" });
+      return resp;
+    }),
+
   create: tenantProcedure
     .input(z.object({
       name:           z.string().min(1),

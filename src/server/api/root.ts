@@ -3,6 +3,11 @@ import { studentsRouter }    from "./routers/students";
 import { disciplinesRouter } from "./routers/disciplines";
 import { paymentsRouter }    from "./routers/payments";
 import { groupsRouter }      from "./routers/groups";
+import { instructorsRouter } from "./routers/instructors";
+import { attendanceRouter }  from "./routers/attendance";
+import { enrollmentsRouter } from "./routers/enrollments";
+import { tenantsRouter }     from "./routers/tenants";
+import { teamRouter }        from "./routers/team";
 
 /**
  * Raíz del router de tRPC.
@@ -13,9 +18,11 @@ export const appRouter = createTRPCRouter({
   disciplines: disciplinesRouter,
   payments:    paymentsRouter,
   groups:      groupsRouter,
-  // próximos:
-  // instructors:  instructorsRouter,
-  // attendance:   attendanceRouter,
+  instructors: instructorsRouter,
+  attendance:  attendanceRouter,
+  enrollments: enrollmentsRouter,
+  tenants:     tenantsRouter,
+  team:        teamRouter,
   // announcements: announcementsRouter,
   // reports:      reportsRouter,
 });

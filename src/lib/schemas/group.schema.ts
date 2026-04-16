@@ -39,6 +39,9 @@ export const groupFormSchema = z.object({
     { required_error: "Selecciona un nivel" }
   ),
 
+  type: z.enum(["FIXED", "PROGRESSIVE"], { required_error: "Selecciona el método" })
+    .default("FIXED"),
+
   capacity: z
     .number({ invalid_type_error: "Ingresa un número" })
     .int("Debe ser un número entero")
@@ -65,6 +68,7 @@ export const groupFormDefaults: GroupFormValues = {
   disciplineId: "",
   instructorId: "",
   level:        "BEGINNER",
+  type:         "FIXED",
   capacity:     20,
   room:         "",
   schedule:     [{ day: "MON", startTime: "", endTime: "" }],

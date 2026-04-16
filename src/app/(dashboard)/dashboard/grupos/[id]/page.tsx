@@ -6,6 +6,7 @@ import { formatDate } from "@/lib/utils";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 import { GroupActions } from "@/components/grupos/group-actions";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
+import { EnrollStudentModal } from "@/components/grupos/enroll-student-modal";
 import type { ScheduleSlot } from "@/lib/schemas/group.schema";
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -80,6 +81,13 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
               borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
             }}>
               {group.discipline.name}
+            </span>
+            <span style={{
+              background: group.type === "FIXED" ? "#f8fafc" : "#fdf4ff", 
+              color: group.type === "FIXED" ? "#475569" : "#a21caf",
+              borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
+            }}>
+              {group.type === "FIXED" ? "Estación Fija" : "Grupo Generacional"}
             </span>
             <GroupLevelBadge level={group.level} />
           </div>
@@ -166,6 +174,7 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
           <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>
             Alumnos inscritos <span style={{ fontSize: 12, color: "var(--color-text-secondary)", fontWeight: 400 }}>({group.enrollments.length})</span>
           </h2>
+          <EnrollStudentModal groupId={group.id} />
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>

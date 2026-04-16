@@ -28,6 +28,7 @@ const NAV_ITEMS = [
 ] as const;
 
 const CONFIG_ITEMS = [
+  { label: "Equipo",       href: "/dashboard/configuracion/equipo",      icon: Users },
   { label: "Disciplinas",  href: "/dashboard/configuracion/disciplinas", icon: Tag },
   { label: "Mi escuela",   href: "/dashboard/configuracion/escuela",     icon: Building2 },
 ] as const;
