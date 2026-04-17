@@ -138,14 +138,14 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
 
       {/* Tabla */}
       <div
-        className="r-table-scroll"
         style={{
           background: "var(--color-background-primary)",
           border: "1px solid var(--color-border-tertiary)",
           borderRadius: 12, overflow: "hidden", boxShadow: "var(--shadow-xs)",
         }}
       >
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <div className="r-table-scroll">
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 500 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "1px solid var(--color-border-tertiary)" }}>
               {["Instructor", "Contacto", "Grupos", "Biografía", "Estado", ""].map(h => (
@@ -235,6 +235,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Paginación */}

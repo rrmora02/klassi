@@ -113,47 +113,32 @@ export function AttendanceClient() {
           border: "1px solid var(--color-border-tertiary)",
           marginBottom: 20,
           display: "flex",
-          gap: 16,
+          gap: 14,
           alignItems: "flex-end",
           boxShadow: "var(--shadow-xs)",
+          flexWrap: "wrap",
         }}
       >
-         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-           <label
-             style={{
-               fontSize: 11,
-               fontWeight: 600,
-               color: "var(--color-text-tertiary)",
-               textTransform: "uppercase",
-               letterSpacing: "0.07em",
-             }}
-           >
+         <div style={{ display: "flex", flexDirection: "column", gap: 5, minWidth: 140, flex: "0 0 auto" }}>
+           <label style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
              Fecha
            </label>
            <input
              type="date"
              value={dateStr}
              onChange={e => setDateStr(e.target.value)}
-             style={{ ...inputBaseStyle, width: 160 }}
+             style={{ ...inputBaseStyle }}
              onFocus={e => { e.target.style.borderColor = "var(--input-focus-border)"; e.target.style.boxShadow = "0 0 0 3px var(--input-focus-ring)"; }}
              onBlur={e => { e.target.style.borderColor = "var(--input-border)"; e.target.style.boxShadow = "none"; }}
            />
          </div>
 
-         <div style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, maxWidth: 340 }}>
-           <label
-             style={{
-               fontSize: 11,
-               fontWeight: 600,
-               color: "var(--color-text-tertiary)",
-               textTransform: "uppercase",
-               letterSpacing: "0.07em",
-             }}
-           >
+         <div style={{ display: "flex", flexDirection: "column", gap: 5, flex: 1, minWidth: 180 }}>
+           <label style={{ fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
              Grupo a calificar
            </label>
            {loadingGroups ? (
-              <div style={{ ...inputBaseStyle, color: "var(--color-text-tertiary)" }}>Cargando grupos...</div>
+              <div style={{ ...inputBaseStyle, color: "var(--color-text-tertiary)" }}>Cargando grupos…</div>
            ) : (
               <select
                  value={groupId}
@@ -170,7 +155,7 @@ export function AttendanceClient() {
                  onFocus={e => { e.target.style.borderColor = "var(--input-focus-border)"; e.target.style.boxShadow = "0 0 0 3px var(--input-focus-ring)"; }}
                  onBlur={e => { e.target.style.borderColor = "var(--input-border)"; e.target.style.boxShadow = "none"; }}
               >
-                 <option value="">Seleccione un grupo...</option>
+                 <option value="">Seleccione un grupo…</option>
                  {groups?.map(g => (
                     <option key={g.id} value={g.id}>{g.name}</option>
                  ))}
@@ -220,79 +205,37 @@ export function AttendanceClient() {
              boxShadow: "var(--shadow-xs)",
            }}
          >
-             <table style={{ width: "100%", borderCollapse: "collapse" }}>
+             <table className="attend-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                <thead>
-                 <tr
-                   style={{
-                     background: "var(--color-background-secondary)",
-                     borderBottom: "1px solid var(--color-border-tertiary)",
-                   }}
-                 >
-                   <th
-                     style={{
-                       padding: "12px 20px",
-                       textAlign: "left",
-                       fontSize: 11,
-                       fontWeight: 600,
-                       color: "var(--color-text-tertiary)",
-                       textTransform: "uppercase",
-                       letterSpacing: "0.07em",
-                     }}
-                   >
+                 <tr style={{ background: "var(--color-background-secondary)", borderBottom: "1px solid var(--color-border-tertiary)" }}>
+                   <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
                      Alumno
                    </th>
-                   <th
-                     style={{
-                       padding: "12px 20px",
-                       textAlign: "right",
-                       fontSize: 11,
-                       fontWeight: 600,
-                       color: "var(--color-text-tertiary)",
-                       textTransform: "uppercase",
-                       letterSpacing: "0.07em",
-                     }}
-                   >
-                     Estado para esta clase
+                   <th style={{ padding: "12px 20px", textAlign: "right", fontSize: 11, fontWeight: 600, color: "var(--color-text-tertiary)", textTransform: "uppercase", letterSpacing: "0.07em" }}>
+                     Estado
                    </th>
                  </tr>
                </thead>
                <tbody>
                   {rosterData.enrollments.length === 0 && (
                      <tr>
-                       <td
-                         colSpan={2}
-                         style={{
-                           textAlign: "center",
-                           padding: 48,
-                           color: "var(--color-text-tertiary)",
-                           fontSize: 13,
-                         }}
-                       >
-                         No hay alumnos inscritos en este grupo de momento.
+                       <td colSpan={2} style={{ textAlign: "center", padding: 48, color: "var(--color-text-tertiary)", fontSize: 13 }}>
+                         No hay alumnos inscritos en este grupo.
                        </td>
                      </tr>
                   )}
                   {rosterData.enrollments.map((enr) => (
-                    <tr
-                      key={enr.enrollmentId}
-                      style={{ borderBottom: "1px solid var(--color-border-tertiary)" }}
-                    >
-                       <td style={{ padding: "13px 20px" }}>
-                          <span
-                            style={{
-                              fontSize: 14,
-                              fontWeight: 500,
-                              color: "var(--color-text-primary)",
-                            }}
-                          >
+                    <tr key={enr.enrollmentId} style={{ borderBottom: "1px solid var(--color-border-tertiary)" }}>
+                       <td style={{ padding: "12px 20px" }}>
+                          <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }}>
                             {enr.student.lastName} {enr.student.firstName}
                           </span>
                        </td>
-                       <td style={{ padding: "13px 20px", textAlign: "right" }}>
+                       <td style={{ padding: "12px 20px", textAlign: "right" }}>
                            <div style={{ display: "flex", gap: 6, justifyContent: "flex-end" }}>
-                              <StatusButton enrId={enr.enrollmentId} val="PRESENT" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} val="ABSENT" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} val="LATE" currentStatus={enr.attendance?.status} />
+                              <StatusButton enrId={enr.enrollmentId} val="PRESENT"   currentStatus={enr.attendance?.status} />
+                              <StatusButton enrId={enr.enrollmentId} val="ABSENT"    currentStatus={enr.attendance?.status} />
+                              <StatusButton enrId={enr.enrollmentId} val="LATE"      currentStatus={enr.attendance?.status} />
                               <StatusButton enrId={enr.enrollmentId} val="JUSTIFIED" currentStatus={enr.attendance?.status} />
                            </div>
                        </td>

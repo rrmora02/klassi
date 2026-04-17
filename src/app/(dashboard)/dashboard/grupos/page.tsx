@@ -252,7 +252,6 @@ export default async function GruposPage({ searchParams }: PageProps) {
 
       {/* Tabla */}
       <div
-        className="r-table-scroll"
         style={{
           background: "var(--color-background-primary)",
           border: "1px solid var(--color-border-tertiary)",
@@ -261,7 +260,8 @@ export default async function GruposPage({ searchParams }: PageProps) {
           boxShadow: "var(--shadow-xs)",
         }}
       >
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <div className="r-table-scroll">
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, minWidth: 600 }}>
           <thead>
             <tr
               style={{
@@ -423,6 +423,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Paginación */}

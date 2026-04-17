@@ -145,3 +145,21 @@ a {
 @media (max-width: 768px) {
   .r-hide-sm  { display: none !important; }
 }
+
+/* ─── Attendance card layout on mobile ──────────────────────────── */
+@media (max-width: 640px) {
+  table.attend-table thead { display: none; }
+  table.attend-table tbody tr {
+    display: flex;
+    flex-direction: column;
+    border-bottom: 1px solid var(--color-border-tertiary);
+  }
+  table.attend-table tbody tr td {
+    display: block;
+    border: none !important;
+    padding: 4px 16px !important;
+  }
+  table.attend-table tbody tr td:first-child { padding-top: 14px !important; }
+  table.attend-table tbody tr td:last-child  { padding-bottom: 14px !important; text-align: left !important; }
+  table.attend-table tbody tr td:last-child > div { justify-content: flex-start !important; flex-wrap: wrap; }
+}
