@@ -29,7 +29,7 @@ export async function TopBar() {
 
   return (
     <header
-      className="flex items-center justify-between px-6"
+      className="flex items-center justify-between px-4 md:px-6"
       style={{
         height: 64,
         background: "#ffffff",
