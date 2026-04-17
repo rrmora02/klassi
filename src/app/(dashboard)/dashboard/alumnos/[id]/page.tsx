@@ -85,6 +85,8 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           display: "flex",
           alignItems: "flex-start",
           justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
           marginBottom: 24,
           background: "#fff",
           borderRadius: 14,
@@ -144,7 +146,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+      <div className="r-grid-4" style={{ gap: 12, marginBottom: 20 }}>
         {[
           { label: "Disciplinas activas", value: String(activeEnrollments.length), alert: false },
           {
@@ -175,7 +177,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="r-grid-2" style={{ gap: 16 }}>
 
         {/* Datos personales */}
         <div

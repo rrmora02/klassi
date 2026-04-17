@@ -252,6 +252,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
 
       {/* Tabla */}
       <div
+        className="r-table-scroll"
         style={{
           background: "var(--color-background-primary)",
           border: "1px solid var(--color-border-tertiary)",
@@ -268,21 +269,14 @@ export default async function GruposPage({ searchParams }: PageProps) {
                 borderBottom: "1px solid var(--color-border-tertiary)",
               }}
             >
-              {["Grupo", "Disciplina", "Instructor", "Nivel", "Horario", "Alumnos", "Estado", ""].map((h) => (
-                <th
-                  key={h}
-                  style={{
-                    padding: "11px 14px",
-                    textAlign: "left",
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.07em",
-                    color: "var(--color-text-tertiary)",
-                  }}
-                >
-                  {h}
-                </th>
+              {(["Grupo", "Disciplina"] as const).map(h => (
+                <th key={h} style={{ padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--color-text-tertiary)" }}>{h}</th>
+              ))}
+              <th className="r-hide-sm" style={{ padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--color-text-tertiary)" }}>Instructor</th>
+              <th className="r-hide-sm" style={{ padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--color-text-tertiary)" }}>Nivel</th>
+              <th className="r-hide-xs" style={{ padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--color-text-tertiary)" }}>Horario</th>
+              {(["Alumnos", "Estado", ""] as const).map(h => (
+                <th key={h} style={{ padding: "11px 14px", textAlign: "left", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--color-text-tertiary)" }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -332,15 +326,16 @@ export default async function GruposPage({ searchParams }: PageProps) {
                       {g.discipline.name}
                     </span>
                   </td>
-                  <td style={{ padding: "12px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>
+                  <td className="r-hide-sm" style={{ padding: "12px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>
                     {g.instructor?.user.name ?? (
                       <span style={{ color: "var(--color-text-tertiary)" }}>—</span>
                     )}
                   </td>
-                  <td style={{ padding: "12px 14px" }}>
+                  <td className="r-hide-sm" style={{ padding: "12px 14px" }}>
                     <GroupLevelBadge level={g.level} />
                   </td>
                   <td
+                    className="r-hide-xs"
                     style={{
                       padding: "12px 14px",
                       color: "var(--color-text-secondary)",

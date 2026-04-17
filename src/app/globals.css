@@ -127,3 +127,21 @@ input[type="radio"] {
 a {
   transition: color 0.15s ease, opacity 0.15s ease;
 }
+
+/* ─── Responsive Layout Helpers ─────────────────────────────────── */
+.r-grid-2   { display: grid; grid-template-columns: 1fr 1fr; }
+.r-grid-4   { display: grid; grid-template-columns: repeat(4, 1fr); }
+.r-grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; }
+.r-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 640px) {
+  .r-grid-2   { grid-template-columns: 1fr; }
+  .r-grid-4   { grid-template-columns: 1fr 1fr; }
+  .r-grid-1-2 { grid-template-columns: 1fr; }
+  .r-hide-xs  { display: none !important; }
+  .r-modal-xs { width: calc(100vw - 32px) !important; max-width: 480px !important; }
+}
+
+@media (max-width: 768px) {
+  .r-hide-sm  { display: none !important; }
+}

@@ -18,14 +18,14 @@ export default async function EscuelaConfigPage() {
   if (!tenant) notFound();
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto", paddingBottom: 40 }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", paddingBottom: 40 }}>
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: "0 0 6px" }}>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--color-text-primary)", letterSpacing: "-0.02em", margin: "0 0 6px" }}>
           Mi Escuela
         </h1>
-        <p style={{ margin: 0, fontSize: 14, color: "var(--color-text-secondary)" }}>
-          Configura los detalles de identidad y contacto para los recibos, portal y notificaciones.
+        <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)" }}>
+          Configura los detalles de identidad y contacto para recibos, portal y notificaciones.
         </p>
       </div>
 

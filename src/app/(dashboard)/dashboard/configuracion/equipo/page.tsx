@@ -15,17 +15,15 @@ export default async function EquipoPage() {
   if (!tenant) notFound();
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", paddingBottom: 40 }}>
+    <div style={{ maxWidth: 880, margin: "0 auto", paddingBottom: 40 }}>
       {/* Header */}
-      <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: "0 0 6px" }}>
-            Equipo de Trabajo
-          </h1>
-          <p style={{ margin: 0, fontSize: 14, color: "var(--color-text-secondary)" }}>
-            Administra los roles, recepcionistas e instructores que tienen acceso a tu plataforma.
-          </p>
-        </div>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--color-text-primary)", letterSpacing: "-0.02em", margin: "0 0 6px" }}>
+          Equipo de Trabajo
+        </h1>
+        <p style={{ margin: 0, fontSize: 13, color: "var(--color-text-secondary)" }}>
+          Administra los roles, recepcionistas e instructores que tienen acceso a tu plataforma.
+        </p>
       </div>
 
       {/* Interfaz Cliente (Listas y Modales de Inivitacion) */}

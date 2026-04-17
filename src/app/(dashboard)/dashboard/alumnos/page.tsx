@@ -208,6 +208,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
 
       {/* Tabla */}
       <div
+        className="r-table-scroll"
         style={{
           background: "var(--color-background-primary)",
           border: "1px solid var(--color-border-tertiary)",
@@ -224,22 +225,17 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                 borderBottom: "1px solid var(--color-border-tertiary)",
               }}
             >
-              {["Alumno", "Edad", "Disciplinas", "Contacto", "Estado", ""].map(h => (
-                <th
-                  key={h}
-                  style={{
-                    padding: "11px 14px",
-                    textAlign: "left",
-                    fontSize: 11,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.07em",
-                    color: "var(--color-text-tertiary)",
-                  }}
-                >
-                  {h}
-                </th>
-              ))}
+              {(() => {
+                const thBase = { padding: "11px 14px", textAlign: "left" as const, fontSize: 11, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.07em", color: "var(--color-text-tertiary)" };
+                return (<>
+                  <th style={thBase}>Alumno</th>
+                  <th className="r-hide-xs" style={thBase}>Edad</th>
+                  <th style={thBase}>Disciplinas</th>
+                  <th className="r-hide-sm" style={thBase}>Contacto</th>
+                  <th style={thBase}>Estado</th>
+                  <th style={thBase}></th>
+                </>);
+              })()}
             </tr>
           </thead>
           <tbody>
@@ -298,7 +294,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                     </div>
                   </div>
                 </td>
-                <td style={{ padding: "12px 14px", color: "var(--color-text-secondary)" }}>
+                <td className="r-hide-xs" style={{ padding: "12px 14px", color: "var(--color-text-secondary)" }}>
                   {calcAge(s.birthDate) ?? "—"}
                 </td>
                 <td style={{ padding: "12px 14px" }}>
@@ -324,7 +320,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                     ))}
                   </div>
                 </td>
-                <td style={{ padding: "12px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>
+                <td className="r-hide-sm" style={{ padding: "12px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>
                   {s.phone ?? s.email ?? "—"}
                 </td>
                 <td style={{ padding: "12px 14px" }}>
