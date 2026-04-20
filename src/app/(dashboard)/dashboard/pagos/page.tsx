@@ -48,7 +48,7 @@ export default async function PagosPage({ searchParams }: PageProps) {
     }),
   };
 
-  const [payments, total, summary, students, counts] = await Promise.all([
+  const [payments, total, summary, students, statusCounts] = await Promise.all([
     db.payment.findMany({
       where, skip: (page - 1) * pageSize, take: pageSize,
       orderBy: [{ status: "asc" }, { dueDate: "desc" }],
@@ -61,12 +61,23 @@ export default async function PagosPage({ searchParams }: PageProps) {
       db.payment.aggregate({ where: { tenantId: tenant.id, status: "OVERDUE"                                              }, _sum: { amount: true }, _count: true }),
     ]),
     db.student.findMany({ where: { tenantId: tenant.id, status: "ACTIVE" }, select: { id: true, firstName: true, lastName: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }] }),
-    db.payment.groupBy({ by: ["status"], where: { tenantId: tenant.id }, _count: true }),
+    Promise.all([
+      db.payment.count({ where: { tenantId: tenant.id, status: "PENDING"   } }),
+      db.payment.count({ where: { tenantId: tenant.id, status: "PAID"      } }),
+      db.payment.count({ where: { tenantId: tenant.id, status: "OVERDUE"   } }),
+      db.payment.count({ where: { tenantId: tenant.id, status: "CANCELLED" } }),
+    ]),
   ]);
 
   const [paid, pending, overdue] = summary;
-  const countMap = Object.fromEntries(counts.map(c => [c.status, c._count]));
-  const pages    = Math.ceil(total / pageSize);
+  const [cntPending, cntPaid, cntOverdue, cntCancelled] = statusCounts;
+  const countMap: Record<string, number> = {
+    PENDING:   cntPending,
+    PAID:      cntPaid,
+    OVERDUE:   cntOverdue,
+    CANCELLED: cntCancelled,
+  };
+  const pages = Math.ceil(total / pageSize);
 
   function buildUrl(params: Record<string, string | undefined>) {
     const sp = new URLSearchParams();
