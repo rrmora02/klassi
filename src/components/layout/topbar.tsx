@@ -2,6 +2,7 @@ import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { TenantSwitcher } from "./tenant-switcher";
+import { ThemeToggle } from "./theme-toggle";
 
 export async function TopBar() {
   const { userId } = await auth();
@@ -28,11 +29,14 @@ export async function TopBar() {
   }
 
   return (
-    <div className="flex h-16 flex-1 items-center justify-between bg-white px-4 md:px-6">
+    <div className="flex h-16 flex-1 items-center justify-between bg-white dark:bg-gray-900 px-4 md:px-6">
       <div className="flex items-center gap-3">
         {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} />}
       </div>
-      <UserButton afterSignOutUrl="/" />
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <UserButton afterSignOutUrl="/" />
+      </div>
     </div>
   );
 }

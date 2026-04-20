@@ -20,6 +20,20 @@
   --border-radius-lg:         0.75rem;
 }
 
+.dark {
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --border: 217 33% 17%;
+
+  --color-text-primary:         #f9fafb;  /* gray-50   */
+  --color-text-secondary:       #9ca3af;  /* gray-400  */
+  --color-text-tertiary:        #6b7280;  /* gray-500  */
+  --color-background-primary:   #1f2937;  /* gray-800  */
+  --color-background-secondary: #111827;  /* gray-900  */
+  --color-border-secondary:     #374151;  /* gray-700  */
+  --color-border-tertiary:      #1f2937;  /* gray-800  */
+}
+
 /* ─── Base ─────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;

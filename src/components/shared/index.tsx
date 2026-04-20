@@ -15,15 +15,15 @@ export function StatCard({ label, value, hint, alert, className }: StatCardProps
     <div
       className={cn(
         "rounded-xl border p-5",
-        alert ? "border-red-200 bg-red-50" : "border-gray-200 bg-white",
+        alert ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900",
         className
       )}
     >
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className={cn("mt-1 text-3xl font-semibold", alert ? "text-red-700" : "text-gray-900")}>
+      <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
+      <p className={cn("mt-1 text-3xl font-semibold", alert ? "text-red-700 dark:text-red-400" : "text-gray-900 dark:text-gray-100")}>
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{hint}</p>}
     </div>
   );
 }
@@ -40,8 +40,8 @@ export function PageHeader({ title, subtitle, action }: PageHeaderProps) {
   return (
     <div className="mb-6 flex items-start justify-between">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-gray-500">{subtitle}</p>}
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
       </div>
       {action && <div>{action}</div>}
     </div>
@@ -81,9 +81,9 @@ interface EmptyStateProps {
 
 export function EmptyState({ title, message, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white py-16">
-      <p className="font-medium text-gray-600">{title}</p>
-      <p className="mt-1 text-sm text-gray-400">{message}</p>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 py-16">
+      <p className="font-medium text-gray-600 dark:text-gray-300">{title}</p>
+      <p className="mt-1 text-sm text-gray-400 dark:text-gray-500">{message}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
