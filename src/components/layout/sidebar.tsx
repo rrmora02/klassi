@@ -37,7 +37,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <div className="flex w-60 flex-col border-r border-gray-200 bg-white">
+    <div className="flex h-full w-full flex-col border-r border-gray-200 bg-white md:w-60">
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-gray-200 px-6">
         <span className="text-xl font-semibold text-violet-900">Klassi</span>

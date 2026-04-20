@@ -28,11 +28,11 @@ export async function TopBar() {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
+    <div className="flex h-16 flex-1 items-center justify-between bg-white px-4 md:px-6">
       <div className="flex items-center gap-3">
         {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} />}
       </div>
       <UserButton afterSignOutUrl="/" />
-    </header>
+    </div>
   );
 }

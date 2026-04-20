@@ -2,10 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Variables ────────────────────────────────────────────────── */
+:root {
+  /* Tailwind theme tokens */
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+
+  /* App color tokens */
+  --color-text-primary:       #111827;  /* gray-900  */
+  --color-text-secondary:     #6b7280;  /* gray-500  */
+  --color-text-tertiary:      #9ca3af;  /* gray-400  */
+  --color-background-primary: #ffffff;  /* white     */
+  --color-background-secondary: #f9fafb; /* gray-50  */
+  --color-border-secondary:   #e5e7eb;  /* gray-200  */
+  --color-border-tertiary:    #f3f4f6;  /* gray-100  */
+  --border-radius-lg:         0.75rem;
+}
+
+/* ─── Base ─────────────────────────────────────────────────────────── */
 * {
-  @apply border-border;
+  box-sizing: border-box;
+  border-color: hsl(var(--border));
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  @apply bg-background text-foreground;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: inherit;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ─── Focus rings ───────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+
+/* ─── Responsive helpers ────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Ensure main content padding is smaller on mobile */
+  .dashboard-main {
+    padding: 1rem;
+  }
 }
