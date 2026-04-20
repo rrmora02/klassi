@@ -80,9 +80,9 @@ export default async function ReportesPage() {
   const attRate  = attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : 0;
 
   return (
-    <div style={{ maxWidth: 1100 }}>
+    <div className="w-full space-y-6">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
+      <div>
         <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Reportes</h1>
         <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>
           Año {year} — {MONTHS[month]} {year}
@@ -90,7 +90,7 @@ export default async function ReportesPage() {
       </div>
 
       {/* KPI cards superiores */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 28 }}>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           { label: "Ingresos del mes",   value: formatCurrency(paidMonth._sum.amount ?? 0), sub: `${paidMonth._count} cobros`, color: "#15803d" },
           { label: "Ingresos del año",   value: formatCurrency(yearTotal), sub: `Año ${year}`, color: "#7c3aed" },
@@ -106,7 +106,7 @@ export default async function ReportesPage() {
       </div>
 
       {/* Gráfico de barras: ingresos por mes */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "20px 24px", marginBottom: 24 }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "20px 24px" }}>
         <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 20px" }}>
           Ingresos mensuales — {year}
         </h2>
@@ -138,7 +138,7 @@ export default async function ReportesPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
 
         {/* Alumnos por disciplina */}
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "20px 24px" }}>
