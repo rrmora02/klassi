@@ -44,7 +44,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-60 flex-col border-r border-gray-200 bg-white">
+    <div className="flex w-60 flex-col border-r border-gray-200 bg-white">
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-gray-200 px-6">
         <span className="text-xl font-semibold text-violet-900">Klassi</span>
@@ -96,6 +96,6 @@ export function Sidebar() {
           })}
         </div>
       </nav>
-    </aside>
+    </div>
   );
 }
