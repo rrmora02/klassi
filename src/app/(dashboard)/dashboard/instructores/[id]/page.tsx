@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 
 interface PageProps {
   params: { id: string };
@@ -132,7 +133,9 @@ export default async function InstructorDetailPage({ params }: PageProps) {
                         {g._count.enrollments} / {g.capacity}
                       </td>
                       <td style={{ padding: "12px 20px", textAlign: "right" }}>
-                        <Link href={`/dashboard/grupos/${g.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Ver grupo →</Link>
+                        <Link href={`/dashboard/grupos/${g.id}`} className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100 hover:border-violet-300 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900">
+                          Ver grupo <ArrowRight className="h-3 w-3" />
+                        </Link>
                       </td>
                     </tr>
                   ))}

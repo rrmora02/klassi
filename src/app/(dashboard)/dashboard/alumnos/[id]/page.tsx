@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { fullName, formatDate, calcAge, formatCurrency } from "@/lib/utils";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 import { StudentActions } from "@/components/alumnos/student-actions";
@@ -181,7 +182,9 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Últimos pagos</h2>
-            <Link href={`/dashboard/pagos?student=${student.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Ver todos</Link>
+            <Link href={`/dashboard/pagos?student=${student.id}`} className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100 hover:border-violet-300 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900">
+              Ver todos <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
           {student.payments.length === 0 && (
             <p style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>Sin pagos registrados</p>

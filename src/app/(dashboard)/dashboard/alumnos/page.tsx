@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { fullName, calcAge } from "@/lib/utils";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 
 interface PageProps {
@@ -141,7 +142,9 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                 <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>{s.phone ?? s.email ?? "—"}</td>
                 <td style={{ padding: "11px 14px" }}><StudentStatusBadge status={s.status} /></td>
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${s.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none", display: "inline-flex", alignItems: "center", minHeight: 32 }}>Ver →</Link>
+                  <Link href={`/dashboard/alumnos/${s.id}`} className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100 hover:border-violet-300 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900">
+                    Ver <ArrowRight className="h-3 w-3" />
+                  </Link>
                 </td>
               </tr>
             ))}

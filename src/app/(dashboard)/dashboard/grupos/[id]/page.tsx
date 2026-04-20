@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 import { GroupActions } from "@/components/grupos/group-actions";
@@ -211,8 +212,8 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
                   {formatDate(e.startDate)}
                 </td>
                 <td style={{ padding: "10px 16px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${e.student.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>
-                    Ver →
+                  <Link href={`/dashboard/alumnos/${e.student.id}`} className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100 hover:border-violet-300 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900">
+                    Ver <ArrowRight className="h-3 w-3" />
                   </Link>
                 </td>
               </tr>
