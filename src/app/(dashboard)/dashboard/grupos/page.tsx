@@ -178,8 +178,8 @@ export default async function GruposPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
+        <table style={{ width: "100%", minWidth: 800, borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Grupo", "Disciplina", "Instructor", "Nivel", "Horario", "Alumnos", "Estado", ""].map((h) => (
@@ -251,7 +251,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
                     </span>
                   </td>
                   <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                    <Link href={`/dashboard/grupos/${g.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>
+                    <Link href={`/dashboard/grupos/${g.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none", display: "inline-flex", alignItems: "center", minHeight: 32 }}>
                       Ver →
                     </Link>
                   </td>

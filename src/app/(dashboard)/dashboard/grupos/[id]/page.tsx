@@ -169,14 +169,14 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
       </div>
 
       {/* Alumnos inscritos */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
           <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>
             Alumnos inscritos <span style={{ fontSize: 12, color: "var(--color-text-secondary)", fontWeight: 400 }}>({group.enrollments.length})</span>
           </h2>
           <EnrollStudentModal groupId={group.id} />
         </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Alumno", "Estado", "Inscripción", ""].map((h) => (

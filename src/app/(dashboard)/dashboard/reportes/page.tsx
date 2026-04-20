@@ -234,7 +234,8 @@ export default async function ReportesPage() {
           <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px" }}>
             Resumen por mes — {year}
           </h2>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", minWidth: 400, borderCollapse: "collapse", fontSize: 13 }}>
             <thead>
               <tr>
                 {["Mes", "Ingresos", "Pagos"].map(h => (
@@ -258,6 +259,7 @@ export default async function ReportesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
       </div>

@@ -103,8 +103,8 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
+        <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Alumno", "Edad", "Disciplinas", "Contacto", "Estado", ""].map(h => (
@@ -141,7 +141,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                 <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>{s.phone ?? s.email ?? "—"}</td>
                 <td style={{ padding: "11px 14px" }}><StudentStatusBadge status={s.status} /></td>
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${s.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Ver →</Link>
+                  <Link href={`/dashboard/alumnos/${s.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none", display: "inline-flex", alignItems: "center", minHeight: 32 }}>Ver →</Link>
                 </td>
               </tr>
             ))}

@@ -94,8 +94,8 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabla */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
+        <table style={{ width: "100%", minWidth: 680, borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Instructor", "Contacto", "Grupos", "Biografía", "Estado", ""].map(h => (
@@ -147,7 +147,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
                 </td>
 
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/instructores/${inst.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Ver →</Link>
+                  <Link href={`/dashboard/instructores/${inst.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none", display: "inline-flex", alignItems: "center", minHeight: 32 }}>Ver →</Link>
                 </td>
               </tr>
             ))}

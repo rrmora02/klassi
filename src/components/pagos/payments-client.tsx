@@ -46,8 +46,8 @@ export function PaymentsClient({ payments, students }: Props) {
         + Nuevo pago
       </button>
 
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden", marginTop: 16 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto", marginTop: 16 }}>
+        <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Alumno", "Concepto", "Monto", "Método", "Vencimiento", "Estado", ""].map(h => (
@@ -89,7 +89,7 @@ export function PaymentsClient({ payments, students }: Props) {
                   {(p.status === "PENDING" || p.status === "OVERDUE") && (
                     <button
                       onClick={() => setMarkingId(p.id)}
-                      style={{ fontSize: 12, color: "#5b21b6", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}
+                      style={{ fontSize: 12, color: "#5b21b6", background: "none", border: "none", cursor: "pointer", fontWeight: 500, display: "inline-flex", alignItems: "center", minHeight: 32 }}
                     >
                       Marcar pagado
                     </button>
