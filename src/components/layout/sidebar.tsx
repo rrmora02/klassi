@@ -14,9 +14,16 @@ import {
   Bell,
   Tag,
   Building2,
+  type LucideIcon,
 } from "lucide-react";
 
-const NAV_ITEMS = [
+interface NavItem {
+  label: string;
+  href:  string;
+  icon:  LucideIcon;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { label: "Inicio",       href: "/dashboard",                          icon: LayoutDashboard },
   { label: "Alumnos",      href: "/dashboard/alumnos",                  icon: Users },
   { label: "Instructores", href: "/dashboard/instructores",             icon: UserCheck },
@@ -25,13 +32,13 @@ const NAV_ITEMS = [
   { label: "Pagos",        href: "/dashboard/pagos",                    icon: CreditCard },
   { label: "Reportes",     href: "/dashboard/reportes",                 icon: BarChart2 },
   { label: "Comunicados",  href: "/dashboard/comunicados",              icon: Bell },
-] as const;
+];
 
-const CONFIG_ITEMS = [
+const CONFIG_ITEMS: NavItem[] = [
   { label: "Equipo",       href: "/dashboard/configuracion/equipo",      icon: Users },
   { label: "Disciplinas",  href: "/dashboard/configuracion/disciplinas", icon: Tag },
   { label: "Mi escuela",   href: "/dashboard/configuracion/escuela",     icon: Building2 },
-] as const;
+];
 
 export function Sidebar() {
   const pathname = usePathname();
