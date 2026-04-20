@@ -3,7 +3,7 @@ import { db } from "@/server/db";
 import { formatDate } from "@/lib/utils";
 import { AnnouncementActions } from "@/components/comunicados/announcement-actions";
 import Link from "next/link";
-import { Bell, Users, BookOpen } from "lucide-react";
+import { Bell, Users, BookOpen, User } from "lucide-react";
 
 interface PageProps {
   searchParams: { page?: string };
@@ -113,6 +113,8 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
                       <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
                         {a.targetAll ? (
                           <><Users size={11} /> Todos los alumnos</>
+                        ) : targets.length === 1 && targets[0]?.startsWith("student:") ? (
+                          <><User size={11} /> Alumno específico</>
                         ) : (
                           <><BookOpen size={11} /> {targets.length} {targets.length === 1 ? "grupo" : "grupos"}</>
                         )}

@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { StudentSearchPicker, type StudentOption } from "@/components/shared/student-search-picker";
+import { User } from "lucide-react";
 
 const schema = z.object({
   title: z.string().min(1, "El título es requerido"),
@@ -14,24 +16,30 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+type TargetMode = "all" | "groups" | "student";
+
 interface Group { id: string; name: string; discipline: { name: string } }
 
 interface Props {
-  groups: Group[];
+  groups:   Group[];
+  students: StudentOption[];
 }
 
-const inputStyle = {
+const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 8,
   border: "1px solid var(--color-border-secondary)", fontSize: 14,
-  outline: "none", boxSizing: "border-box" as const,
+  outline: "none", boxSizing: "border-box",
   background: "var(--color-background-primary)", color: "var(--color-text-primary)",
 };
 
-export function AnnouncementForm({ groups }: Props) {
-  const router   = useRouter();
-  const create   = api.announcements.create.useMutation();
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [targetAll, setTargetAll]           = useState(true);
+export function AnnouncementForm({ groups, students }: Props) {
+  const router  = useRouter();
+  const create  = api.announcements.create.useMutation();
+
+  const [targetMode,      setTargetMode]      = useState<TargetMode>("all");
+  const [selectedGroups,  setSelectedGroups]  = useState<string[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
+  const [studentError,    setStudentError]    = useState("");
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -41,13 +49,25 @@ export function AnnouncementForm({ groups }: Props) {
     setSelectedGroups(prev => prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]);
 
   const onSubmit = async (data: FormValues) => {
+    if (targetMode === "student" && !selectedStudent) {
+      setStudentError("Selecciona un alumno");
+      return;
+    }
+    setStudentError("");
+
+    let targetAll    = false;
+    let targetGroups: string[] = [];
+
+    if (targetMode === "all") {
+      targetAll = true;
+    } else if (targetMode === "groups") {
+      targetGroups = selectedGroups;
+    } else {
+      targetGroups = [`student:${selectedStudent!.id}`];
+    }
+
     try {
-      await create.mutateAsync({
-        title:        data.title,
-        body:         data.body,
-        targetAll,
-        targetGroups: targetAll ? [] : selectedGroups,
-      });
+      await create.mutateAsync({ title: data.title, body: data.body, targetAll, targetGroups });
       router.push("/dashboard/comunicados");
       router.refresh();
     } catch (err: any) {
@@ -75,20 +95,36 @@ export function AnnouncementForm({ groups }: Props) {
         {errors.body && <p style={{ color: "#b91c1c", fontSize: 11, marginTop: 4 }}>{errors.body.message}</p>}
       </div>
 
+      {/* Destinatarios */}
       <div>
-        <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 10 }}>Destinatarios</label>
+        <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 10 }}>
+          Destinatarios
+        </label>
+
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <input type="radio" name="targetAll" checked={targetAll} onChange={() => setTargetAll(true)} style={{ accentColor: "#1e3a5f" }} />
-            <span style={{ fontSize: 13, color: "var(--color-text-primary)" }}>Todos los alumnos y familias</span>
-          </label>
-          <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
-            <input type="radio" name="targetAll" checked={!targetAll} onChange={() => setTargetAll(false)} style={{ accentColor: "#1e3a5f" }} />
-            <span style={{ fontSize: 13, color: "var(--color-text-primary)" }}>Grupos específicos</span>
-          </label>
+          {(["all", "groups", "student"] as TargetMode[]).map(mode => {
+            const labels: Record<TargetMode, string> = {
+              all:     "Todos los alumnos y familias",
+              groups:  "Grupos específicos",
+              student: "Alumno / tutor específico",
+            };
+            return (
+              <label key={mode} style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                <input
+                  type="radio"
+                  name="targetMode"
+                  checked={targetMode === mode}
+                  onChange={() => { setTargetMode(mode); setStudentError(""); }}
+                  style={{ accentColor: "#1e3a5f" }}
+                />
+                <span style={{ fontSize: 13, color: "var(--color-text-primary)" }}>{labels[mode]}</span>
+              </label>
+            );
+          })}
         </div>
 
-        {!targetAll && groups.length > 0 && (
+        {/* Selector de grupos */}
+        {targetMode === "groups" && groups.length > 0 && (
           <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 8 }}>
             {groups.map(g => {
               const sel = selectedGroups.includes(g.id);
@@ -109,6 +145,24 @@ export function AnnouncementForm({ groups }: Props) {
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {/* Buscador de alumno */}
+        {targetMode === "student" && (
+          <div style={{ marginTop: 12 }}>
+            <StudentSearchPicker
+              students={students}
+              value={selectedStudent}
+              onChange={s => { setSelectedStudent(s); setStudentError(""); }}
+              placeholder="Buscar alumno por nombre..."
+              error={studentError}
+            />
+            {selectedStudent && (
+              <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
+                <User size={11} /> El comunicado se enviará a {selectedStudent.firstName} y sus tutores registrados.
+              </p>
+            )}
           </div>
         )}
       </div>

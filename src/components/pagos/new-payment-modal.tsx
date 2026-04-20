@@ -7,21 +7,19 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import type { PaymentMethod } from "@prisma/client";
+import { StudentSearchPicker, type StudentOption } from "@/components/shared/student-search-picker";
 
 const schema = z.object({
-  studentId: z.string().min(1, "Selecciona un alumno"),
-  concept:   z.string().min(1, "Escribe el concepto"),
-  amount:    z.number({ invalid_type_error: "Ingresa un monto" }).positive("Debe ser mayor a 0"),
-  method:    z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"] as [PaymentMethod, ...PaymentMethod[]]),
-  dueDate:   z.string().optional(),
+  concept: z.string().min(1, "Escribe el concepto"),
+  amount:  z.number({ invalid_type_error: "Ingresa un monto" }).positive("Debe ser mayor a 0"),
+  method:  z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"] as [PaymentMethod, ...PaymentMethod[]]),
+  dueDate: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-interface Student { id: string; firstName: string; lastName: string; }
-
 interface Props {
-  students: Student[];
+  students: StudentOption[];
   onClose:  () => void;
 }
 
@@ -29,15 +27,18 @@ const METHOD_LABELS: Record<string, string> = {
   CASH: "Efectivo", TRANSFER: "Transferencia", CARD: "Tarjeta", OXXO: "OXXO", SPEI: "SPEI",
 };
 
-const inputStyle = {
+const inputStyle: React.CSSProperties = {
   width: "100%", padding: "9px 12px", borderRadius: 8,
   border: "1px solid var(--color-border-secondary)", fontSize: 14,
-  outline: "none", boxSizing: "border-box" as const,
+  outline: "none", boxSizing: "border-box",
 };
 
 export function NewPaymentModal({ students, onClose }: Props) {
   const router  = useRouter();
   const create  = api.payments.create.useMutation();
+
+  const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
+  const [studentError,    setStudentError]    = useState("");
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -45,8 +46,13 @@ export function NewPaymentModal({ students, onClose }: Props) {
   });
 
   const onSubmit = async (data: FormValues) => {
+    if (!selectedStudent) {
+      setStudentError("Selecciona un alumno");
+      return;
+    }
+    setStudentError("");
     await create.mutateAsync({
-      studentId: data.studentId,
+      studentId: selectedStudent.id,
       concept:   data.concept,
       amount:    Math.round(data.amount * 100),
       method:    data.method,
@@ -67,15 +73,16 @@ export function NewPaymentModal({ students, onClose }: Props) {
         </h2>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
           <div>
             <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>Alumno</label>
-            <select {...register("studentId")} style={inputStyle}>
-              <option value="">Selecciona un alumno...</option>
-              {students.map(s => (
-                <option key={s.id} value={s.id}>{s.lastName}, {s.firstName}</option>
-              ))}
-            </select>
-            {errors.studentId && <p style={{ color: "#b91c1c", fontSize: 11, marginTop: 4 }}>{errors.studentId.message}</p>}
+            <StudentSearchPicker
+              students={students}
+              value={selectedStudent}
+              onChange={s => { setSelectedStudent(s); setStudentError(""); }}
+              placeholder="Buscar alumno por nombre..."
+              error={studentError}
+            />
           </div>
 
           <div>
@@ -99,7 +106,9 @@ export function NewPaymentModal({ students, onClose }: Props) {
           </div>
 
           <div>
-            <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>Fecha límite <span style={{ fontWeight: 400 }}>(opcional)</span></label>
+            <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
+              Fecha límite <span style={{ fontWeight: 400 }}>(opcional)</span>
+            </label>
             <input type="date" {...register("dueDate")} style={inputStyle} />
           </div>
 

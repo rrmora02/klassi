@@ -11,11 +11,18 @@ export default async function NuevoComunicadoPage() {
   const tenant = user?.activeTenant;
   if (!tenant) return null;
 
-  const groups = await db.group.findMany({
-    where:   { tenantId: tenant.id, isActive: true },
-    select:  { id: true, name: true, discipline: { select: { name: true } } },
-    orderBy: [{ discipline: { name: "asc" } }, { name: "asc" }],
-  });
+  const [groups, students] = await Promise.all([
+    db.group.findMany({
+      where:   { tenantId: tenant.id, isActive: true },
+      select:  { id: true, name: true, discipline: { select: { name: true } } },
+      orderBy: [{ discipline: { name: "asc" } }, { name: "asc" }],
+    }),
+    db.student.findMany({
+      where:   { tenantId: tenant.id, status: "ACTIVE" },
+      select:  { id: true, firstName: true, lastName: true },
+      orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+    }),
+  ]);
 
   return (
     <div style={{ maxWidth: 720, margin: "0 auto" }}>
@@ -34,7 +41,7 @@ export default async function NuevoComunicadoPage() {
       </p>
 
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 28 }}>
-        <AnnouncementForm groups={groups} />
+        <AnnouncementForm groups={groups} students={students} />
       </div>
     </div>
   );
