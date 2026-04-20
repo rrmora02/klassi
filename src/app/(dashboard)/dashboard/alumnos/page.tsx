@@ -61,7 +61,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Alumnos</h1>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{total} {total === 1 ? "alumno" : "alumnos"}</p>
         </div>
-        <Link href="/dashboard/alumnos/nuevo" style={{ background: "#1e3a5f", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+        <Link href="/dashboard/alumnos/nuevo" style={{ background: "#5b21b6", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
           + Nuevo alumno
         </Link>
       </div>
@@ -77,9 +77,9 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
           return (
             <Link key={tab.label} href={buildUrl({ status: tab.value, page: "1" })} style={{
               padding: "8px 16px", fontSize: 13, textDecoration: "none",
-              color: active ? "#1e3a5f" : "var(--color-text-secondary)",
+              color: active ? "#5b21b6" : "var(--color-text-secondary)",
               fontWeight: active ? 500 : 400,
-              borderBottom: active ? "2px solid #1e3a5f" : "2px solid transparent",
+              borderBottom: active ? "2px solid #5b21b6" : "2px solid transparent",
               marginBottom: -1,
             }}>
               {tab.label} <span style={{ fontSize: 11 }}>{tab.count}</span>
@@ -95,7 +95,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
         </form>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {[{ id: undefined, name: "Todas" }, ...disciplines].map(d => (
-            <Link key={d.id ?? "all"} href={buildUrl({ disc: d.id, page: "1" })} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: discId === d.id || (!discId && !d.id) ? "#1e3a5f" : "var(--color-background-primary)", color: discId === d.id || (!discId && !d.id) ? "#fff" : "var(--color-text-secondary)" }}>
+            <Link key={d.id ?? "all"} href={buildUrl({ disc: d.id, page: "1" })} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: discId === d.id || (!discId && !d.id) ? "#5b21b6" : "var(--color-background-primary)", color: discId === d.id || (!discId && !d.id) ? "#fff" : "var(--color-text-secondary)" }}>
               {d.name}
             </Link>
           ))}
@@ -120,7 +120,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
               <tr key={s.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                 <td style={{ padding: "11px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#dbeafe", color: "#1d4ed8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#ede9fe", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, flexShrink: 0 }}>
                       {s.firstName[0]}{s.lastName[0]}
                     </div>
                     <div>
@@ -134,14 +134,14 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                     {s.enrollments.length === 0 && <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>Sin grupo</span>}
                     {s.enrollments.map(e => (
-                      <span key={e.id} style={{ background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>{e.group.discipline.name}</span>
+                      <span key={e.id} style={{ background: "#f5f3ff", color: "#7c3aed", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>{e.group.discipline.name}</span>
                     ))}
                   </div>
                 </td>
                 <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>{s.phone ?? s.email ?? "—"}</td>
                 <td style={{ padding: "11px 14px" }}><StudentStatusBadge status={s.status} /></td>
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${s.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Ver →</Link>
+                  <Link href={`/dashboard/alumnos/${s.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Ver →</Link>
                 </td>
               </tr>
             ))}
@@ -156,7 +156,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
           <div style={{ display: "flex", gap: 4 }}>
             {page > 1 && <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>← Ant</Link>}
             {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
-              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#1e3a5f" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
+              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#5b21b6" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
             ))}
             {page < pages && <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>Sig →</Link>}
           </div>

@@ -66,7 +66,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
       {/* Header */}
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#dbeafe", color: "#1d4ed8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 500 }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#ede9fe", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 500 }}>
             {student.firstName[0]}{student.lastName[0]}
           </div>
           <div>
@@ -113,7 +113,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Datos personales</h2>
-            <Link href={`/dashboard/alumnos/${student.id}/editar`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Editar</Link>
+            <Link href={`/dashboard/alumnos/${student.id}/editar`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Editar</Link>
           </div>
           {[
             { label: "Email",    value: student.email  ?? "—" },
@@ -160,7 +160,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
             <div key={e.id} style={{ padding: "10px 0", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <span style={{ background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>{e.group.discipline.name}</span>
+                  <span style={{ background: "#f5f3ff", color: "#7c3aed", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>{e.group.discipline.name}</span>
                   <p style={{ fontWeight: 500, fontSize: 13, margin: "4px 0 0" }}>{e.group.name}</p>
                   <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>
                     {e.group.instructor?.user.name ?? "Sin instructor"} · Desde {formatDate(e.startDate)}
@@ -181,7 +181,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Últimos pagos</h2>
-            <Link href={`/dashboard/pagos?student=${student.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Ver todos</Link>
+            <Link href={`/dashboard/pagos?student=${student.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Ver todos</Link>
           </div>
           {student.payments.length === 0 && (
             <p style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>Sin pagos registrados</p>

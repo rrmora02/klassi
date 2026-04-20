@@ -129,7 +129,7 @@ export function TenantForm({ initialData }: Props) {
           type="submit" 
           disabled={isSubmitting || update.isLoading}
           style={{ 
-            padding: "10px 24px", borderRadius: 8, border: "none", background: "#1e3a5f", color: "#fff", 
+            padding: "10px 24px", borderRadius: 8, border: "none", background: "#5b21b6", color: "#fff", 
             fontWeight: 500, cursor: (isSubmitting || update.isLoading) ? "not-allowed" : "pointer", opacity: (isSubmitting || update.isLoading) ? 0.7 : 1 
           }}
         >

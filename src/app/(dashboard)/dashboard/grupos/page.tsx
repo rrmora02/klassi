@@ -105,7 +105,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
         <Link
           href="/dashboard/grupos/nuevo"
           style={{
-            background: "#1e3a5f", color: "#fff", borderRadius: 8,
+            background: "#5b21b6", color: "#fff", borderRadius: 8,
             padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none",
           }}
         >
@@ -130,9 +130,9 @@ export default async function GruposPage({ searchParams }: PageProps) {
               href={buildUrl({ active: tab.value, page: "1" })}
               style={{
                 padding: "8px 16px", fontSize: 13, textDecoration: "none",
-                color:       active ? "#1e3a5f" : "var(--color-text-secondary)",
+                color:       active ? "#5b21b6" : "var(--color-text-secondary)",
                 fontWeight:  active ? 500 : 400,
-                borderBottom: active ? "2px solid #1e3a5f" : "2px solid transparent",
+                borderBottom: active ? "2px solid #5b21b6" : "2px solid transparent",
                 marginBottom: -1,
               }}
             >
@@ -167,7 +167,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
               style={{
                 padding: "6px 14px", borderRadius: 20, fontSize: 12,
                 textDecoration: "none", border: "0.5px solid var(--color-border-secondary)",
-                background: discId === d.id || (!discId && !d.id) ? "#1e3a5f" : "var(--color-background-primary)",
+                background: discId === d.id || (!discId && !d.id) ? "#5b21b6" : "var(--color-background-primary)",
                 color:      discId === d.id || (!discId && !d.id) ? "#fff"     : "var(--color-text-secondary)",
               }}
             >
@@ -221,7 +221,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
                   </td>
                   <td style={{ padding: "11px 14px" }}>
                     <span style={{
-                      background: "#eff6ff", color: "#1d4ed8",
+                      background: "#f5f3ff", color: "#7c3aed",
                       borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
                     }}>
                       {g.discipline.name}
@@ -251,7 +251,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
                     </span>
                   </td>
                   <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                    <Link href={`/dashboard/grupos/${g.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>
+                    <Link href={`/dashboard/grupos/${g.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>
                       Ver →
                     </Link>
                   </td>
@@ -281,7 +281,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
                   style={{
                     padding: "5px 10px", borderRadius: 6, textDecoration: "none",
                     border: "0.5px solid var(--color-border-secondary)",
-                    background: p === page ? "#1e3a5f" : "transparent",
+                    background: p === page ? "#5b21b6" : "transparent",
                     color:      p === page ? "#fff"     : "var(--color-text-secondary)",
                   }}
                 >

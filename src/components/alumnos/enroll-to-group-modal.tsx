@@ -39,7 +39,7 @@ export function EnrollToGroupModal({ studentId }: Props) {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: "#1e3a5f", color: "#fff", border: "none", cursor: "pointer", transition: "all 0.2s" }}
+        style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: "#5b21b6", color: "#fff", border: "none", cursor: "pointer", transition: "all 0.2s" }}
         onMouseOver={e => e.currentTarget.style.opacity = "0.9"}
         onMouseOut={e => e.currentTarget.style.opacity = "1"}
       >
@@ -85,7 +85,7 @@ export function EnrollToGroupModal({ studentId }: Props) {
                       >
                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                             <div>
-                               <span style={{ fontSize: 11, fontWeight: 600, color: "#1d4ed8", padding: "2px 8px", background: "#dbeafe", borderRadius: 20 }}>
+                               <span style={{ fontSize: 11, fontWeight: 600, color: "#7c3aed", padding: "2px 8px", background: "#ede9fe", borderRadius: 20 }}>
                                  {g.discipline.name}
                                </span>
                                <h3 style={{ fontSize: 14, fontWeight: 500, margin: "6px 0 4px", color: "var(--color-text-primary)" }}>{g.name}</h3>
@@ -111,7 +111,7 @@ export function EnrollToGroupModal({ studentId }: Props) {
 
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)", marginTop: "auto" }}>
                   <button type="button" onClick={handleClose} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "transparent", cursor: "pointer" }}>Cancelar</button>
-                  <button type="submit" disabled={!groupId || enroll.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#1e3a5f", color: "#fff", cursor: (!groupId || enroll.isLoading) ? "not-allowed" : "pointer", opacity: (!groupId || enroll.isLoading) ? 0.7 : 1 }}>
+                  <button type="submit" disabled={!groupId || enroll.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#5b21b6", color: "#fff", cursor: (!groupId || enroll.isLoading) ? "not-allowed" : "pointer", opacity: (!groupId || enroll.isLoading) ? 0.7 : 1 }}>
                     {enroll.isLoading ? "Guardando..." : "Confirmar Inscripción"}
                   </button>
                 </div>

@@ -46,7 +46,7 @@ export function InviteUserModal({ onSuccess }: Props) {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#1e3a5f", color: "#fff", cursor: "pointer", fontWeight: 500, fontSize: 14 }}
+        style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#5b21b6", color: "#fff", cursor: "pointer", fontWeight: 500, fontSize: 14 }}
       >
         + Invitar al Equipo
       </button>
@@ -79,7 +79,7 @@ export function InviteUserModal({ onSuccess }: Props) {
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 24 }}>
                 <button type="button" onClick={() => setIsOpen(false)} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "transparent", cursor: "pointer" }}>Cancelar</button>
-                <button type="submit" disabled={invite.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#1e3a5f", color: "#fff", cursor: invite.isLoading ? "not-allowed" : "pointer" }}>
+                <button type="submit" disabled={invite.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#5b21b6", color: "#fff", cursor: invite.isLoading ? "not-allowed" : "pointer" }}>
                   {invite.isLoading ? "Procesando..." : "Generar Invitación"}
                 </button>
               </div>

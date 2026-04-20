@@ -77,7 +77,7 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{
-              background: "#eff6ff", color: "#1d4ed8",
+              background: "#f5f3ff", color: "#7c3aed",
               borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
             }}>
               {group.discipline.name}
@@ -211,7 +211,7 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
                   {formatDate(e.startDate)}
                 </td>
                 <td style={{ padding: "10px 16px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${e.student.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>
+                  <Link href={`/dashboard/alumnos/${e.student.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>
                     Ver →
                   </Link>
                 </td>

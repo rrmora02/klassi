@@ -47,7 +47,7 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Disciplinas</h1>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>Administra las categorías de clases de tu escuela.</p>
         </div>
-        <Link href="/dashboard/configuracion/disciplinas/nuevo" style={{ background: "#1e3a5f", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+        <Link href="/dashboard/configuracion/disciplinas/nuevo" style={{ background: "#5b21b6", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
           + Nueva disciplina
         </Link>
       </div>
@@ -63,9 +63,9 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
           return (
             <Link key={tab.label} href={buildUrl({ active: tab.value })} style={{
               padding: "8px 16px", fontSize: 13, textDecoration: "none",
-              color: active ? "#1e3a5f" : "var(--color-text-secondary)",
+              color: active ? "#5b21b6" : "var(--color-text-secondary)",
               fontWeight: active ? 500 : 400,
-              borderBottom: active ? "2px solid #1e3a5f" : "2px solid transparent",
+              borderBottom: active ? "2px solid #5b21b6" : "2px solid transparent",
               marginBottom: -1,
             }}>
               {tab.label} <span style={{ fontSize: 11 }}>{tab.count}</span>
@@ -115,7 +115,7 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
                 </td>
 
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/configuracion/disciplinas/${disc.id}/editar`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Editar →</Link>
+                  <Link href={`/dashboard/configuracion/disciplinas/${disc.id}/editar`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Editar →</Link>
                 </td>
               </tr>
             ))}

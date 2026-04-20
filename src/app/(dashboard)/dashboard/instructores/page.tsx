@@ -59,7 +59,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Instructores</h1>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{total} {total === 1 ? "instructor" : "instructores"}</p>
         </div>
-        <Link href="/dashboard/instructores/nuevo" style={{ background: "#1e3a5f", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+        <Link href="/dashboard/instructores/nuevo" style={{ background: "#5b21b6", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
           + Nuevo instructor
         </Link>
       </div>
@@ -75,9 +75,9 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
           return (
             <Link key={tab.label} href={buildUrl({ active: tab.value, page: "1" })} style={{
               padding: "8px 16px", fontSize: 13, textDecoration: "none",
-              color: active ? "#1e3a5f" : "var(--color-text-secondary)",
+              color: active ? "#5b21b6" : "var(--color-text-secondary)",
               fontWeight: active ? 500 : 400,
-              borderBottom: active ? "2px solid #1e3a5f" : "2px solid transparent",
+              borderBottom: active ? "2px solid #5b21b6" : "2px solid transparent",
               marginBottom: -1,
             }}>
               {tab.label} <span style={{ fontSize: 11 }}>{tab.count}</span>
@@ -113,7 +113,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
                 {/* Avatar y Nombre */}
                 <td style={{ padding: "11px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#dbeafe", color: "#1d4ed8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#ede9fe", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, flexShrink: 0 }}>
                       {inst.user.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -147,7 +147,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
                 </td>
 
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/instructores/${inst.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Ver →</Link>
+                  <Link href={`/dashboard/instructores/${inst.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Ver →</Link>
                 </td>
               </tr>
             ))}
@@ -162,7 +162,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
           <div style={{ display: "flex", gap: 4 }}>
             {page > 1 && <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>← Ant</Link>}
             {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
-              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#1e3a5f" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
+              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#5b21b6" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
             ))}
             {page < pages && <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>Sig →</Link>}
           </div>

@@ -121,7 +121,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
             </button>
             <button type="submit" disabled={create.isLoading} style={{
               padding: "8px 18px", borderRadius: 8, border: "none",
-              background: "#1e3a5f", color: "#fff", fontSize: 13, fontWeight: 500,
+              background: "#5b21b6", color: "#fff", fontSize: 13, fontWeight: 500,
               cursor: create.isLoading ? "not-allowed" : "pointer",
             }}>
               {create.isLoading ? "Creando..." : "Crear pago"}

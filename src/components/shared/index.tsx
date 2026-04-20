@@ -56,7 +56,7 @@ interface BadgeProps {
 }
 
 const badgeColors = {
-  blue:   "bg-blue-50 text-blue-800",
+  blue:   "bg-violet-50 text-violet-800",
   green:  "bg-green-50 text-green-800",
   yellow: "bg-yellow-50 text-yellow-800",
   red:    "bg-red-50 text-red-800",

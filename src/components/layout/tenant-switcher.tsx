@@ -53,13 +53,13 @@ export function TenantSwitcher({
             className="flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm hover:bg-gray-50"
           >
             <span className="truncate">{t.name}</span>
-            {t.id === activeTenantId && <Check className="h-4 w-4 text-blue-600" />}
+            {t.id === activeTenantId && <Check className="h-4 w-4 text-violet-600" />}
           </button>
         ))}
         <div className="my-1 h-px bg-gray-100" />
         <button 
           onClick={() => router.push("/onboarding")}
-          className="flex items-center px-3 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 hover:text-blue-700 rounded-lg"
+          className="flex items-center px-3 py-2 text-left text-sm text-violet-600 hover:bg-violet-50 hover:text-violet-700 rounded-lg"
         >
           + Agregar otra escuela
         </button>

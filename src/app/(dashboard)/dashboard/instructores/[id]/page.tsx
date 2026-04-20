@@ -42,7 +42,7 @@ export default async function InstructorDetailPage({ params }: PageProps) {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#dbeafe", color: "#1d4ed8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 500, flexShrink: 0 }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#ede9fe", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 500, flexShrink: 0 }}>
              {instructor.user.name.substring(0, 2).toUpperCase()}
           </div>
           <div>
@@ -124,7 +124,7 @@ export default async function InstructorDetailPage({ params }: PageProps) {
                     <tr key={g.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                       <td style={{ padding: "12px 20px", fontWeight: 500, color: "var(--color-text-primary)" }}>{g.name}</td>
                       <td style={{ padding: "12px 20px" }}>
-                        <span style={{ background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>
+                        <span style={{ background: "#f5f3ff", color: "#7c3aed", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>
                           {g.discipline.name}
                         </span>
                       </td>
@@ -132,7 +132,7 @@ export default async function InstructorDetailPage({ params }: PageProps) {
                         {g._count.enrollments} / {g.capacity}
                       </td>
                       <td style={{ padding: "12px 20px", textAlign: "right" }}>
-                        <Link href={`/dashboard/grupos/${g.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Ver grupo →</Link>
+                        <Link href={`/dashboard/grupos/${g.id}`} style={{ fontSize: 12, color: "#5b21b6", textDecoration: "none" }}>Ver grupo →</Link>
                       </td>
                     </tr>
                   ))}

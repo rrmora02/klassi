@@ -138,7 +138,7 @@ export default async function DashboardPage() {
                 : `Tu período de prueba vence en ${daysLeft} ${daysLeft === 1 ? "día" : "días"}.`}
             </p>
           </div>
-          <span className="ml-4 rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
+          <span className="ml-4 rounded-lg bg-violet-900 px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
             Actualizar plan
           </span>
         </div>
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
             {stats.overdueCount > 0 && (
               <Link
                 href="/dashboard/pagos?status=OVERDUE"
-                className="flex items-center gap-1 text-xs text-blue-700 hover:underline"
+                className="flex items-center gap-1 text-xs text-violet-700 hover:underline"
               >
                 Ver todos <ChevronRight className="h-3 w-3" />
               </Link>
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/alumnos/${p.student.id}`}
-                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                        className="text-sm font-medium text-gray-900 hover:text-violet-700"
                       >
                         {fullName(p.student.firstName, p.student.lastName)}
                       </Link>
@@ -250,12 +250,12 @@ export default async function DashboardPage() {
         <section className="lg:col-span-2 rounded-xl border border-gray-200 bg-white">
           <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
+              <Users className="h-4 w-4 text-violet-500" />
               <h2 className="text-sm font-semibold text-gray-900">Alumnos recientes</h2>
             </div>
             <Link
               href="/dashboard/alumnos"
-              className="flex items-center gap-1 text-xs text-blue-700 hover:underline"
+              className="flex items-center gap-1 text-xs text-violet-700 hover:underline"
             >
               Ver todos <ChevronRight className="h-3 w-3" />
             </Link>
@@ -263,13 +263,13 @@ export default async function DashboardPage() {
 
           {recentStudents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
-                <Users className="h-5 w-5 text-blue-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-50">
+                <Users className="h-5 w-5 text-violet-600" />
               </div>
               <p className="mt-3 text-sm font-medium text-gray-700">Sin alumnos aún</p>
               <Link
                 href="/dashboard/alumnos/nuevo"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-violet-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-800"
               >
                 <Plus className="h-3.5 w-3.5" /> Agregar alumno
               </Link>
@@ -281,7 +281,7 @@ export default async function DashboardPage() {
                 return (
                   <li key={s.id} className="flex items-center gap-3 px-5 py-3.5">
                     {/* Avatar */}
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-800">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-violet-100 text-xs font-semibold text-violet-800">
                       {initials(s.firstName, s.lastName)}
                     </span>
 
@@ -289,7 +289,7 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/alumnos/${s.id}`}
-                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                        className="text-sm font-medium text-gray-900 hover:text-violet-700"
                       >
                         {fullName(s.firstName, s.lastName)}
                       </Link>
@@ -320,19 +320,19 @@ export default async function DashboardPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard/alumnos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-violet-300 hover:text-violet-800"
           >
             <Plus className="h-4 w-4" /> Nuevo alumno
           </Link>
           <Link
             href="/dashboard/grupos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-violet-300 hover:text-violet-800"
           >
             <BookOpen className="h-4 w-4" /> Nuevo grupo
           </Link>
           <Link
             href="/dashboard/alumnos"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-violet-300 hover:text-violet-800"
           >
             <Users className="h-4 w-4" /> Ver alumnos
           </Link>

@@ -39,7 +39,7 @@ export function AnnouncementActions({ id, sentAt, title }: Props) {
         <button
           onClick={handleSend}
           disabled={send.isLoading}
-          style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#1e3a5f", background: "none", border: "none", cursor: "pointer", fontWeight: 500, padding: 0 }}
+          style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#5b21b6", background: "none", border: "none", cursor: "pointer", fontWeight: 500, padding: 0 }}
         >
           <Send size={12} /> {send.isLoading ? "Enviando..." : "Enviar"}
         </button>
