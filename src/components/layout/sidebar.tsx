@@ -14,16 +14,9 @@ import {
   Bell,
   Tag,
   Building2,
-  type LucideIcon,
 } from "lucide-react";
 
-interface NavItem {
-  label: string;
-  href:  string;
-  icon:  LucideIcon;
-}
-
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS = [
   { label: "Inicio",       href: "/dashboard",                          icon: LayoutDashboard },
   { label: "Alumnos",      href: "/dashboard/alumnos",                  icon: Users },
   { label: "Instructores", href: "/dashboard/instructores",             icon: UserCheck },
@@ -34,7 +27,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Comunicados",  href: "/dashboard/comunicados",              icon: Bell },
 ];
 
-const CONFIG_ITEMS: NavItem[] = [
+const CONFIG_ITEMS = [
   { label: "Equipo",       href: "/dashboard/configuracion/equipo",      icon: Users },
   { label: "Disciplinas",  href: "/dashboard/configuracion/disciplinas", icon: Tag },
   { label: "Mi escuela",   href: "/dashboard/configuracion/escuela",     icon: Building2 },

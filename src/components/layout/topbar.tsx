@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { TenantSwitcher } from "./tenant-switcher";
 
 export async function TopBar() {
-  const { userId } = auth(); // Clerk auth cacheado en layout
+  const { userId } = await auth();
   let tenants: any[] = [];
   let user = null;
 
