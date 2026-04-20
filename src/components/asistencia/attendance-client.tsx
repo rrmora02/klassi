@@ -72,14 +72,14 @@ export function AttendanceClient() {
       <div style={{ background: "var(--color-background-primary)", padding: 20, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", gap: 20, alignItems: "center" }}>
          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Fecha</label>
-           <input 
-             type="date" 
+           <input
+             type="date"
              value={dateStr}
              onChange={e => setDateStr(e.target.value)}
-             style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", outline: "none" }}
+             className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-violet-400 dark:focus:border-violet-500 [color-scheme:light] dark:[color-scheme:dark]"
            />
          </div>
-         
+
          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 2 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Grupo a calificar</label>
            {loadingGroups ? (
@@ -88,7 +88,7 @@ export function AttendanceClient() {
               <select
                  value={groupId}
                  onChange={e => setGroupId(e.target.value)}
-                 style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", outline: "none", background: "#fff" }}
+                 className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-violet-400 dark:focus:border-violet-500"
               >
                  <option value="">Seleccione un grupo...</option>
                  {groups?.map(g => (
