@@ -69,8 +69,8 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
               {group.name}
             </h1>
             <span style={{
-              background: group.isActive ? "#f0fdf4" : "#f8fafc",
-              color:      group.isActive ? "#15803d" : "#475569",
+              background: group.isActive ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.10)",
+              color:      group.isActive ? "#10b981" : "#94a3b8",
               borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 500,
             }}>
               {group.isActive ? "Activo" : "Inactivo"}
@@ -84,8 +84,8 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
               {group.discipline.name}
             </span>
             <span style={{
-              background: group.type === "FIXED" ? "#f8fafc" : "#fdf4ff", 
-              color: group.type === "FIXED" ? "#475569" : "#a21caf",
+              background: group.type === "FIXED" ? "rgba(100,116,139,0.10)" : "rgba(0,117,74,0.12)", 
+              color: group.type === "FIXED" ? "#475569" : "#00754A",
               borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
             }}>
               {group.type === "FIXED" ? "Estación Fija" : "Grupo Generacional"}
@@ -112,8 +112,8 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
           <div
             key={k.label}
             style={{
-              background: k.alert ? "#fff5f5" : "var(--color-background-primary)",
-              border: `0.5px solid ${k.alert ? "#fca5a5" : "var(--color-border-tertiary)"}`,
+              background: k.alert ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)",
+              border: `0.5px solid ${k.alert ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`,
               borderRadius: 10, padding: "12px 14px",
             }}
           >

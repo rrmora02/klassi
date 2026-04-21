@@ -80,7 +80,7 @@ export function InstructorForm({
             {...form.register("isActive", { setValueAs: v => String(v) === "true" })}
             style={{
               padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
-              fontSize: 14, outline: "none", background: "#fff",
+              fontSize: 14, outline: "none", background: "var(--color-background-primary)",
             }}
           >
             <option value="true">Activo</option>

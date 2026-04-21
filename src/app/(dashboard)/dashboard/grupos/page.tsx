@@ -244,8 +244,8 @@ export default async function GruposPage({ searchParams }: PageProps) {
                   </td>
                   <td style={{ padding: "11px 14px" }}>
                     <span style={{
-                      background: g.isActive ? "#f0fdf4" : "#f8fafc",
-                      color:      g.isActive ? "#15803d" : "#475569",
+                      background: g.isActive ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.10)",
+                      color:      g.isActive ? "#10b981" : "#94a3b8",
                       borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 500,
                     }}>
                       {g.isActive ? "Activo" : "Inactivo"}

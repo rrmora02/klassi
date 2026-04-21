@@ -95,11 +95,11 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
                         {a.title}
                       </h3>
                       {a.sentAt ? (
-                        <span style={{ background: "#f0fdf4", color: "#15803d", borderRadius: 20, padding: "1px 8px", fontSize: 10, fontWeight: 500, whiteSpace: "nowrap" }}>
+                        <span style={{ background: "rgba(16,185,129,0.12)", color: "#10b981", borderRadius: 20, padding: "1px 8px", fontSize: 10, fontWeight: 500, whiteSpace: "nowrap" }}>
                           Enviado
                         </span>
                       ) : (
-                        <span style={{ background: "#fffbeb", color: "#b45309", borderRadius: 20, padding: "1px 8px", fontSize: 10, fontWeight: 500, whiteSpace: "nowrap" }}>
+                        <span style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b", borderRadius: 20, padding: "1px 8px", fontSize: 10, fontWeight: 500, whiteSpace: "nowrap" }}>
                           Borrador
                         </span>
                       )}

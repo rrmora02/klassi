@@ -107,8 +107,8 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
                 
                 <td style={{ padding: "11px 14px" }}>
                   <span style={{
-                      background: disc.isActive ? "#f0fdf4" : "#f8fafc",
-                      color:      disc.isActive ? "#15803d" : "#475569",
+                      background: disc.isActive ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.10)",
+                      color:      disc.isActive ? "#10b981" : "#94a3b8",
                       borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 500,
                   }}>
                     {disc.isActive ? "Activo" : "Inactivo"}

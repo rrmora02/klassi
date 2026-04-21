@@ -115,7 +115,7 @@ export default async function PagosPage({ searchParams }: PageProps) {
           </p>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{pending._count} pendientes</p>
         </div>
-        <div style={{ background: overdue._count > 0 ? "#fef2f2" : "var(--color-background-primary)", border: `0.5px solid ${overdue._count > 0 ? "#fecaca" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "16px 20px" }}>
+        <div style={{ background: overdue._count > 0 ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${overdue._count > 0 ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "16px 20px" }}>
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Adeudos vencidos</p>
           <p style={{ fontSize: 26, fontWeight: 600, color: overdue._count > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0" }}>
             {formatCurrency(overdue._sum.amount ?? 0)}

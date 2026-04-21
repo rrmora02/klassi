@@ -101,7 +101,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           { label: "Clases totales", value: String(totalClasses) },
           { label: "Total pagado", value: formatCurrency(totalPaid), alert: overduePayments.length > 0 },
         ].map(k => (
-          <div key={k.label} style={{ background: k.alert ? "#fff5f5" : "var(--color-background-primary)", border: `0.5px solid ${k.alert ? "#fca5a5" : "var(--color-border-tertiary)"}`, borderRadius: 10, padding: "12px 14px" }}>
+          <div key={k.label} style={{ background: k.alert ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${k.alert ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 10, padding: "12px 14px" }}>
             <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{k.label}</p>
             <p style={{ fontSize: 22, fontWeight: 500, color: k.alert ? "#b91c1c" : "var(--color-text-primary)", margin: "4px 0 0" }}>{k.value}</p>
           </div>
@@ -169,7 +169,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
                   {e.discount > 0 && (
-                    <span style={{ background: "#fef3c7", color: "#b45309", borderRadius: 20, padding: "2px 8px", fontSize: 11 }}>{e.discount}% desc.</span>
+                    <span style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b", borderRadius: 20, padding: "2px 8px", fontSize: 11 }}>{e.discount}% desc.</span>
                   )}
                   <TransferGroupModal studentId={student.id} currentEnrollmentId={e.id} />
                 </div>
@@ -191,10 +191,10 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           )}
           {student.payments.slice(0, 5).map(p => {
             const colors: Record<string, { bg: string; color: string }> = {
-              PAID:      { bg: "#f0fdf4", color: "#15803d" },
-              PENDING:   { bg: "#fffbeb", color: "#b45309" },
+              PAID:      { bg: "rgba(16,185,129,0.12)", color: "#10b981" },
+              PENDING:   { bg: "rgba(245,158,11,0.12)", color: "#f59e0b" },
               OVERDUE:   { bg: "#fff1f2", color: "#be123c" },
-              CANCELLED: { bg: "#f8fafc", color: "#475569" },
+              CANCELLED: { bg: "rgba(100,116,139,0.10)", color: "#94a3b8" },
             };
             const c = colors[p.status] ?? colors.PENDING;
             return (

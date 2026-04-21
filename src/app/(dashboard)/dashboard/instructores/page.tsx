@@ -139,8 +139,8 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
 
                 <td style={{ padding: "11px 14px" }}>
                   <span style={{
-                      background: inst.isActive ? "#f0fdf4" : "#f8fafc",
-                      color:      inst.isActive ? "#15803d" : "#475569",
+                      background: inst.isActive ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.10)",
+                      color:      inst.isActive ? "#10b981" : "#94a3b8",
                       borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 500,
                   }}>
                     {inst.isActive ? "Activo" : "Inactivo"}

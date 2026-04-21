@@ -40,9 +40,9 @@ export function TransferGroupModal({ studentId, currentEnrollmentId }: Props) {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 500, background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", cursor: "pointer", transition: "all 0.2s" }}
-        onMouseOver={e => e.currentTarget.style.background = "#e2e8f0"}
-        onMouseOut={e => e.currentTarget.style.background = "#f1f5f9"}
+        style={{ padding: "4px 10px", borderRadius: 6, fontSize: 11, fontWeight: 500, background: "var(--color-background-primary)", color: "var(--color-text-secondary)", border: "1px solid var(--color-border-secondary)", cursor: "pointer", transition: "all 0.2s" }}
+        onMouseOver={e => e.currentTarget.style.background = "var(--color-background-secondary)"}
+        onMouseOut={e => e.currentTarget.style.background = "var(--color-background-primary)"}
         title="Cambiar a otro grupo o nivel"
       >
         Transferir
@@ -54,7 +54,7 @@ export function TransferGroupModal({ studentId, currentEnrollmentId }: Props) {
           background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
         }}>
           <div style={{
-            background: "#ffffff", width: 500, borderRadius: 12, 
+            background: "var(--color-background-primary)", width: 500, borderRadius: 12, 
             padding: 24, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
             maxHeight: "90vh", display: "flex", flexDirection: "column"
           }}>
@@ -80,10 +80,10 @@ export function TransferGroupModal({ studentId, currentEnrollmentId }: Props) {
                         key={g.id}
                         onClick={() => !isFull && setGroupId(g.id)}
                         style={{
-                          border: `1.5px solid ${isSelected ? "#378ADD" : "var(--color-border-secondary)"}`,
+                          border: `1.5px solid ${isSelected ? "#00754A" : "var(--color-border-secondary)"}`,
                           borderRadius: 10, padding: "12px 16px",
                           cursor: isFull ? "not-allowed" : "pointer",
-                          background: isSelected ? "#f0f7ff" : (isFull ? "#f8fafc" : "#fff"),
+                          background: isSelected ? "#d4e9e2" : (isFull ? "var(--color-background-secondary)" : "var(--color-background-primary)"),
                           opacity: isFull ? 0.6 : 1, transition: "all 0.2s"
                         }}
                       >
@@ -99,7 +99,7 @@ export function TransferGroupModal({ studentId, currentEnrollmentId }: Props) {
                                </div>
                             </div>
                             <div>
-                               {isFull && <span style={{ fontSize: 11, color: "#e53e3e", fontWeight: 500, background: "#fff5f5", padding: "2px 6px", borderRadius: 4 }}>Lleno</span>}
+                               {isFull && <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 500, background: "rgba(220,38,38,0.10)", padding: "2px 6px", borderRadius: 4 }}>Lleno</span>}
                             </div>
                          </div>
                       </div>

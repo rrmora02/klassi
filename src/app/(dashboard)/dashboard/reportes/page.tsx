@@ -179,10 +179,10 @@ export default async function ReportesPage() {
           ) : (
             <>
               {[
-                { label: "Presentes",  count: attPresent,   color: "#15803d", bg: "#f0fdf4" },
-                { label: "Ausentes",   count: attAbsent,    color: "#b91c1c", bg: "#fef2f2" },
-                { label: "Justificados",count: attJustified, color: "#b45309", bg: "#fffbeb" },
-                { label: "Tarde",      count: attLate,      color: "#6b7280", bg: "#f9fafb" },
+                { label: "Presentes",  count: attPresent,   color: "#10b981", bg: "rgba(16,185,129,0.10)" },
+                { label: "Ausentes",   count: attAbsent,    color: "#ef4444", bg: "rgba(220,38,38,0.10)" },
+                { label: "Justificados",count: attJustified, color: "#f59e0b", bg: "rgba(245,158,11,0.10)" },
+                { label: "Tarde",      count: attLate,      color: "#94a3b8", bg: "rgba(100,116,139,0.10)" },
               ].map(item => {
                 const pct = attTotal > 0 ? Math.round((item.count / attTotal) * 100) : 0;
                 return (
@@ -197,7 +197,7 @@ export default async function ReportesPage() {
                   </div>
                 );
               })}
-              <div style={{ marginTop: 16, padding: "12px 16px", background: attRate >= 80 ? "#f0fdf4" : "#fffbeb", borderRadius: 8 }}>
+              <div style={{ marginTop: 16, padding: "12px 16px", background: attRate >= 80 ? "rgba(16,185,129,0.10)" : "rgba(245,158,11,0.10)", borderRadius: 8 }}>
                 <p style={{ fontSize: 13, fontWeight: 600, color: attRate >= 80 ? "#15803d" : "#b45309", margin: 0 }}>
                   Tasa de asistencia: {attRate}%
                 </p>

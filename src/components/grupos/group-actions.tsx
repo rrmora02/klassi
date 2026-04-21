@@ -77,7 +77,7 @@ export function GroupActions({ groupId, groupName, isActive }: Props) {
               style={{
                 display: "block", width: "100%", textAlign: "left",
                 padding: "8px 12px", fontSize: 13, border: "none",
-                background: "transparent", color: "#dc2626",
+                background: "transparent", color: "#ef4444",
                 cursor: "pointer", borderRadius: 6,
               }}
             >

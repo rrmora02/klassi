@@ -56,11 +56,11 @@ interface BadgeProps {
 }
 
 const badgeColors = {
-  blue:   "bg-sb-light/30 text-sb-green",
-  green:  "bg-green-50 text-green-800",
-  yellow: "bg-yellow-50 text-yellow-800",
-  red:    "bg-red-50 text-red-800",
-  gray:   "bg-gray-100 text-gray-700",
+  blue:   "bg-sb-light/30 dark:bg-sb-house text-sb-green dark:text-sb-light",
+  green:  "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400",
+  yellow: "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400",
+  red:    "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400",
+  gray:   "bg-slate-50 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400",
 };
 
 export function Badge({ children, color = "gray" }: BadgeProps) {
@@ -95,7 +95,7 @@ export function Spinner({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600",
+        "h-5 w-5 animate-spin rounded-full border-2 border-gray-200 dark:border-sb-uplift border-t-sb-accent",
         className
       )}
     />

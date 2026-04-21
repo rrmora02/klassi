@@ -51,7 +51,7 @@ export function EnrollStudentModal({ groupId }: Props) {
           background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
         }}>
           <div style={{
-            background: "#ffffff", width: 440, borderRadius: 12, 
+            background: "var(--color-background-primary)", width: 440, borderRadius: 12, 
             padding: 24, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>Añadir Alumno al Grupo</h2>
@@ -61,7 +61,7 @@ export function EnrollStudentModal({ groupId }: Props) {
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
             {data?.isFull && (
-               <div style={{ padding: "8px 12px", background: "#fef2f2", color: "#991b1b", fontSize: 12, borderRadius: 6 }}>
+               <div style={{ padding: "8px 12px", background: "rgba(220,38,38,0.10)", color: "#ef4444", fontSize: 12, borderRadius: 6 }}>
                  Atención: Este grupo ya ha alcanzado su capacidad máxima ({data.enrolledCount}/{data.capacity}).
                </div>
             )}
@@ -71,7 +71,7 @@ export function EnrollStudentModal({ groupId }: Props) {
               <select 
                  value={studentId} 
                  onChange={e => setStudentId(e.target.value)}
-                 style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", outline: "none", fontSize: 14, background: "#fff" }}
+                 style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", outline: "none", fontSize: 14, background: "var(--color-background-primary)" }}
                  required
               >
                 <option value="">Buscar estudiante...</option>

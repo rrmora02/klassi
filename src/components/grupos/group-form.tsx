@@ -32,10 +32,10 @@ function Field({ label, error, required, children }: {
   return (
     <div>
       <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>
-        {label}{required && <span style={{ color: "#e53e3e", marginLeft: 2 }}>*</span>}
+        {label}{required && <span style={{ color: "#ef4444", marginLeft: 2 }}>*</span>}
       </label>
       {children}
-      {error && <p style={{ fontSize: 12, color: "#c53030", marginTop: 4 }}>{error}</p>}
+      {error && <p style={{ fontSize: 12, color: "#ef4444", marginTop: 4 }}>{error}</p>}
     </div>
   );
 }
@@ -46,13 +46,13 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
       ref={ref}
       {...props}
       style={{
-        width: "100%", border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
+        width: "100%", border: `0.5px solid ${error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
         borderRadius: 8, padding: "8px 12px", fontSize: 14,
         background: "var(--color-background-primary)", color: "var(--color-text-primary)",
         outline: "none", boxSizing: "border-box", ...(props.style ?? {}),
       }}
-      onFocus={e => { e.target.style.borderColor = error ? "#fc8181" : "#378ADD"; e.target.style.boxShadow = "0 0 0 3px rgba(55,138,221,.12)"; }}
-      onBlur={e  => { e.target.style.borderColor = error ? "#fc8181" : "var(--color-border-secondary)"; e.target.style.boxShadow = "none"; }}
+      onFocus={e => { e.target.style.borderColor = error ? "rgba(220,38,38,0.60)" : "#00754A"; e.target.style.boxShadow = "0 0 0 3px rgba(0,117,74,0.12)"; }}
+      onBlur={e  => { e.target.style.borderColor = error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"; e.target.style.boxShadow = "none"; }}
     />
   );
 });
@@ -64,7 +64,7 @@ const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HT
       ref={ref}
       {...props}
       style={{
-        width: "100%", border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
+        width: "100%", border: `0.5px solid ${error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
         borderRadius: 8, padding: "8px 12px", fontSize: 14,
         background: "var(--color-background-primary)", color: "var(--color-text-primary)",
         outline: "none", boxSizing: "border-box",
@@ -147,8 +147,8 @@ export function GroupForm({
 
       {serverError && (
         <div style={{
-          background: "#fff5f5", border: "0.5px solid #fc8181", borderRadius: 8,
-          padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#c53030",
+          background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)", borderRadius: 8,
+          padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#ef4444",
         }}>
           {serverError}
         </div>
@@ -179,8 +179,8 @@ export function GroupForm({
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <label style={{
               border: "1.5px solid var(--color-border-secondary)", borderRadius: 10, padding: 14, cursor: "pointer",
-              background: currentType === "FIXED" ? "#f0f7ff" : "var(--color-background-primary)",
-              borderColor: currentType === "FIXED" ? "#378ADD" : "var(--color-border-secondary)"
+              background: currentType === "FIXED" ? "#d4e9e2" : "var(--color-background-primary)",
+              borderColor: currentType === "FIXED" ? "#00754A" : "var(--color-border-secondary)"
             }}>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <input type="radio" value="FIXED" {...register("type")} style={{ marginTop: 2 }} />
@@ -192,8 +192,8 @@ export function GroupForm({
             </label>
             <label style={{
               border: "1.5px solid var(--color-border-secondary)", borderRadius: 10, padding: 14, cursor: "pointer",
-              background: currentType === "PROGRESSIVE" ? "#f0f7ff" : "var(--color-background-primary)",
-              borderColor: currentType === "PROGRESSIVE" ? "#378ADD" : "var(--color-border-secondary)"
+              background: currentType === "PROGRESSIVE" ? "#d4e9e2" : "var(--color-background-primary)",
+              borderColor: currentType === "PROGRESSIVE" ? "#00754A" : "var(--color-border-secondary)"
             }}>
               <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
                 <input type="radio" value="PROGRESSIVE" {...register("type")} style={{ marginTop: 2 }} />
@@ -303,7 +303,7 @@ export function GroupForm({
 
                          {/* Entradas de Tiempo */}
                          {isChecked && slot && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", padding: "4px 8px", borderRadius: 8, border: "0.5px solid var(--color-border-secondary)" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--color-background-primary)", padding: "4px 8px", borderRadius: 8, border: "0.5px solid var(--color-border-secondary)" }}>
                                <input
                                  type="time"
                                  value={slot.startTime}
@@ -325,12 +325,12 @@ export function GroupForm({
 
                  {/* Mostrar validaciones o fallos directamente ligados a `schedule` */}
                  {errors.schedule?.message && (
-                    <p style={{ fontSize: 12, color: "#c53030", marginTop: 8 }}>
+                    <p style={{ fontSize: 12, color: "#ef4444", marginTop: 8 }}>
                       {errors.schedule.message}
                     </p>
                  )}
                  {Array.isArray(errors.schedule) && errors.schedule.find(e => e?.endTime?.message) && (
-                     <p style={{ fontSize: 12, color: "#c53030", marginTop: 4 }}>
+                     <p style={{ fontSize: 12, color: "#ef4444", marginTop: 4 }}>
                        Hay un error en las horas de algunos días (la hora de fin debe ser mayor a la de inicio).
                      </p>
                  )}
@@ -358,7 +358,7 @@ export function GroupForm({
           type="submit"
           disabled={isSubmitting || (isEdit && !isDirty)}
           style={{
-            background: isSubmitting || (isEdit && !isDirty) ? "#94a3b8" : "#006241",
+            background: isSubmitting || (isEdit && !isDirty) ? "#64748b" : "#006241",
             color: "#fff", border: "none", borderRadius: 8,
             padding: "8px 24px", fontSize: 13, fontWeight: 500,
             cursor: isSubmitting ? "wait" : "pointer",

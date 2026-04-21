@@ -71,7 +71,7 @@ export function TeamClientView() {
                   <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)" }}>{m.user.email}</p>
                 </td>
                 <td style={tdStyle}>
-                  <span style={{ background: m.role === "ADMIN" ? "#d4e9e2" : (m.role === "INSTRUCTOR" ? "#fdf4ff" : "#f0fdf4"), color: m.role === "ADMIN" ? "#006241" : (m.role === "INSTRUCTOR" ? "#a21caf" : "#15803d"), padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500 }}>
+                  <span style={{ background: m.role === "ADMIN" ? "#d4e9e2" : (m.role === "INSTRUCTOR" ? "rgba(0,117,74,0.12)" : "#f0fdf4"), color: m.role === "ADMIN" ? "#006241" : (m.role === "INSTRUCTOR" ? "#00754A" : "#15803d"), padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500 }}>
                     {m.role}
                   </span>
                 </td>

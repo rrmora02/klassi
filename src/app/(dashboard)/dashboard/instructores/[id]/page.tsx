@@ -60,8 +60,8 @@ export default async function InstructorDetailPage({ params }: PageProps) {
               )}
               <span>•</span>
               <span style={{
-                  background: instructor.isActive ? "#f0fdf4" : "#f8fafc",
-                  color:      instructor.isActive ? "#15803d" : "#475569",
+                  background: instructor.isActive ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.10)",
+                  color:      instructor.isActive ? "#10b981" : "#94a3b8",
                   borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
               }}>
                 {instructor.isActive ? "Activo" : "Inactivo"}

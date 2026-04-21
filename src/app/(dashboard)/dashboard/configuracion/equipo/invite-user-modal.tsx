@@ -57,7 +57,7 @@ export function InviteUserModal({ onSuccess }: Props) {
           background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
         }}>
           <div style={{
-            background: "#ffffff", width: 400, borderRadius: 12, padding: 24, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)"
+            background: "var(--color-background-primary)", width: 400, borderRadius: 12, padding: 24, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)"
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>Invitar Analista / Recepcionista</h2>
             

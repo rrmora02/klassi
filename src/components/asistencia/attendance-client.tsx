@@ -83,12 +83,12 @@ export function AttendanceClient() {
          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 2 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Grupo a calificar</label>
            {loadingGroups ? (
-              <div style={{ padding: "8px 12px", fontSize: 14 }}>Cargando grupos...</div>
+              <div style={{ padding: "8px 12px", fontSize: 14, color: "var(--color-text-secondary)" }}>Cargando grupos...</div>
            ) : (
               <select
                  value={groupId}
                  onChange={e => setGroupId(e.target.value)}
-                 className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent"
+                 className="w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent"
               >
                  <option value="">Seleccione un grupo...</option>
                  {groups?.map(g => (

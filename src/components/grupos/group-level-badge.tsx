@@ -1,19 +1,16 @@
 import { GroupLevel } from "@prisma/client";
 
-const config: Record<GroupLevel, { label: string; bg: string; color: string }> = {
-  BEGINNER:     { label: "Principiante", bg: "#f8fafc", color: "#475569" },
-  INTERMEDIATE: { label: "Intermedio",   bg: "#d4e9e2", color: "#006241" },
-  ADVANCED:     { label: "Avanzado",     bg: "#d4e9e2", color: "#006241" },
-  PROFESSIONAL: { label: "Profesional",  bg: "#fefce8", color: "#a16207" },
+const config: Record<GroupLevel, { label: string; className: string }> = {
+  BEGINNER:     { label: "Principiante", className: "bg-slate-50     dark:bg-slate-800/40  text-slate-600  dark:text-slate-400  border border-slate-200  dark:border-slate-700" },
+  INTERMEDIATE: { label: "Intermedio",   className: "bg-sb-light/40  dark:bg-sb-house      text-sb-green   dark:text-sb-light   border border-sb-light   dark:border-sb-uplift"  },
+  ADVANCED:     { label: "Avanzado",     className: "bg-sb-light/60  dark:bg-sb-house      text-sb-green   dark:text-sb-light   border border-sb-light   dark:border-sb-uplift"  },
+  PROFESSIONAL: { label: "Profesional",  className: "bg-amber-50     dark:bg-amber-900/20  text-amber-700  dark:text-amber-400  border border-amber-200  dark:border-amber-800"  },
 };
 
 export function GroupLevelBadge({ level }: { level: GroupLevel }) {
-  const { label, bg, color } = config[level];
+  const { label, className } = config[level];
   return (
-    <span style={{
-      background: bg, color, borderRadius: 20,
-      padding: "2px 10px", fontSize: 11, fontWeight: 500, display: "inline-block",
-    }}>
+    <span className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}>
       {label}
     </span>
   );

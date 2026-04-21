@@ -14,11 +14,11 @@ function Field({ label, error, required, children }: {
   return (
     <div>
       <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>
-        {label}{required && <span style={{ color: "#e53e3e", marginLeft: 2 }}>*</span>}
+        {label}{required && <span style={{ color: "#ef4444", marginLeft: 2 }}>*</span>}
       </label>
       {children}
       {error && (
-        <p style={{ fontSize: 12, color: "#c53030", marginTop: 4 }}>{error}</p>
+        <p style={{ fontSize: 12, color: "#ef4444", marginTop: 4 }}>{error}</p>
       )}
     </div>
   );
@@ -34,7 +34,7 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
         ref={ref}
         style={{
           width: "100%",
-          border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
+          border: `0.5px solid ${error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
           borderRadius: 8,
           padding: "8px 12px",
           fontSize: 14,
@@ -44,9 +44,9 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
           boxSizing: "border-box",
           ...(props.style ?? {}),
         }}
-        onFocus={e => { e.target.style.borderColor = error ? "#fc8181" : "#378ADD"; e.target.style.boxShadow = "0 0 0 3px rgba(55,138,221,.12)"; }}
+        onFocus={e => { e.target.style.borderColor = error ? "rgba(220,38,38,0.60)" : "#00754A"; e.target.style.boxShadow = "0 0 0 3px rgba(0,117,74,0.12)"; }}
         onBlur={e  => { 
-          e.target.style.borderColor = error ? "#fc8181" : "var(--color-border-secondary)"; 
+          e.target.style.borderColor = error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"; 
           e.target.style.boxShadow = "none";
           props.onBlur?.(e);
         }}
@@ -64,7 +64,7 @@ const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HT
         ref={ref}
         style={{
           width: "100%",
-          border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
+          border: `0.5px solid ${error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
           borderRadius: 8,
           padding: "8px 12px",
           fontSize: 14,
@@ -149,8 +149,8 @@ export function StudentForm({
       {/* Error global del servidor */}
       {serverError && (
         <div style={{
-          background: "#fff5f5", border: "0.5px solid #fc8181", borderRadius: 8,
-          padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#c53030",
+          background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)", borderRadius: 8,
+          padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#ef4444",
         }}>
           {serverError}
         </div>
@@ -265,7 +265,7 @@ export function StudentForm({
             rows={3}
             style={{
               width: "100%",
-              border: `0.5px solid ${errors.notes ? "#fc8181" : "var(--color-border-secondary)"}`,
+              border: `0.5px solid ${errors.notes ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
               borderRadius: 8,
               padding: "8px 12px",
               fontSize: 14,
@@ -301,7 +301,7 @@ export function StudentForm({
           type="submit"
           disabled={isSubmitting || (isEdit && !isDirty)}
           style={{
-            background: isSubmitting || (isEdit && !isDirty) ? "#94a3b8" : "#006241",
+            background: isSubmitting || (isEdit && !isDirty) ? "#64748b" : "#006241",
             color: "#fff", border: "none", borderRadius: 8,
             padding: "8px 24px", fontSize: 13, fontWeight: 500, cursor: isSubmitting ? "wait" : "pointer",
           }}
