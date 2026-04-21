@@ -115,7 +115,7 @@ export function AnnouncementForm({ groups, students }: Props) {
                   name="targetMode"
                   checked={targetMode === mode}
                   onChange={() => { setTargetMode(mode); setStudentError(""); }}
-                  style={{ accentColor: "#7c3aed" }}
+                  style={{ accentColor: "#006241" }}
                 />
                 <span style={{ fontSize: 13, color: "var(--color-text-primary)" }}>{labels[mode]}</span>
               </label>
@@ -136,7 +136,7 @@ export function AnnouncementForm({ groups, students }: Props) {
                   style={{
                     padding: "6px 14px", borderRadius: 20, fontSize: 12, cursor: "pointer",
                     border: "1px solid var(--color-border-secondary)",
-                    background: sel ? "#5b21b6" : "transparent",
+                    background: sel ? "#006241" : "transparent",
                     color: sel ? "#fff" : "var(--color-text-secondary)",
                     fontWeight: sel ? 500 : 400,
                   }}
@@ -178,7 +178,7 @@ export function AnnouncementForm({ groups, students }: Props) {
         <button
           type="submit"
           disabled={create.isLoading}
-          style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#5b21b6", color: "#fff", fontSize: 13, fontWeight: 500, cursor: create.isLoading ? "not-allowed" : "pointer" }}
+          style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500, cursor: create.isLoading ? "not-allowed" : "pointer" }}
         >
           {create.isLoading ? "Guardando..." : "Crear comunicado"}
         </button>

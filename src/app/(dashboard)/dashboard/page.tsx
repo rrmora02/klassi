@@ -255,7 +255,7 @@ export default async function DashboardPage() {
             </div>
             <Link
               href="/dashboard/alumnos"
-              className="flex items-center gap-1 text-xs text-violet-700 hover:underline"
+              className="flex items-center gap-1 text-xs text-sb-accent hover:underline"
             >
               Ver todos <ChevronRight className="h-3 w-3" />
             </Link>
@@ -263,13 +263,13 @@ export default async function DashboardPage() {
 
           {recentStudents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-50 dark:bg-violet-950">
-                <Users className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sb-light/30 dark:bg-sb-house">
+                <Users className="h-5 w-5 text-sb-accent dark:text-sb-light" />
               </div>
               <p className="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">Sin alumnos aún</p>
               <Link
                 href="/dashboard/alumnos/nuevo"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-violet-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-violet-800"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green"
               >
                 <Plus className="h-3.5 w-3.5" /> Agregar alumno
               </Link>
@@ -281,7 +281,7 @@ export default async function DashboardPage() {
                 return (
                   <li key={s.id} className="flex items-center gap-3 px-5 py-3.5">
                     {/* Avatar */}
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-violet-100 dark:bg-violet-900 text-xs font-semibold text-violet-800 dark:text-violet-300">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-sb-light/50 dark:bg-sb-house text-xs font-semibold text-sb-green dark:text-sb-light">
                       {initials(s.firstName, s.lastName)}
                     </span>
 
@@ -289,7 +289,7 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/alumnos/${s.id}`}
-                        className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-violet-700 dark:hover:text-violet-400"
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
                       >
                         {fullName(s.firstName, s.lastName)}
                       </Link>
@@ -320,19 +320,19 @@ export default async function DashboardPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard/alumnos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-violet-300 dark:hover:border-violet-600 hover:text-violet-800 dark:hover:text-violet-400"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <Plus className="h-4 w-4" /> Nuevo alumno
           </Link>
           <Link
             href="/dashboard/grupos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-violet-300 dark:hover:border-violet-600 hover:text-violet-800 dark:hover:text-violet-400"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <BookOpen className="h-4 w-4" /> Nuevo grupo
           </Link>
           <Link
             href="/dashboard/alumnos"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-violet-300 dark:hover:border-violet-600 hover:text-violet-800 dark:hover:text-violet-400"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <Users className="h-4 w-4" /> Ver alumnos
           </Link>

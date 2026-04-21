@@ -78,7 +78,7 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{
-              background: "#f5f3ff", color: "#7c3aed",
+              background: "#d4e9e2", color: "#006241",
               borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
             }}>
               {group.discipline.name}
@@ -212,7 +212,7 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
                   {formatDate(e.startDate)}
                 </td>
                 <td style={{ padding: "10px 16px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${e.student.id}`} className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100 hover:border-violet-300 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900">
+                  <Link href={`/dashboard/alumnos/${e.student.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-house">
                     Ver <ArrowRight className="h-3 w-3" />
                   </Link>
                 </td>

@@ -89,7 +89,7 @@ export function TransferGroupModal({ studentId, currentEnrollmentId }: Props) {
                       >
                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                             <div>
-                               <span style={{ fontSize: 11, fontWeight: 600, color: "#7c3aed", padding: "2px 8px", background: "#ede9fe", borderRadius: 20 }}>
+                               <span style={{ fontSize: 11, fontWeight: 600, color: "#006241", padding: "2px 8px", background: "#d4e9e2", borderRadius: 20 }}>
                                  {g.discipline.name}
                                </span>
                                <h3 style={{ fontSize: 14, fontWeight: 500, margin: "6px 0 4px", color: "var(--color-text-primary)" }}>{g.name}</h3>
@@ -115,7 +115,7 @@ export function TransferGroupModal({ studentId, currentEnrollmentId }: Props) {
 
                 <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)", marginTop: "auto" }}>
                   <button type="button" onClick={handleClose} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "transparent", cursor: "pointer" }}>Cancelar</button>
-                  <button type="submit" disabled={!groupId || transfer.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#5b21b6", color: "#fff", cursor: (!groupId || transfer.isLoading) ? "not-allowed" : "pointer", opacity: (!groupId || transfer.isLoading) ? 0.7 : 1 }}>
+                  <button type="submit" disabled={!groupId || transfer.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#00754A", color: "#fff", cursor: (!groupId || transfer.isLoading) ? "not-allowed" : "pointer", opacity: (!groupId || transfer.isLoading) ? 0.7 : 1 }}>
                     {transfer.isLoading ? "Procesando..." : "Confirmar Transferencia"}
                   </button>
                 </div>

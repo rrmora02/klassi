@@ -2,8 +2,8 @@ import { GroupLevel } from "@prisma/client";
 
 const config: Record<GroupLevel, { label: string; bg: string; color: string }> = {
   BEGINNER:     { label: "Principiante", bg: "#f8fafc", color: "#475569" },
-  INTERMEDIATE: { label: "Intermedio",   bg: "#f5f3ff", color: "#7c3aed" },
-  ADVANCED:     { label: "Avanzado",     bg: "#f5f3ff", color: "#7c3aed" },
+  INTERMEDIATE: { label: "Intermedio",   bg: "#d4e9e2", color: "#006241" },
+  ADVANCED:     { label: "Avanzado",     bg: "#d4e9e2", color: "#006241" },
   PROFESSIONAL: { label: "Profesional",  bg: "#fefce8", color: "#a16207" },
 };
 

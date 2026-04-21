@@ -43,7 +43,7 @@ export default async function InstructorDetailPage({ params }: PageProps) {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#ede9fe", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 500, flexShrink: 0 }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#d4e9e2", color: "#006241", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 500, flexShrink: 0 }}>
              {instructor.user.name.substring(0, 2).toUpperCase()}
           </div>
           <div>
@@ -125,7 +125,7 @@ export default async function InstructorDetailPage({ params }: PageProps) {
                     <tr key={g.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                       <td style={{ padding: "12px 20px", fontWeight: 500, color: "var(--color-text-primary)" }}>{g.name}</td>
                       <td style={{ padding: "12px 20px" }}>
-                        <span style={{ background: "#f5f3ff", color: "#7c3aed", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>
+                        <span style={{ background: "#d4e9e2", color: "#006241", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>
                           {g.discipline.name}
                         </span>
                       </td>
@@ -133,7 +133,7 @@ export default async function InstructorDetailPage({ params }: PageProps) {
                         {g._count.enrollments} / {g.capacity}
                       </td>
                       <td style={{ padding: "12px 20px", textAlign: "right" }}>
-                        <Link href={`/dashboard/grupos/${g.id}`} className="inline-flex items-center gap-1 rounded-md border border-violet-200 bg-violet-50 px-2.5 py-1.5 text-xs font-medium text-violet-700 transition-colors hover:bg-violet-100 hover:border-violet-300 dark:border-violet-800 dark:bg-violet-950 dark:text-violet-300 dark:hover:bg-violet-900">
+                        <Link href={`/dashboard/grupos/${g.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-house">
                           Ver grupo <ArrowRight className="h-3 w-3" />
                         </Link>
                       </td>

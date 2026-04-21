@@ -358,7 +358,7 @@ export function GroupForm({
           type="submit"
           disabled={isSubmitting || (isEdit && !isDirty)}
           style={{
-            background: isSubmitting || (isEdit && !isDirty) ? "#94a3b8" : "#5b21b6",
+            background: isSubmitting || (isEdit && !isDirty) ? "#94a3b8" : "#006241",
             color: "#fff", border: "none", borderRadius: 8,
             padding: "8px 24px", fontSize: 13, fontWeight: 500,
             cursor: isSubmitting ? "wait" : "pointer",

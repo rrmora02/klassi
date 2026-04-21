@@ -105,7 +105,7 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
             </button>
             <button type="submit" disabled={markPaid.isLoading} style={{
               padding: "8px 18px", borderRadius: 8, border: "none",
-              background: "#5b21b6", color: "#fff", fontSize: 13, fontWeight: 500,
+              background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
               cursor: markPaid.isLoading ? "not-allowed" : "pointer",
             }}>
               {markPaid.isLoading ? "Guardando..." : "Confirmar pago"}

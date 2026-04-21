@@ -71,7 +71,7 @@ export function TeamClientView() {
                   <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)" }}>{m.user.email}</p>
                 </td>
                 <td style={tdStyle}>
-                  <span style={{ background: m.role === "ADMIN" ? "#f5f3ff" : (m.role === "INSTRUCTOR" ? "#fdf4ff" : "#f0fdf4"), color: m.role === "ADMIN" ? "#7c3aed" : (m.role === "INSTRUCTOR" ? "#a21caf" : "#15803d"), padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500 }}>
+                  <span style={{ background: m.role === "ADMIN" ? "#d4e9e2" : (m.role === "INSTRUCTOR" ? "#fdf4ff" : "#f0fdf4"), color: m.role === "ADMIN" ? "#006241" : (m.role === "INSTRUCTOR" ? "#a21caf" : "#15803d"), padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500 }}>
                     {m.role}
                   </span>
                 </td>
@@ -121,7 +121,7 @@ export function TeamClientView() {
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                     <button 
                       onClick={() => copyToClipboard(inv.token)}
-                      style={{ padding: "6px 12px", background: "#5b21b6", color: "#fff", border: "none", borderRadius: 6, fontSize: 11, cursor: "pointer" }}
+                      style={{ padding: "6px 12px", background: "#00754A", color: "#fff", border: "none", borderRadius: 6, fontSize: 11, cursor: "pointer" }}
                     >
                       Copiar Link
                     </button>

@@ -93,7 +93,7 @@ export default async function ReportesPage() {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           { label: "Ingresos del mes",   value: formatCurrency(paidMonth._sum.amount ?? 0), sub: `${paidMonth._count} cobros`, color: "#15803d" },
-          { label: "Ingresos del año",   value: formatCurrency(yearTotal), sub: `Año ${year}`, color: "#7c3aed" },
+          { label: "Ingresos del año",   value: formatCurrency(yearTotal), sub: `Año ${year}`, color: "#006241" },
           { label: "Tasa de cobranza",   value: `${collectionRate}%`, sub: `${collectionPaid}/${collectionTotal} pagos`, color: collectionRate >= 80 ? "#15803d" : collectionRate >= 50 ? "#b45309" : "#b91c1c" },
           { label: "Asistencia del mes", value: `${attRate}%`, sub: `${attPresent}/${attTotal} registros`, color: attRate >= 80 ? "#15803d" : attRate >= 50 ? "#b45309" : "#b91c1c" },
         ].map(card => (
@@ -123,13 +123,13 @@ export default async function ReportesPage() {
                   <div style={{
                     width: "100%",
                     height: `${Math.max(heightPct, m.total > 0 ? 4 : 0)}%`,
-                    background: isCurrent ? "#5b21b6" : "#ddd6fe",
+                    background: isCurrent ? "#00754A" : "#d4e9e2",
                     borderRadius: "4px 4px 0 0",
                     minHeight: m.total > 0 ? 4 : 0,
                     transition: "height 0.3s",
                   }} />
                 </div>
-                <span style={{ fontSize: 10, color: isCurrent ? "#5b21b6" : "var(--color-text-secondary)", fontWeight: isCurrent ? 600 : 400 }}>
+                <span style={{ fontSize: 10, color: isCurrent ? "#00754A" : "var(--color-text-secondary)", fontWeight: isCurrent ? 600 : 400 }}>
                   {MONTHS[m.month]}
                 </span>
               </div>
@@ -246,7 +246,7 @@ export default async function ReportesPage() {
             <tbody>
               {monthlyRevenue.slice(0, month + 1).reverse().map(m => (
                 <tr key={m.month} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                  <td style={{ padding: "7px 8px", color: m.month === month ? "#5b21b6" : "var(--color-text-primary)", fontWeight: m.month === month ? 600 : 400 }}>
+                  <td style={{ padding: "7px 8px", color: m.month === month ? "#006241" : "var(--color-text-primary)", fontWeight: m.month === month ? 600 : 400 }}>
                     {MONTHS[m.month]}
                   </td>
                   <td style={{ padding: "7px 8px", color: m.total > 0 ? "#15803d" : "var(--color-text-tertiary)", fontWeight: 500 }}>

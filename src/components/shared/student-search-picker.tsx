@@ -60,8 +60,8 @@ export function StudentSearchPicker({ students, value, onChange, placeholder = "
 
   if (value) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "#f5f3ff" }}>
-        <span style={{ fontSize: 14, color: "#5b21b6", fontWeight: 500, flex: 1 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "#d4e9e2" }}>
+        <span style={{ fontSize: 14, color: "#006241", fontWeight: 500, flex: 1 }}>
           {fullName(value.firstName, value.lastName)}
         </span>
         <button

@@ -122,7 +122,7 @@ export function InstructorForm({
           disabled={isSubmitting}
           style={{
             padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 500,
-            background: "#5b21b6", color: "#fff", border: "none",
+            background: "#00754A", color: "#fff", border: "none",
             cursor: isSubmitting ? "not-allowed" : "pointer", opacity: isSubmitting ? 0.7 : 1,
             display: "flex", alignItems: "center", gap: 8,
           }}

@@ -38,7 +38,7 @@ export function EnrollStudentModal({ groupId }: Props) {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: "#5b21b6", color: "#fff", border: "none", cursor: "pointer", transition: "all 0.2s" }}
+        style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: "#00754A", color: "#fff", border: "none", cursor: "pointer", transition: "all 0.2s" }}
         onMouseOver={e => e.currentTarget.style.opacity = "0.9"}
         onMouseOut={e => e.currentTarget.style.opacity = "1"}
       >
@@ -88,7 +88,7 @@ export function EnrollStudentModal({ groupId }: Props) {
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
               <button type="button" onClick={handleClose} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "transparent", cursor: "pointer" }}>Cancelar</button>
-              <button type="submit" disabled={!studentId || enroll.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#5b21b6", color: "#fff", cursor: (!studentId || enroll.isLoading) ? "not-allowed" : "pointer", opacity: (!studentId || enroll.isLoading) ? 0.7 : 1 }}>
+              <button type="submit" disabled={!studentId || enroll.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#00754A", color: "#fff", cursor: (!studentId || enroll.isLoading) ? "not-allowed" : "pointer", opacity: (!studentId || enroll.isLoading) ? 0.7 : 1 }}>
                 {enroll.isLoading ? "Guardando..." : "Inscribir Alumno"}
               </button>
             </div>

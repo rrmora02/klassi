@@ -76,7 +76,7 @@ export function AttendanceClient() {
              type="date"
              value={dateStr}
              onChange={e => setDateStr(e.target.value)}
-             className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-violet-400 dark:focus:border-violet-500 [color-scheme:light] dark:[color-scheme:dark]"
+             className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent [color-scheme:light] dark:[color-scheme:dark]"
            />
          </div>
 
@@ -88,7 +88,7 @@ export function AttendanceClient() {
               <select
                  value={groupId}
                  onChange={e => setGroupId(e.target.value)}
-                 className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-violet-400 dark:focus:border-violet-500"
+                 className="w-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent"
               >
                  <option value="">Seleccione un grupo...</option>
                  {groups?.map(g => (

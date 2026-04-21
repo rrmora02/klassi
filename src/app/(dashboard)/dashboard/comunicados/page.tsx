@@ -48,7 +48,7 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
             {total} {total === 1 ? "comunicado" : "comunicados"}
           </p>
         </div>
-        <Link href="/dashboard/comunicados/nuevo" style={{ background: "#5b21b6", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+        <Link href="/dashboard/comunicados/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
           + Nuevo comunicado
         </Link>
       </div>
@@ -57,7 +57,7 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 24 }}>
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "16px 20px" }}>
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Total</p>
-          <p style={{ fontSize: 26, fontWeight: 600, color: "#5b21b6", margin: "4px 0 0" }}>{total}</p>
+          <p style={{ fontSize: 26, fontWeight: 600, color: "#006241", margin: "4px 0 0" }}>{total}</p>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>comunicados</p>
         </div>
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "16px 20px" }}>
@@ -78,7 +78,7 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
           <Bell size={32} style={{ color: "var(--color-text-tertiary)", marginBottom: 12 }} />
           <p style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-secondary)", margin: 0 }}>Sin comunicados aún</p>
           <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", margin: "4px 0 16px" }}>Crea tu primer comunicado para notificar a los alumnos y familias</p>
-          <Link href="/dashboard/comunicados/nuevo" style={{ background: "#5b21b6", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+          <Link href="/dashboard/comunicados/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
             + Nuevo comunicado
           </Link>
         </div>
@@ -136,7 +136,7 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
           <div style={{ display: "flex", gap: 4 }}>
             {page > 1 && <Link href={buildUrl(page - 1)} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>← Ant</Link>}
             {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
-              <Link key={p} href={buildUrl(p)} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#5b21b6" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
+              <Link key={p} href={buildUrl(p)} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#006241" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
             ))}
             {page < pages && <Link href={buildUrl(page + 1)} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>Sig →</Link>}
           </div>
