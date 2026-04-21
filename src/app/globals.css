@@ -5,33 +5,33 @@
 /* ─── CSS Variables ────────────────────────────────────────────────── */
 :root {
   /* Tailwind theme tokens */
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --border: 214 32% 91%;
+  --background: 42 21% 93%;    /* #f2f0eb Neutral Warm — Starbucks page canvas */
+  --foreground: 0 0% 9%;
+  --border: 210 13% 85%;       /* #d6dbde */
 
-  /* App color tokens */
-  --color-text-primary:       #111827;  /* gray-900  */
-  --color-text-secondary:     #6b7280;  /* gray-500  */
-  --color-text-tertiary:      #9ca3af;  /* gray-400  */
-  --color-background-primary: #ffffff;  /* white     */
-  --color-background-secondary: #f9fafb; /* gray-50  */
-  --color-border-secondary:   #e5e7eb;  /* gray-200  */
-  --color-border-tertiary:    #f3f4f6;  /* gray-100  */
-  --border-radius-lg:         0.75rem;
+  /* App color tokens — Starbucks palette */
+  --color-text-primary:         rgba(0, 0, 0, 0.87);   /* Text Black */
+  --color-text-secondary:       rgba(0, 0, 0, 0.58);   /* Text Black Soft */
+  --color-text-tertiary:        rgba(0, 0, 0, 0.38);
+  --color-background-primary:   #ffffff;
+  --color-background-secondary: #f2f0eb;               /* Neutral Warm */
+  --color-border-secondary:     #d6dbde;
+  --color-border-tertiary:      #e7e7e7;
+  --border-radius-lg:           0.75rem;
 }
 
 .dark {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  --border: 217 33% 17%;
+  --background: 164 31% 17%;   /* #1E3932 House Green */
+  --foreground: 0 0% 100%;
+  --border: 165 31% 24%;       /* #2b5148 Green Uplift */
 
-  --color-text-primary:         #f9fafb;  /* gray-50   */
-  --color-text-secondary:       #9ca3af;  /* gray-400  */
-  --color-text-tertiary:        #6b7280;  /* gray-500  */
-  --color-background-primary:   #1f2937;  /* gray-800  */
-  --color-background-secondary: #111827;  /* gray-900  */
-  --color-border-secondary:     #374151;  /* gray-700  */
-  --color-border-tertiary:      #1f2937;  /* gray-800  */
+  --color-text-primary:         rgba(255, 255, 255, 1);
+  --color-text-secondary:       rgba(255, 255, 255, 0.70);
+  --color-text-tertiary:        rgba(255, 255, 255, 0.50);
+  --color-background-primary:   #2b5148;               /* Green Uplift */
+  --color-background-secondary: #1E3932;               /* House Green */
+  --color-border-secondary:     rgba(255, 255, 255, 0.15);
+  --color-border-tertiary:      rgba(255, 255, 255, 0.10);
 }
 
 /* ─── Base ─────────────────────────────────────────────────────────── */
@@ -49,6 +49,7 @@ body {
   color: hsl(var(--foreground));
   font-family: inherit;
   line-height: 1.5;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -67,7 +68,7 @@ body {
 
 /* ─── Focus rings ───────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid #7c3aed;
+  outline: 2px solid #00754A;
   outline-offset: 2px;
 }
 

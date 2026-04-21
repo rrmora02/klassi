@@ -40,7 +40,7 @@ export function Sidebar() {
     <div className="flex h-full w-full flex-col border-r border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 md:w-60">
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-gray-200 dark:border-gray-700 px-6">
-        <span className="text-xl font-semibold text-violet-900 dark:text-violet-400">Klassi</span>
+        <span className="text-xl font-semibold text-sb-green dark:text-sb-light">Klassi</span>
       </div>
 
       {/* Nav principal */}
@@ -54,11 +54,11 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-violet-50 dark:bg-violet-950 text-violet-900 dark:text-violet-300"
+                  ? "bg-sb-light/30 dark:bg-sb-house text-sb-green dark:text-sb-light"
                   : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
               )}
             >
-              <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-violet-700 dark:text-violet-400" : "text-gray-400 dark:text-gray-500")} />
+              <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-gray-500")} />
               {label}
             </Link>
           );
@@ -78,11 +78,11 @@ export function Sidebar() {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-violet-50 dark:bg-violet-950 text-violet-900 dark:text-violet-300"
+                    ? "bg-sb-light/30 dark:bg-sb-house text-sb-green dark:text-sb-light"
                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100"
                 )}
               >
-                <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-violet-700 dark:text-violet-400" : "text-gray-400 dark:text-gray-500")} />
+                <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-gray-500")} />
                 {label}
               </Link>
             );

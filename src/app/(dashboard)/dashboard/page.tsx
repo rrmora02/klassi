@@ -138,7 +138,7 @@ export default async function DashboardPage() {
                 : `Tu período de prueba vence en ${daysLeft} ${daysLeft === 1 ? "día" : "días"}.`}
             </p>
           </div>
-          <span className="ml-4 rounded-lg bg-violet-900 px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
+          <span className="ml-4 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
             Actualizar plan
           </span>
         </div>
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
             {stats.overdueCount > 0 && (
               <Link
                 href="/dashboard/pagos?status=OVERDUE"
-                className="flex items-center gap-1 text-xs text-violet-700 hover:underline"
+                className="flex items-center gap-1 text-xs text-sb-accent hover:underline"
               >
                 Ver todos <ChevronRight className="h-3 w-3" />
               </Link>
@@ -217,7 +217,7 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/alumnos/${p.student.id}`}
-                        className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-violet-700 dark:hover:text-violet-400"
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
                       >
                         {fullName(p.student.firstName, p.student.lastName)}
                       </Link>
@@ -250,7 +250,7 @@ export default async function DashboardPage() {
         <section className="lg:col-span-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-5 py-4">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-violet-500 dark:text-violet-400" />
+              <Users className="h-4 w-4 text-sb-accent dark:text-sb-light" />
               <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Alumnos recientes</h2>
             </div>
             <Link
