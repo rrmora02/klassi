@@ -168,36 +168,50 @@ export function GroupForm({
           </Field>
         </div>
 
-        <Field label="Modalidad Estratégica" error={errors.type?.message} style={{ gridColumn: "1 / -1" }}>
+        <div style={{ gridColumn: "1 / -1" }}>
+          <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 8 }}>
+            Modalidad Estratégica
+          </label>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <label style={{
-              border: "1.5px solid var(--color-border-secondary)", borderRadius: 10, padding: 14, cursor: "pointer",
-              background: currentType === "FIXED" ? "#d4e9e2" : "var(--color-background-primary)",
-              borderColor: currentType === "FIXED" ? "#00754A" : "var(--color-border-secondary)"
-            }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <input type="radio" value="FIXED" {...register("type")} style={{ marginTop: 2 }} />
+            <label className={cn(
+              "block rounded-xl border-[1.5px] p-4 cursor-pointer transition-colors",
+              currentType === "FIXED"
+                ? "border-sb-accent bg-sb-light/30 dark:bg-sb-accent/[0.12] dark:border-sb-accent"
+                : "border-gray-200 dark:border-[rgba(255,255,255,0.15)] bg-white dark:bg-sb-house hover:bg-gray-50 dark:hover:bg-sb-uplift"
+            )}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <input type="radio" value="FIXED" {...register("type")} className="mt-1 accent-sb-accent" />
                 <div>
-                  <h4 style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>Estación Fija (Recomendado)</h4>
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", lineHeight: 1.4 }}>El nivel del grupo NO cambia. Los alumnos avanzan mudándose (transfiriéndose) a otros grupos de mayor nivel.</p>
+                  <h4 className={cn("m-0 mb-1 text-[13px] font-semibold", currentType === "FIXED" ? "text-sb-green dark:text-sb-light" : "text-gray-800 dark:text-gray-100")}>
+                    Estación Fija <span className="text-[11px] font-normal text-sb-accent">(Recomendado)</span>
+                  </h4>
+                  <p className="m-0 text-xs leading-[1.5] text-gray-500 dark:text-sb-light/60">
+                    El nivel del grupo NO cambia. Los alumnos avanzan mudándose (transfiriéndose) a otros grupos de mayor nivel.
+                  </p>
                 </div>
               </div>
             </label>
-            <label style={{
-              border: "1.5px solid var(--color-border-secondary)", borderRadius: 10, padding: 14, cursor: "pointer",
-              background: currentType === "PROGRESSIVE" ? "#d4e9e2" : "var(--color-background-primary)",
-              borderColor: currentType === "PROGRESSIVE" ? "#00754A" : "var(--color-border-secondary)"
-            }}>
-              <div style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <input type="radio" value="PROGRESSIVE" {...register("type")} style={{ marginTop: 2 }} />
+            <label className={cn(
+              "block rounded-xl border-[1.5px] p-4 cursor-pointer transition-colors",
+              currentType === "PROGRESSIVE"
+                ? "border-sb-accent bg-sb-light/30 dark:bg-sb-accent/[0.12] dark:border-sb-accent"
+                : "border-gray-200 dark:border-[rgba(255,255,255,0.15)] bg-white dark:bg-sb-house hover:bg-gray-50 dark:hover:bg-sb-uplift"
+            )}>
+              <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                <input type="radio" value="PROGRESSIVE" {...register("type")} className="mt-1 accent-sb-accent" />
                 <div>
-                  <h4 style={{ margin: "0 0 4px", fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)" }}>Generacional</h4>
-                  <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)", lineHeight: 1.4 }}>Todos los alumnos avanzan juntos. El operador de Klassi subirá manualmente el nivel general de este grupo en navidad o fin de ciclo.</p>
+                  <h4 className={cn("m-0 mb-1 text-[13px] font-semibold", currentType === "PROGRESSIVE" ? "text-sb-green dark:text-sb-light" : "text-gray-800 dark:text-gray-100")}>
+                    Generacional
+                  </h4>
+                  <p className="m-0 text-xs leading-[1.5] text-gray-500 dark:text-sb-light/60">
+                    Todos los alumnos avanzan juntos. El operador de Klassi subirá manualmente el nivel general de este grupo en navidad o fin de ciclo.
+                  </p>
                 </div>
               </div>
             </label>
           </div>
-        </Field>
+          {errors.type && <p style={{ fontSize: 12, color: "#ef4444", marginTop: 6 }}>{errors.type.message}</p>}
+        </div>
       </div>
 
       {/* ── Asignación ───────────────────────────────── */}
