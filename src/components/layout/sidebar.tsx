@@ -54,7 +54,7 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-sb-light/30 dark:bg-sb-house text-sb-green dark:text-sb-light"
+                  ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
                   : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
               )}
             >
@@ -78,7 +78,7 @@ export function Sidebar() {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-sb-light/30 dark:bg-sb-house text-sb-green dark:text-sb-light"
+                    ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
                     : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
                 )}
               >
