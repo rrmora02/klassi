@@ -27,7 +27,7 @@ export const studentFormSchema = z.object({
 
   phone: z
     .string()
-    .regex(/^[\d\s\+\-\(\)]{7,20}$/, "Teléfono inválido")
+    .regex(/^[\d\s\+\-\(\)]{7,20}$/, "Solo dígitos, espacios y caracteres +/- ( ) (7-20 caracteres)")
     .optional()
     .or(z.literal("")),
 
@@ -47,7 +47,7 @@ export const studentFormSchema = z.object({
 
   tutorPhone: z
     .string()
-    .regex(/^[\d\s\+\-\(\)]{7,20}$/, "Teléfono del tutor inválido")
+    .regex(/^[\d\s\+\-\(\)]{7,20}$/, "Solo dígitos, espacios y caracteres +/- ( ) (7-20 caracteres)")
     .optional()
     .or(z.literal("")),
 

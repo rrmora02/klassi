@@ -152,6 +152,7 @@ export function StudentForm({
             type="date"
             error={!!errors.birthDate}
             max={new Date().toISOString().split("T")[0]}
+            className="[color-scheme:light] dark:[color-scheme:dark]"
           />
         </Field>
         <Field label="Sexo" error={errors.gender?.message}>
@@ -166,6 +167,7 @@ export function StudentForm({
           <Input
             {...register("phone")}
             type="tel"
+            inputMode="tel"
             placeholder="Ej: 81 1234 5678"
             error={!!errors.phone}
           />
@@ -210,6 +212,7 @@ export function StudentForm({
           <Input
             {...register("tutorPhone")}
             type="tel"
+            inputMode="tel"
             placeholder="Ej: 81 9876 5432"
             error={!!errors.tutorPhone}
           />

@@ -10,10 +10,10 @@ import type { PaymentMethod } from "@prisma/client";
 import { StudentSearchPicker, type StudentOption } from "@/components/shared/student-search-picker";
 
 const schema = z.object({
-  concept: z.string().min(1, "Escribe el concepto"),
-  amount:  z.number({ invalid_type_error: "Ingresa un monto" }).positive("Debe ser mayor a 0"),
+  concept: z.string().min(1, "Escribe el concepto").max(200, "Máximo 200 caracteres"),
+  amount:  z.number({ invalid_type_error: "Ingresa un monto" }).positive("Debe ser mayor a 0").max(1_000_000, "Monto demasiado alto"),
   method:  z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"] as [PaymentMethod, ...PaymentMethod[]]),
-  dueDate: z.string().optional(),
+  dueDate: z.string().refine(v => !v || !isNaN(Date.parse(v)), "Fecha inválida").optional(),
 });
 
 type FormValues = z.infer<typeof schema>;

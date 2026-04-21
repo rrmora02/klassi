@@ -11,9 +11,9 @@ const tenantSchema = z.object({
   name:         z.string().min(2, "Mínimo 2 caracteres"),
   primaryColor: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Código Hex (Ej. #1D3557)").optional().or(z.literal("")),
   logo:         z.string().url("Debe ser URL válida").optional().or(z.literal("")),
-  phone:        z.string().optional().or(z.literal("")),
+  phone:        z.string().regex(/^[\d\s\+\-\(\)]{7,20}$/, "Solo dígitos, espacios y caracteres +/- ( ) (7-20 caracteres)").optional().or(z.literal("")),
   email:        z.string().email("Correo inválido").optional().or(z.literal("")),
-  address:      z.string().optional().or(z.literal("")),
+  address:      z.string().max(200, "Máximo 200 caracteres").optional().or(z.literal("")),
 });
 
 type TenantFormValues = z.infer<typeof tenantSchema>;
@@ -99,7 +99,7 @@ export function TenantForm({ initialData }: Props) {
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
           <div>
             <label style={labelStyle}>Teléfono / WhatsApp</label>
-            <input {...register("phone")} className={inputCls} placeholder="(123) 456-7890" />
+            <input {...register("phone")} type="tel" inputMode="tel" className={inputCls} placeholder="Ej. 81 1234 5678" />
             {errors.phone && <p style={errorStyle}>{errors.phone.message}</p>}
           </div>
 

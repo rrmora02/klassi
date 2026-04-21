@@ -65,7 +65,9 @@ export function InstructorForm({
           <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)" }}>Teléfono</label>
           <input
             {...form.register("phone")}
-            placeholder="Opcional"
+            type="tel"
+            inputMode="tel"
+            placeholder="Ej. 81 1234 5678"
             className={inputCls}
           />
           {errors.phone && <span style={{ fontSize: 12, color: "#ef4444" }}>{errors.phone.message}</span>}

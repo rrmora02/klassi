@@ -10,8 +10,8 @@ import type { PaymentMethod } from "@prisma/client";
 
 const schema = z.object({
   method:    z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"] as [PaymentMethod, ...PaymentMethod[]]),
-  reference: z.string().optional(),
-  paidAt:    z.string().optional(),
+  reference: z.string().max(100, "Máximo 100 caracteres").optional(),
+  paidAt:    z.string().refine(v => !v || !isNaN(Date.parse(v)), "Fecha inválida").optional(),
 });
 
 type FormValues = z.infer<typeof schema>;

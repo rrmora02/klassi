@@ -10,8 +10,8 @@ import { StudentSearchPicker, type StudentOption } from "@/components/shared/stu
 import { User } from "lucide-react";
 
 const schema = z.object({
-  title: z.string().min(1, "El título es requerido"),
-  body:  z.string().min(1, "El cuerpo es requerido"),
+  title: z.string().min(1, "El título es requerido").max(100, "Máximo 100 caracteres"),
+  body:  z.string().min(1, "El cuerpo es requerido").max(2000, "Máximo 2,000 caracteres"),
 });
 
 type FormValues = z.infer<typeof schema>;
