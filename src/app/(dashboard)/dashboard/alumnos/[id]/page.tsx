@@ -88,7 +88,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
 
         {/* Acciones */}
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <StudentShareButton studentId={student.id} existingToken={student.shareToken} />
+          <StudentShareButton studentId={student.id} />
           <StudentActions
             studentId={student.id}
             studentName={fullName(student.firstName, student.lastName)}

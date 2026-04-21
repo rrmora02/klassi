@@ -6,21 +6,24 @@ import { Share2, Copy, Check, X } from "lucide-react";
 
 interface Props {
   studentId: string;
-  existingToken?: string | null;
 }
 
-export function StudentShareButton({ studentId, existingToken }: Props) {
-  const [open, setOpen]       = useState(false);
-  const [token, setToken]     = useState<string | null>(existingToken ?? null);
-  const [copied, setCopied]   = useState(false);
+export function StudentShareButton({ studentId }: Props) {
+  const [open, setOpen]     = useState(false);
+  const [link, setLink]     = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const generate = api.students.generateShareLink.useMutation({
-    onSuccess: (data) => setToken(data.shareToken),
+    onSuccess: (data) => {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      setLink(`${origin}/alumno/${data.shareToken}`);
+    },
   });
 
-  const link = token
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/alumno/${token}`
-    : null;
+  const handleOpen = () => {
+    setOpen(true);
+    if (!link) generate.mutate({ id: studentId });
+  };
 
   const handleCopy = () => {
     if (!link) return;
@@ -32,7 +35,7 @@ export function StudentShareButton({ studentId, existingToken }: Props) {
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
         style={{
           display: "flex", alignItems: "center", gap: 6,
           padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500,
@@ -55,13 +58,13 @@ export function StudentShareButton({ studentId, existingToken }: Props) {
             padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
           }}>
             {/* Header */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
               <div>
                 <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>
                   Compartir historial con el tutor
                 </h2>
                 <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>
-                  Genera un enlace seguro que el tutor puede ver sin iniciar sesión.
+                  Enlace de solo lectura — el tutor no necesita crear cuenta.
                 </p>
               </div>
               <button
@@ -73,23 +76,9 @@ export function StudentShareButton({ studentId, existingToken }: Props) {
             </div>
 
             {/* Contenido */}
-            {!token ? (
-              <div style={{ textAlign: "center", padding: "24px 0" }}>
-                <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 20 }}>
-                  Aún no se ha generado un enlace para este alumno.
-                </p>
-                <button
-                  onClick={() => generate.mutate({ id: studentId })}
-                  disabled={generate.isLoading}
-                  style={{
-                    padding: "10px 24px", borderRadius: 8, border: "none",
-                    background: "#00754A", color: "#fff", fontSize: 14, fontWeight: 500,
-                    cursor: generate.isLoading ? "not-allowed" : "pointer",
-                    opacity: generate.isLoading ? 0.7 : 1,
-                  }}
-                >
-                  {generate.isLoading ? "Generando..." : "Generar enlace"}
-                </button>
+            {generate.isLoading || !link ? (
+              <div style={{ textAlign: "center", padding: "20px 0", color: "var(--color-text-secondary)", fontSize: 13 }}>
+                Generando enlace...
               </div>
             ) : (
               <div>
@@ -99,19 +88,15 @@ export function StudentShareButton({ studentId, existingToken }: Props) {
                 <div style={{ display: "flex", gap: 8 }}>
                   <input
                     readOnly
-                    value={link ?? ""}
-                    style={{
-                      flex: 1, padding: "9px 12px", borderRadius: 8, fontSize: 12,
-                      border: "0.5px solid var(--color-border-secondary)",
-                      background: "var(--color-background-secondary)",
-                      color: "var(--color-text-secondary)", outline: "none",
-                    }}
+                    value={link}
+                    onClick={e => (e.target as HTMLInputElement).select()}
+                    className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.15)] bg-gray-50 dark:bg-sb-house text-gray-500 dark:text-sb-light/60 px-3 py-2 text-xs outline-none"
                   />
                   <button
                     onClick={handleCopy}
                     style={{
-                      padding: "9px 14px", borderRadius: 8, border: "none",
-                      background: copied ? "#00754A" : "var(--color-background-secondary)",
+                      padding: "8px 14px", borderRadius: 8, flexShrink: 0,
+                      background: copied ? "#00754A" : "transparent",
                       color: copied ? "#fff" : "var(--color-text-secondary)",
                       border: "0.5px solid var(--color-border-secondary)",
                       cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
@@ -122,8 +107,8 @@ export function StudentShareButton({ studentId, existingToken }: Props) {
                     {copied ? "¡Copiado!" : "Copiar"}
                   </button>
                 </div>
-                <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 10 }}>
-                  Cualquier persona con este enlace puede ver el historial del alumno. No comparte datos sensibles ni permite editar.
+                <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 10, lineHeight: 1.5 }}>
+                  Cualquier persona con este enlace puede ver el historial del alumno. No permite editar ni comparte notas internas.
                 </p>
               </div>
             )}

@@ -458,17 +458,11 @@ export const studentsRouter = createTRPCRouter({
 
       const student = await db.student.findFirst({
         where: { id: input.id, tenantId },
-        select: { id: true, shareToken: true },
+        select: { id: true },
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const shareToken = student.shareToken ?? crypto.randomUUID();
-
-      await db.student.update({
-        where: { id: input.id },
-        data:  { shareToken },
-      });
-
-      return { shareToken };
+      // El CUID del alumno es el token — 25 chars aleatorios, imposible de adivinar
+      return { shareToken: student.id };
     }),
 });

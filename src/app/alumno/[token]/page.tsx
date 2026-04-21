@@ -35,7 +35,7 @@ export async function generateMetadata(
   { params }: { params: { token: string } }
 ): Promise<Metadata> {
   const student = await db.student.findUnique({
-    where: { shareToken: params.token },
+    where: { id: params.token },
     select: { firstName: true, lastName: true, tenant: { select: { name: true } } },
   });
   if (!student) return { title: "Perfil no encontrado" };
@@ -49,7 +49,7 @@ export async function generateMetadata(
 
 export default async function AlumnoPublicPage({ params }: { params: { token: string } }) {
   const student = await db.student.findUnique({
-    where: { shareToken: params.token },
+    where: { id: params.token },
     select: {
       firstName:  true,
       lastName:   true,
