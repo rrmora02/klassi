@@ -6,6 +6,10 @@ import { studentFormSchema, studentFormDefaults, type StudentFormValues } from "
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
+const sanitizePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
+  e.target.value = e.target.value.replace(/[^\d\s+\-()]/g, "");
+};
+
 // ─── Primitivos del formulario ────────────────────────────────────
 
 function Field({ label, error, required, children }: {
@@ -165,7 +169,7 @@ export function StudentForm({
         </Field>
         <Field label="Teléfono" error={errors.phone?.message}>
           <Input
-            {...register("phone")}
+            {...register("phone", { onChange: sanitizePhone })}
             type="tel"
             inputMode="tel"
             placeholder="Ej: 81 1234 5678"
@@ -210,7 +214,7 @@ export function StudentForm({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
         <Field label="Teléfono del tutor" error={errors.tutorPhone?.message}>
           <Input
-            {...register("tutorPhone")}
+            {...register("tutorPhone", { onChange: sanitizePhone })}
             type="tel"
             inputMode="tel"
             placeholder="Ej: 81 9876 5432"

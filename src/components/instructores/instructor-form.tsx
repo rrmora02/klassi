@@ -4,6 +4,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { instructorFormSchema, type InstructorFormValues, instructorFormDefaults } from "@/lib/schemas/instructor.schema";
 
+const sanitizePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
+  e.target.value = e.target.value.replace(/[^\d\s+\-()]/g, "");
+};
+
 // ─── Shared input class tokens ─────────────────────────────────────
 const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
 const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
@@ -64,7 +68,7 @@ export function InstructorForm({
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)" }}>Teléfono</label>
           <input
-            {...form.register("phone")}
+            {...form.register("phone", { onChange: sanitizePhone })}
             type="tel"
             inputMode="tel"
             placeholder="Ej. 81 1234 5678"
