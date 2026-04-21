@@ -29,7 +29,7 @@ export async function TopBar() {
   }
 
   return (
-    <div className="flex h-16 flex-1 items-center justify-between bg-white dark:bg-gray-900 px-4 md:px-6">
+    <div className="flex h-16 flex-1 items-center justify-between bg-white dark:bg-sb-uplift px-4 md:px-6">
       <div className="flex items-center gap-3">
         {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} />}
       </div>

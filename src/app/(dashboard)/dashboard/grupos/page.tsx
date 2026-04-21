@@ -252,7 +252,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
                     </span>
                   </td>
                   <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                    <Link href={`/dashboard/grupos/${g.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-house">
+                    <Link href={`/dashboard/grupos/${g.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
                       Ver <ArrowRight className="h-3 w-3" />
                     </Link>
                   </td>

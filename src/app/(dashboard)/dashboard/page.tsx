@@ -120,7 +120,7 @@ export default async function DashboardPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Inicio</h1>
-        <p className="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{tenant.name}</p>
+        <p className="mt-0.5 text-sm text-gray-500 dark:text-sb-light/70">{tenant.name}</p>
       </div>
 
       {/* Trial banner */}
@@ -173,8 +173,8 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
 
         {/* Adeudos vencidos */}
-        <section className="lg:col-span-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-5 py-4">
+        <section className="lg:col-span-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-[rgba(255,255,255,0.07)] px-5 py-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-500" />
               <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Adeudos vencidos</h2>
@@ -199,11 +199,11 @@ export default async function DashboardPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 dark:bg-green-950">
                 <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
-              <p className="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">Sin adeudos vencidos</p>
-              <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500">Todos los pagos están al corriente</p>
+              <p className="mt-3 text-sm font-medium text-gray-700 dark:text-sb-light/80">Sin adeudos vencidos</p>
+              <p className="mt-0.5 text-xs text-gray-400 dark:text-sb-light/50">Todos los pagos están al corriente</p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-50 dark:divide-gray-800">
+            <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
               {overduePayments.map((p) => {
                 const days = p.dueDate ? daysOverdue(p.dueDate) : 0;
                 return (
@@ -221,7 +221,7 @@ export default async function DashboardPage() {
                       >
                         {fullName(p.student.firstName, p.student.lastName)}
                       </Link>
-                      <p className="truncate text-xs text-gray-400 dark:text-gray-500">{p.concept}</p>
+                      <p className="truncate text-xs text-gray-400 dark:text-sb-light/50">{p.concept}</p>
                     </div>
 
                     {/* Amount */}
@@ -247,8 +247,8 @@ export default async function DashboardPage() {
         </section>
 
         {/* Alumnos recientes */}
-        <section className="lg:col-span-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-5 py-4">
+        <section className="lg:col-span-2 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-[rgba(255,255,255,0.07)] px-5 py-4">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-sb-accent dark:text-sb-light" />
               <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Alumnos recientes</h2>
@@ -266,7 +266,7 @@ export default async function DashboardPage() {
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sb-light/30 dark:bg-sb-house">
                 <Users className="h-5 w-5 text-sb-accent dark:text-sb-light" />
               </div>
-              <p className="mt-3 text-sm font-medium text-gray-700 dark:text-gray-300">Sin alumnos aún</p>
+              <p className="mt-3 text-sm font-medium text-gray-700 dark:text-sb-light/80">Sin alumnos aún</p>
               <Link
                 href="/dashboard/alumnos/nuevo"
                 className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green"
@@ -275,7 +275,7 @@ export default async function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-50 dark:divide-gray-800">
+            <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
               {recentStudents.map((s) => {
                 const disc = s.enrollments[0]?.group.discipline;
                 return (
@@ -294,14 +294,14 @@ export default async function DashboardPage() {
                         {fullName(s.firstName, s.lastName)}
                       </Link>
                       {disc ? (
-                        <p className="text-xs text-gray-400 dark:text-gray-500">{disc.name}</p>
+                        <p className="text-xs text-gray-400 dark:text-sb-light/50">{disc.name}</p>
                       ) : (
-                        <p className="text-xs text-gray-400 dark:text-gray-500">Sin grupo activo</p>
+                        <p className="text-xs text-gray-400 dark:text-sb-light/50">Sin grupo activo</p>
                       )}
                     </div>
 
                     {/* Date */}
-                    <span className="flex-shrink-0 text-xs text-gray-400 dark:text-gray-500 tabular-nums">
+                    <span className="flex-shrink-0 text-xs text-gray-400 dark:text-sb-light/50 tabular-nums">
                       {formatDate(s.createdAt)}
                     </span>
                   </li>
@@ -314,25 +314,25 @@ export default async function DashboardPage() {
 
       {/* Quick actions */}
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-sb-light/50">
           Acciones rápidas
         </h2>
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard/alumnos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift px-4 py-3 text-sm font-medium text-gray-700 dark:text-sb-light/80 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <Plus className="h-4 w-4" /> Nuevo alumno
           </Link>
           <Link
             href="/dashboard/grupos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift px-4 py-3 text-sm font-medium text-gray-700 dark:text-sb-light/80 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <BookOpen className="h-4 w-4" /> Nuevo grupo
           </Link>
           <Link
             href="/dashboard/alumnos"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift px-4 py-3 text-sm font-medium text-gray-700 dark:text-sb-light/80 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <Users className="h-4 w-4" /> Ver alumnos
           </Link>
