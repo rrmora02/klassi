@@ -95,14 +95,15 @@ export function StudentForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<StudentFormValues>({
     resolver:      zodResolver(studentFormSchema),
     defaultValues: { ...studentFormDefaults, ...defaultValues },
-    mode:          "onBlur", // validar al salir de cada campo
+    mode:          "onBlur",
   });
 
-  const tutorName = watch("tutorName");
+  const studentPhone = watch("phone");
 
   async function handleFormSubmit(data: StudentFormValues) {
     setIsSubmitting(true);
@@ -193,16 +194,16 @@ export function StudentForm({
       {/* ── Tutor / Responsable ──────────────────────── */}
       <SectionTitle>Tutor / Responsable</SectionTitle>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-        <Field label="Nombre del tutor" error={errors.tutorName?.message}>
+        <Field label="Nombre del tutor" required error={errors.tutorName?.message}>
           <Input
             {...register("tutorName")}
             placeholder="Ej: Roberto López"
             error={!!errors.tutorName}
           />
         </Field>
-        <Field label="Relación" error={errors.tutorRelationship?.message}>
+        <Field label="Relación" required error={errors.tutorRelationship?.message}>
           <Select {...register("tutorRelationship")} error={!!errors.tutorRelationship}>
-            <option value="">Sin especificar</option>
+            <option value="" disabled>Selecciona...</option>
             <option value="madre">Madre</option>
             <option value="padre">Padre</option>
             <option value="tutor">Tutor legal</option>
@@ -213,7 +214,7 @@ export function StudentForm({
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <Field label="Teléfono del tutor" error={errors.tutorPhone?.message}>
+        <Field label="Teléfono del tutor" required error={errors.tutorPhone?.message}>
           <Input
             {...register("tutorPhone", { onChange: sanitizePhone })}
             type="tel"
@@ -222,6 +223,20 @@ export function StudentForm({
             placeholder="10 dígitos"
             error={!!errors.tutorPhone}
           />
+          {studentPhone?.length === 10 && (
+            <button
+              type="button"
+              onClick={() => setValue("tutorPhone", studentPhone, { shouldValidate: true })}
+              style={{
+                marginTop: 6, fontSize: 11, fontWeight: 500,
+                color: "#00754A", background: "none", border: "none",
+                cursor: "pointer", padding: 0, textDecoration: "underline",
+                textUnderlineOffset: 2,
+              }}
+            >
+              Usar el mismo número del alumno ({studentPhone})
+            </button>
+          )}
         </Field>
         <Field label="Correo del tutor" error={errors.tutorEmail?.message}>
           <Input
