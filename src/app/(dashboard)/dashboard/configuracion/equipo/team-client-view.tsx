@@ -47,8 +47,8 @@ export function TeamClientView() {
 
       {/* Miembros Activos */}
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border-tertiary)", background: "#f8fafc" }}>
-          <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0 }}>Usuarios Activos</h2>
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0, color: "var(--color-text-primary)" }}>Usuarios Activos</h2>
         </div>
         <table style={{ width: "100%", minWidth: 500, borderCollapse: "collapse" }}>
           <thead>
@@ -94,9 +94,9 @@ export function TeamClientView() {
 
       {/* Invitaciones Pendientes */}
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border-tertiary)", background: "#fefce8" }}>
-          <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0, color: "#854d0e" }}>Invitaciones Pendientes ⏳</h2>
-          <p style={{ margin: "2px 0 0", fontSize: 12, color: "#a16207" }}>Usuarios que no han aceptado el Link o no han creado su cuenta.</p>
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0, color: "var(--color-text-primary)" }}>Invitaciones Pendientes ⏳</h2>
+          <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--color-text-secondary)" }}>Usuarios que no han aceptado el Link o no han creado su cuenta.</p>
         </div>
         <table style={{ width: "100%", minWidth: 500, borderCollapse: "collapse" }}>
           <thead>

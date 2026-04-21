@@ -51,23 +51,16 @@ export function StudentSearchPicker({ students, value, onChange, placeholder = "
     setQuery("");
   };
 
-  const inputStyle: React.CSSProperties = {
-    width: "100%", padding: "9px 12px 9px 34px", borderRadius: 8,
-    border: `1px solid ${error ? "#fca5a5" : "var(--color-border-secondary)"}`,
-    fontSize: 14, outline: "none", boxSizing: "border-box",
-    background: "var(--color-background-primary)", color: "var(--color-text-primary)",
-  };
-
   if (value) {
     return (
-      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "#d4e9e2" }}>
-        <span style={{ fontSize: 14, color: "#006241", fontWeight: 500, flex: 1 }}>
+      <div className="flex items-center gap-2 rounded-lg border border-sb-light dark:border-sb-uplift bg-sb-light/40 dark:bg-sb-uplift px-3 py-2">
+        <span className="flex-1 text-sm font-medium text-sb-green dark:text-sb-light">
           {fullName(value.firstName, value.lastName)}
         </span>
         <button
           type="button"
           onClick={clear}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "#6b7280", display: "flex", alignItems: "center", padding: 2 }}
+          className="flex items-center p-0.5 text-gray-400 dark:text-sb-light/50 hover:text-gray-600 dark:hover:text-sb-light border-none bg-transparent cursor-pointer"
         >
           <X size={14} />
         </button>
@@ -76,27 +69,29 @@ export function StudentSearchPicker({ students, value, onChange, placeholder = "
   }
 
   return (
-    <div ref={containerRef} style={{ position: "relative" }}>
-      <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#9ca3af", pointerEvents: "none" }} />
+    <div ref={containerRef} className="relative">
+      <Search
+        size={14}
+        className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-sb-light/50"
+      />
       <input
         type="text"
         value={query}
         onChange={e => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder={placeholder}
-        style={inputStyle}
         autoComplete="off"
+        className={`w-full rounded-lg border bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 pl-9 pr-3 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent ${
+          error
+            ? "border-red-300 dark:border-red-500"
+            : "border-gray-200 dark:border-[rgba(255,255,255,0.20)]"
+        }`}
       />
 
       {open && (
-        <div style={{
-          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
-          background: "#fff", border: "1px solid var(--color-border-secondary)",
-          borderRadius: 8, boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
-          zIndex: 100, maxHeight: 220, overflowY: "auto",
-        }}>
+        <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-[100] max-h-56 overflow-y-auto rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.15)] bg-white dark:bg-sb-uplift shadow-lg">
           {filtered.length === 0 ? (
-            <p style={{ padding: "10px 14px", fontSize: 13, color: "var(--color-text-tertiary)", margin: 0 }}>
+            <p className="px-3.5 py-2.5 text-sm text-gray-400 dark:text-sb-light/50 m-0">
               Sin resultados
             </p>
           ) : (
@@ -105,24 +100,16 @@ export function StudentSearchPicker({ students, value, onChange, placeholder = "
                 key={s.id}
                 type="button"
                 onMouseDown={() => select(s)}
-                style={{
-                  width: "100%", textAlign: "left", padding: "9px 14px",
-                  background: "none", border: "none", cursor: "pointer",
-                  fontSize: 13, color: "var(--color-text-primary)",
-                  borderBottom: "0.5px solid var(--color-border-tertiary)",
-                  display: "flex", flexDirection: "column",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "#f5f5f5")}
-                onMouseLeave={e => (e.currentTarget.style.background = "none")}
+                className="w-full text-left px-3.5 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-100 border-none border-b border-gray-50 dark:border-[rgba(255,255,255,0.07)] bg-transparent cursor-pointer hover:bg-gray-50 dark:hover:bg-sb-house transition-colors"
               >
-                <span style={{ fontWeight: 500 }}>{fullName(s.firstName, s.lastName)}</span>
+                {fullName(s.firstName, s.lastName)}
               </button>
             ))
           )}
         </div>
       )}
 
-      {error && <p style={{ color: "#b91c1c", fontSize: 11, marginTop: 4 }}>{error}</p>}
+      {error && <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 }
