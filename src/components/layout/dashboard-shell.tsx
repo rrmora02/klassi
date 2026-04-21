@@ -25,7 +25,7 @@ export function DashboardShell({ sidebar, topbar, children }: Props) {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-sb-warm dark:bg-sb-house">
+    <div className="flex h-screen overflow-hidden bg-sb-warm dark:bg-sb-depth">
 
       {/* ── Desktop sidebar ─────────────────────────────── */}
       <div className="hidden md:flex md:w-60 md:flex-shrink-0">
