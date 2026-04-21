@@ -31,11 +31,9 @@ const METHOD_LABELS: Record<string, string> = {
   SPEI:     "SPEI",
 };
 
-const inputStyle = {
-  width: "100%", padding: "9px 12px", borderRadius: 8,
-  border: "1px solid var(--color-border-secondary)", fontSize: 14,
-  outline: "none", boxSizing: "border-box" as const,
-};
+const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const dateCls = `${inputCls} [color-scheme:light] dark:[color-scheme:dark]`;
 
 export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) {
   const router  = useRouter();
@@ -75,7 +73,7 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
             <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
               Método de pago
             </label>
-            <select {...register("method")} style={inputStyle}>
+            <select {...register("method")} className={selectCls}>
               {Object.entries(METHOD_LABELS).map(([v, l]) => (
                 <option key={v} value={v}>{l}</option>
               ))}
@@ -86,14 +84,14 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
             <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
               Referencia / folio <span style={{ fontWeight: 400 }}>(opcional)</span>
             </label>
-            <input {...register("reference")} placeholder="Ej. TRF-2024-001" style={inputStyle} />
+            <input {...register("reference")} placeholder="Ej. TRF-2024-001" className={inputCls} />
           </div>
 
           <div>
             <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
               Fecha de pago
             </label>
-            <input type="date" {...register("paidAt")} style={inputStyle} />
+            <input type="date" {...register("paidAt")} className={dateCls} />
           </div>
 
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>

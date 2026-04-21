@@ -40,7 +40,8 @@ export function InviteUserModal({ onSuccess }: Props) {
 
   const fieldStyle = { display: "flex", flexDirection: "column" as const, gap: 6, marginBottom: 16 };
   const labelStyle = { fontSize: 13, color: "var(--color-text-secondary)", fontWeight: 500 };
-  const inputStyle = { padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", outline: "none", fontSize: 14 };
+  const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+  const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
 
   return (
     <>
@@ -64,13 +65,13 @@ export function InviteUserModal({ onSuccess }: Props) {
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <div style={fieldStyle}>
                 <label style={labelStyle}>Correo Electrónico (El que usarán para entrar)</label>
-                <input {...register("email")} style={inputStyle} placeholder="empleado@escuela.com" />
+                <input {...register("email")} className={inputCls} placeholder="empleado@escuela.com" />
                 {errors.email && <span style={{ color: "#e53e3e", fontSize: 12 }}>{errors.email.message}</span>}
               </div>
 
               <div style={fieldStyle}>
                 <label style={labelStyle}>Puesto / Acceso</label>
-                <select {...register("role")} style={inputStyle}>
+                <select {...register("role")} className={selectCls}>
                   <option value="RECEPTIONIST">Recepcionista</option>
                   <option value="ADMIN">Administrador Regional</option>
                 </select>

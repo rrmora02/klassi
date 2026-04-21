@@ -27,11 +27,9 @@ const METHOD_LABELS: Record<string, string> = {
   CASH: "Efectivo", TRANSFER: "Transferencia", CARD: "Tarjeta", OXXO: "OXXO", SPEI: "SPEI",
 };
 
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "9px 12px", borderRadius: 8,
-  border: "1px solid var(--color-border-secondary)", fontSize: 14,
-  outline: "none", boxSizing: "border-box",
-};
+const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const dateCls = `${inputCls} [color-scheme:light] dark:[color-scheme:dark]`;
 
 export function NewPaymentModal({ students, onClose }: Props) {
   const router  = useRouter();
@@ -87,19 +85,19 @@ export function NewPaymentModal({ students, onClose }: Props) {
 
           <div>
             <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>Concepto</label>
-            <input {...register("concept")} placeholder="Ej. Mensualidad Mayo 2026" style={inputStyle} />
+            <input {...register("concept")} placeholder="Ej. Mensualidad Mayo 2026" className={inputCls} />
             {errors.concept && <p style={{ color: "#b91c1c", fontSize: 11, marginTop: 4 }}>{errors.concept.message}</p>}
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>Monto (MXN)</label>
-              <input type="number" step="0.01" min="0" {...register("amount", { valueAsNumber: true })} placeholder="0.00" style={inputStyle} />
+              <input type="number" step="0.01" min="0" {...register("amount", { valueAsNumber: true })} placeholder="0.00" className={inputCls} />
               {errors.amount && <p style={{ color: "#b91c1c", fontSize: 11, marginTop: 4 }}>{errors.amount.message}</p>}
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>Método</label>
-              <select {...register("method")} style={inputStyle}>
+              <select {...register("method")} className={selectCls}>
                 {Object.entries(METHOD_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
               </select>
             </div>
@@ -109,7 +107,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
             <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
               Fecha límite <span style={{ fontWeight: 400 }}>(opcional)</span>
             </label>
-            <input type="date" {...register("dueDate")} style={inputStyle} />
+            <input type="date" {...register("dueDate")} className={dateCls} />
           </div>
 
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>

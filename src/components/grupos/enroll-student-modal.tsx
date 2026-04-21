@@ -68,10 +68,10 @@ export function EnrollStudentModal({ groupId }: Props) {
 
             <div>
               <label style={{ display: "block", fontSize: 13, marginBottom: 6, color: "var(--color-text-secondary)" }}>Selecciona un Alumno</label>
-              <select 
-                 value={studentId} 
+              <select
+                 value={studentId}
                  onChange={e => setStudentId(e.target.value)}
-                 style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", outline: "none", fontSize: 14, background: "var(--color-background-primary)" }}
+                 className="w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors"
                  required
               >
                 <option value="">Buscar estudiante...</option>

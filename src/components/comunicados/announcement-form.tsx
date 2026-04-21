@@ -25,12 +25,8 @@ interface Props {
   students: StudentOption[];
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%", padding: "9px 12px", borderRadius: 8,
-  border: "1px solid var(--color-border-secondary)", fontSize: 14,
-  outline: "none", boxSizing: "border-box",
-  background: "var(--color-background-primary)", color: "var(--color-text-primary)",
-};
+const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const textareaCls = `${inputCls} resize-y`;
 
 export function AnnouncementForm({ groups, students }: Props) {
   const router  = useRouter();
@@ -80,7 +76,7 @@ export function AnnouncementForm({ groups, students }: Props) {
 
       <div>
         <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>Título</label>
-        <input {...register("title")} placeholder="Ej. Cierre por vacaciones" style={inputStyle} />
+        <input {...register("title")} placeholder="Ej. Cierre por vacaciones" className={inputCls} />
         {errors.title && <p style={{ color: "#b91c1c", fontSize: 11, marginTop: 4 }}>{errors.title.message}</p>}
       </div>
 
@@ -90,7 +86,7 @@ export function AnnouncementForm({ groups, students }: Props) {
           {...register("body")}
           rows={6}
           placeholder="Escribe el contenido del comunicado..."
-          style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
+          className={textareaCls}
         />
         {errors.body && <p style={{ color: "#b91c1c", fontSize: 11, marginTop: 4 }}>{errors.body.message}</p>}
       </div>

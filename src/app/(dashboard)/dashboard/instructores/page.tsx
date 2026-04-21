@@ -90,7 +90,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
       {/* Filtros */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
         <form style={{ flex: 1, minWidth: 200, maxWidth: 320 }}>
-          <input name="q" defaultValue={search} placeholder="Buscar por nombre, email o teléfono..." style={{ width: "100%", border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "7px 12px", fontSize: 13, background: "var(--color-background-primary)", color: "var(--color-text-primary)", outline: "none", boxSizing: "border-box" }} />
+          <input name="q" defaultValue={search} placeholder="Buscar por nombre, email o teléfono..." className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors" />
         </form>
       </div>
 

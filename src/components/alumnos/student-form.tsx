@@ -26,61 +26,30 @@ function Field({ label, error, required, children }: {
 
 import React from "react";
 
+const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(
-  ({ error, ...props }, ref) => {
-    return (
-      <input
-        {...props}
-        ref={ref}
-        style={{
-          width: "100%",
-          border: `0.5px solid ${error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
-          borderRadius: 8,
-          padding: "8px 12px",
-          fontSize: 14,
-          background: "var(--color-background-primary)",
-          color: "var(--color-text-primary)",
-          outline: "none",
-          boxSizing: "border-box",
-          ...(props.style ?? {}),
-        }}
-        onFocus={e => { e.target.style.borderColor = error ? "rgba(220,38,38,0.60)" : "#00754A"; e.target.style.boxShadow = "0 0 0 3px rgba(0,117,74,0.12)"; }}
-        onBlur={e  => { 
-          e.target.style.borderColor = error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"; 
-          e.target.style.boxShadow = "none";
-          props.onBlur?.(e);
-        }}
-      />
-    );
-  }
+  ({ error, className, ...props }, ref) => (
+    <input
+      {...props}
+      ref={ref}
+      className={cn(inputCls, error && "border-red-300 dark:border-red-500", className)}
+    />
+  )
 );
 Input.displayName = "Input";
 
 const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }>(
-  ({ error, children, ...props }, ref) => {
-    return (
-      <select
-        {...props}
-        ref={ref}
-        style={{
-          width: "100%",
-          border: `0.5px solid ${error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
-          borderRadius: 8,
-          padding: "8px 12px",
-          fontSize: 14,
-          background: "var(--color-background-primary)",
-          color: "var(--color-text-primary)",
-          outline: "none",
-          boxSizing: "border-box",
-        }}
-        onBlur={(e) => {
-           props.onBlur?.(e);
-        }}
-      >
-        {children}
-      </select>
-    );
-  }
+  ({ error, className, children, ...props }, ref) => (
+    <select
+      {...props}
+      ref={ref}
+      className={cn(selectCls, error && "border-red-300 dark:border-red-500", className)}
+    >
+      {children}
+    </select>
+  )
 );
 Select.displayName = "Select";
 
@@ -263,19 +232,10 @@ export function StudentForm({
             {...register("notes")}
             placeholder="Alergias, condiciones médicas relevantes, observaciones del instructor..."
             rows={3}
-            style={{
-              width: "100%",
-              border: `0.5px solid ${errors.notes ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
-              borderRadius: 8,
-              padding: "8px 12px",
-              fontSize: 14,
-              background: "var(--color-background-primary)",
-              color: "var(--color-text-primary)",
-              outline: "none",
-              resize: "vertical",
-              boxSizing: "border-box",
-              fontFamily: "inherit",
-            }}
+            className={cn(
+              "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none resize-y focus:border-sb-accent dark:focus:border-sb-accent transition-colors",
+              errors.notes && "border-red-300 dark:border-red-500"
+            )}
           />
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
             Solo visible para el personal de la escuela

@@ -4,6 +4,11 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { groupFormSchema, groupFormDefaults, type GroupFormValues } from "@/lib/schemas/group.schema";
+import { cn } from "@/lib/utils";
+
+const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const timeCls  = "rounded px-2 py-1 text-sm bg-transparent text-gray-900 dark:text-gray-100 outline-none border-none [color-scheme:light] dark:[color-scheme:dark]";
 
 // ─── Etiquetas de día ─────────────────────────────────────────────
 
@@ -40,40 +45,28 @@ function Field({ label, error, required, children }: {
   );
 }
 
-const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(({ error, ...props }, ref) => {
-  return (
+const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(
+  ({ error, className, ...props }, ref) => (
     <input
       ref={ref}
       {...props}
-      style={{
-        width: "100%", border: `0.5px solid ${error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
-        borderRadius: 8, padding: "8px 12px", fontSize: 14,
-        background: "var(--color-background-primary)", color: "var(--color-text-primary)",
-        outline: "none", boxSizing: "border-box", ...(props.style ?? {}),
-      }}
-      onFocus={e => { e.target.style.borderColor = error ? "rgba(220,38,38,0.60)" : "#00754A"; e.target.style.boxShadow = "0 0 0 3px rgba(0,117,74,0.12)"; }}
-      onBlur={e  => { e.target.style.borderColor = error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"; e.target.style.boxShadow = "none"; }}
+      className={cn(inputCls, error && "border-red-300 dark:border-red-500", className)}
     />
-  );
-});
+  )
+);
 Input.displayName = "Input";
 
-const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }>(({ error, children, ...props }, ref) => {
-  return (
+const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }>(
+  ({ error, className, children, ...props }, ref) => (
     <select
       ref={ref}
       {...props}
-      style={{
-        width: "100%", border: `0.5px solid ${error ? "rgba(220,38,38,0.60)" : "var(--color-border-secondary)"}`,
-        borderRadius: 8, padding: "8px 12px", fontSize: 14,
-        background: "var(--color-background-primary)", color: "var(--color-text-primary)",
-        outline: "none", boxSizing: "border-box",
-      }}
+      className={cn(selectCls, error && "border-red-300 dark:border-red-500", className)}
     >
       {children}
     </select>
-  );
-});
+  )
+);
 Select.displayName = "Select";
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -303,19 +296,19 @@ export function GroupForm({
 
                          {/* Entradas de Tiempo */}
                          {isChecked && slot && (
-                            <div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--color-background-primary)", padding: "4px 8px", borderRadius: 8, border: "0.5px solid var(--color-border-secondary)" }}>
+                            <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house px-3 py-1.5">
                                <input
                                  type="time"
                                  value={slot.startTime}
                                  onChange={(e) => handleTimeChange(d.value, "startTime", e.target.value)}
-                                 style={{ padding: "4px", fontSize: 13, outline: "none", border: "none", color: "var(--color-text-primary)" }}
+                                 className={timeCls}
                                />
                                <span style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>a</span>
                                <input
                                  type="time"
                                  value={slot.endTime}
                                  onChange={(e) => handleTimeChange(d.value, "endTime", e.target.value)}
-                                 style={{ padding: "4px", fontSize: 13, outline: "none", border: "none", color: "var(--color-text-primary)" }}
+                                 className={timeCls}
                                />
                             </div>
                          )}
