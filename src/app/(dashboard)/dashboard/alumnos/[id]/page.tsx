@@ -8,6 +8,7 @@ import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 import { StudentActions } from "@/components/alumnos/student-actions";
 import { EnrollToGroupModal } from "@/components/alumnos/enroll-to-group-modal";
 import { TransferGroupModal } from "@/components/alumnos/transfer-group-modal";
+import { StudentShareButton } from "@/components/alumnos/student-share-button";
 
 export default async function AlumnoDetailPage({ params }: { params: { id: string } }) {
   const { userId } = await auth();
@@ -85,12 +86,15 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           </div>
         </div>
 
-        {/* Acciones: editar / cambiar estado / eliminar */}
-        <StudentActions
-          studentId={student.id}
-          studentName={fullName(student.firstName, student.lastName)}
-          status={student.status}
-        />
+        {/* Acciones */}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <StudentShareButton studentId={student.id} existingToken={student.shareToken} />
+          <StudentActions
+            studentId={student.id}
+            studentName={fullName(student.firstName, student.lastName)}
+            status={student.status}
+          />
+        </div>
       </div>
 
       {/* KPIs */}

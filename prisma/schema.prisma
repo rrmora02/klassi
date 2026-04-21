@@ -286,11 +286,12 @@ model Student {
   gender    String?
   phone     String?
   email     String?
-  avatarUrl String?
-  status    StudentStatus @default(ACTIVE)
-  notes     String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  avatarUrl   String?
+  status      StudentStatus @default(ACTIVE)
+  notes       String?
+  shareToken  String?       @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
   enrollments Enrollment[]
   parents     ParentStudent[]
