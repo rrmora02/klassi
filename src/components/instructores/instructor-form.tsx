@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { instructorFormSchema, type InstructorFormValues, instructorFormDefaults } from "@/lib/schemas/instructor.schema";
 
 const sanitizePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-  e.target.value = e.target.value.replace(/[^\d\s+\-()]/g, "");
+  e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
 };
 
 // ─── Shared input class tokens ─────────────────────────────────────
@@ -70,8 +70,9 @@ export function InstructorForm({
           <input
             {...form.register("phone", { onChange: sanitizePhone })}
             type="tel"
-            inputMode="tel"
-            placeholder="Ej. 81 1234 5678"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="10 dígitos"
             className={inputCls}
           />
           {errors.phone && <span style={{ fontSize: 12, color: "#ef4444" }}>{errors.phone.message}</span>}

@@ -14,7 +14,7 @@ export const instructorFormSchema = z.object({
 
   phone: z
     .string()
-    .regex(/^[\d\s\+\-\(\)]{7,20}$/, "Solo dígitos, espacios y caracteres +/- ( ) (7-20 caracteres)")
+    .regex(/^\d{10}$/, "El teléfono debe tener exactamente 10 dígitos")
     .optional()
     .or(z.literal("")),
 

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const sanitizePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-  e.target.value = e.target.value.replace(/[^\d\s+\-()]/g, "");
+  e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
 };
 
 // ─── Primitivos del formulario ────────────────────────────────────
@@ -171,8 +171,9 @@ export function StudentForm({
           <Input
             {...register("phone", { onChange: sanitizePhone })}
             type="tel"
-            inputMode="tel"
-            placeholder="Ej: 81 1234 5678"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="10 dígitos"
             error={!!errors.phone}
           />
         </Field>
@@ -216,8 +217,9 @@ export function StudentForm({
           <Input
             {...register("tutorPhone", { onChange: sanitizePhone })}
             type="tel"
-            inputMode="tel"
-            placeholder="Ej: 81 9876 5432"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="10 dígitos"
             error={!!errors.tutorPhone}
           />
         </Field>
