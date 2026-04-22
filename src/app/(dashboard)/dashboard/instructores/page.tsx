@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 interface PageProps {
   searchParams: { q?: string; active?: string; page?: string; };
@@ -59,7 +60,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Instructores</h1>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{total} {total === 1 ? "instructor" : "instructores"}</p>
         </div>
-        <Link href="/dashboard/instructores/nuevo" style={{ background: "#1e3a5f", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+        <Link href="/dashboard/instructores/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
           + Nuevo instructor
         </Link>
       </div>
@@ -75,9 +76,9 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
           return (
             <Link key={tab.label} href={buildUrl({ active: tab.value, page: "1" })} style={{
               padding: "8px 16px", fontSize: 13, textDecoration: "none",
-              color: active ? "#1e3a5f" : "var(--color-text-secondary)",
+              color: active ? "#006241" : "var(--color-text-secondary)",
               fontWeight: active ? 500 : 400,
-              borderBottom: active ? "2px solid #1e3a5f" : "2px solid transparent",
+              borderBottom: active ? "2px solid #006241" : "2px solid transparent",
               marginBottom: -1,
             }}>
               {tab.label} <span style={{ fontSize: 11 }}>{tab.count}</span>
@@ -89,13 +90,13 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
       {/* Filtros */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
         <form style={{ flex: 1, minWidth: 200, maxWidth: 320 }}>
-          <input name="q" defaultValue={search} placeholder="Buscar por nombre, email o teléfono..." style={{ width: "100%", border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "7px 12px", fontSize: 13, background: "var(--color-background-primary)", color: "var(--color-text-primary)", outline: "none", boxSizing: "border-box" }} />
+          <input name="q" defaultValue={search} placeholder="Buscar por nombre, email o teléfono..." className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors" />
         </form>
       </div>
 
       {/* Tabla */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
+        <table style={{ width: "100%", minWidth: 680, borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Instructor", "Contacto", "Grupos", "Biografía", "Estado", ""].map(h => (
@@ -113,7 +114,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
                 {/* Avatar y Nombre */}
                 <td style={{ padding: "11px 14px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#dbeafe", color: "#1d4ed8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, flexShrink: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#d4e9e2", color: "#006241", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, flexShrink: 0 }}>
                       {inst.user.name.substring(0, 2).toUpperCase()}
                     </div>
                     <div>
@@ -138,8 +139,8 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
 
                 <td style={{ padding: "11px 14px" }}>
                   <span style={{
-                      background: inst.isActive ? "#f0fdf4" : "#f8fafc",
-                      color:      inst.isActive ? "#15803d" : "#475569",
+                      background: inst.isActive ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.10)",
+                      color:      inst.isActive ? "#10b981" : "#94a3b8",
                       borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 500,
                   }}>
                     {inst.isActive ? "Activo" : "Inactivo"}
@@ -147,7 +148,9 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
                 </td>
 
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/instructores/${inst.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Ver →</Link>
+                  <Link href={`/dashboard/instructores/${inst.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
+                    Ver <ArrowRight className="h-3 w-3" />
+                  </Link>
                 </td>
               </tr>
             ))}
@@ -162,7 +165,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
           <div style={{ display: "flex", gap: 4 }}>
             {page > 1 && <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>← Ant</Link>}
             {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
-              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#1e3a5f" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
+              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#006241" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
             ))}
             {page < pages && <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>Sig →</Link>}
           </div>

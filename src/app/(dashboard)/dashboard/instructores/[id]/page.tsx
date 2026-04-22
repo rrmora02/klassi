@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 
 interface PageProps {
   params: { id: string };
@@ -42,7 +43,7 @@ export default async function InstructorDetailPage({ params }: PageProps) {
 
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#dbeafe", color: "#1d4ed8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 500, flexShrink: 0 }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#d4e9e2", color: "#006241", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 500, flexShrink: 0 }}>
              {instructor.user.name.substring(0, 2).toUpperCase()}
           </div>
           <div>
@@ -59,8 +60,8 @@ export default async function InstructorDetailPage({ params }: PageProps) {
               )}
               <span>•</span>
               <span style={{
-                  background: instructor.isActive ? "#f0fdf4" : "#f8fafc",
-                  color:      instructor.isActive ? "#15803d" : "#475569",
+                  background: instructor.isActive ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.10)",
+                  color:      instructor.isActive ? "#10b981" : "#94a3b8",
                   borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
               }}>
                 {instructor.isActive ? "Activo" : "Inactivo"}
@@ -103,11 +104,11 @@ export default async function InstructorDetailPage({ params }: PageProps) {
 
         {/* Panel derecho: Grupos asignados */}
         <div>
-           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
+           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
               <div style={{ padding: "16px 20px", borderBottom: "0.5px solid var(--color-border-tertiary)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>Grupos asignados</h3>
               </div>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                     <th style={{ padding: "10px 20px", textAlign: "left", fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Grupo</th>
@@ -124,7 +125,7 @@ export default async function InstructorDetailPage({ params }: PageProps) {
                     <tr key={g.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                       <td style={{ padding: "12px 20px", fontWeight: 500, color: "var(--color-text-primary)" }}>{g.name}</td>
                       <td style={{ padding: "12px 20px" }}>
-                        <span style={{ background: "#eff6ff", color: "#1d4ed8", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>
+                        <span style={{ background: "#d4e9e2", color: "#006241", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>
                           {g.discipline.name}
                         </span>
                       </td>
@@ -132,7 +133,9 @@ export default async function InstructorDetailPage({ params }: PageProps) {
                         {g._count.enrollments} / {g.capacity}
                       </td>
                       <td style={{ padding: "12px 20px", textAlign: "right" }}>
-                        <Link href={`/dashboard/grupos/${g.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>Ver grupo →</Link>
+                        <Link href={`/dashboard/grupos/${g.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
+                          Ver grupo <ArrowRight className="h-3 w-3" />
+                        </Link>
                       </td>
                     </tr>
                   ))}

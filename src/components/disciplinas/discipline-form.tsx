@@ -36,10 +36,7 @@ export function DisciplineForm({
           <input
             {...form.register("name")}
             placeholder="Ej. Ballet, Natación, Yoga"
-            style={{
-              padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
-              fontSize: 14, outline: "none",
-            }}
+            className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent"
           />
           {errors.name && <span style={{ fontSize: 12, color: "#ef4444" }}>{errors.name.message}</span>}
         </div>
@@ -52,17 +49,14 @@ export function DisciplineForm({
               type="color"
               {...form.register("color")}
               style={{
-                width: 42, height: 42, padding: 0, border: "1px solid var(--color-border-secondary)", 
-                borderRadius: 8, cursor: "pointer"
+                width: 42, height: 42, padding: 0, border: "1px solid var(--color-border-secondary)",
+                borderRadius: 8, cursor: "pointer", background: "var(--color-background-primary)"
               }}
             />
             <input
               {...form.register("color")}
               placeholder="#1e40af"
-              style={{
-                flex: 1, padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
-                fontSize: 14, outline: "none", textTransform: "uppercase"
-              }}
+              className="flex-1 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none uppercase focus:border-sb-accent dark:focus:border-sb-accent"
             />
           </div>
           {errors.color && <span style={{ fontSize: 12, color: "#ef4444" }}>{errors.color.message}</span>}
@@ -73,10 +67,7 @@ export function DisciplineForm({
           <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>Estado</label>
           <select
             {...form.register("isActive", { setValueAs: v => String(v) === "true" })}
-            style={{
-              padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
-              fontSize: 14, outline: "none", background: "#fff",
-            }}
+            className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent"
           >
             <option value="true">Activa</option>
             <option value="false">Inactiva</option>
@@ -91,10 +82,7 @@ export function DisciplineForm({
           {...form.register("description")}
           placeholder="Pequeña descripción descriptiva de la disciplina..."
           rows={3}
-          style={{
-            padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
-            fontSize: 14, outline: "none", resize: "vertical",
-          }}
+          className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none resize-y focus:border-sb-accent dark:focus:border-sb-accent"
         />
         {errors.description && <span style={{ fontSize: 12, color: "#ef4444" }}>{errors.description.message}</span>}
       </div>
@@ -117,7 +105,7 @@ export function DisciplineForm({
           disabled={isSubmitting}
           style={{
             padding: "10px 20px", borderRadius: 8, fontSize: 14, fontWeight: 500,
-            background: "#1e3a5f", color: "#fff", border: "none",
+            background: "#00754A", color: "#fff", border: "none",
             cursor: isSubmitting ? "not-allowed" : "pointer", opacity: isSubmitting ? 0.7 : 1,
             display: "flex", alignItems: "center", gap: 8,
           }}

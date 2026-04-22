@@ -2,10 +2,82 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── CSS Variables ────────────────────────────────────────────────── */
+:root {
+  /* Tailwind theme tokens */
+  --background: 42 21% 93%;    /* #f2f0eb Neutral Warm — Starbucks page canvas */
+  --foreground: 0 0% 9%;
+  --border: 210 13% 85%;       /* #d6dbde */
+
+  /* App color tokens — Starbucks palette */
+  --color-text-primary:         rgba(0, 0, 0, 0.87);   /* Text Black */
+  --color-text-secondary:       rgba(0, 0, 0, 0.58);   /* Text Black Soft */
+  --color-text-tertiary:        rgba(0, 0, 0, 0.38);
+  --color-background-primary:   #ffffff;
+  --color-background-secondary: #f2f0eb;               /* Neutral Warm */
+  --color-border-secondary:     #d6dbde;
+  --color-border-tertiary:      #e7e7e7;
+  --border-radius-lg:           0.75rem;
+}
+
+.dark {
+  --background: 164 33% 7%;    /* #0b1714 Deep — darkest shell */
+  --foreground: 0 0% 100%;
+  --border: 165 31% 24%;       /* #2b5148 Green Uplift */
+
+  --color-text-primary:         rgba(255, 255, 255, 1);
+  --color-text-secondary:       rgba(255, 255, 255, 0.70);
+  --color-text-tertiary:        rgba(255, 255, 255, 0.50);
+  --color-background-primary:   #2b5148;               /* Green Uplift — cards */
+  --color-background-secondary: #1E3932;               /* House Green — table headers */
+  --color-border-secondary:     rgba(255, 255, 255, 0.15);
+  --color-border-tertiary:      rgba(255, 255, 255, 0.10);
+}
+
+/* ─── Base ─────────────────────────────────────────────────────────── */
 * {
-  @apply border-border;
+  box-sizing: border-box;
+  border-color: hsl(var(--border));
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  @apply bg-background text-foreground;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: inherit;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+.dark ::-webkit-scrollbar-thumb { background: #2b5148; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #3a6b60; }
+
+/* ─── Focus rings ───────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid #00754A;
+  outline-offset: 2px;
+}
+
+/* ─── Responsive helpers ────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* Ensure main content padding is smaller on mobile */
+  .dashboard-main {
+    padding: 1rem;
+  }
 }

@@ -66,7 +66,7 @@ export function StudentActions({ studentId, studentName, status }: Props) {
             <div style={{ height: "0.5px", background: "var(--color-border-tertiary)", margin: "4px 0" }} />
             <button
               onClick={() => { setShowMenu(false); setShowDelete(true); }}
-              style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 12px", fontSize: 13, border: "none", background: "transparent", color: "#dc2626", cursor: "pointer", borderRadius: 6 }}
+              style={{ display: "block", width: "100%", textAlign: "left", padding: "8px 12px", fontSize: 13, border: "none", background: "transparent", color: "#ef4444", cursor: "pointer", borderRadius: 6 }}
             >
               Eliminar alumno
             </button>
@@ -79,7 +79,7 @@ export function StudentActions({ studentId, studentName, status }: Props) {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 14, padding: 28, width: 420, maxWidth: "90vw" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "#fff5f5", border: "0.5px solid #fca5a5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#dc2626", flexShrink: 0 }}>!</div>
+              <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#ef4444", flexShrink: 0 }}>!</div>
               <div>
                 <p style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Eliminar alumno</p>
                 <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>Esta acción no se puede deshacer</p>
@@ -91,7 +91,7 @@ export function StudentActions({ studentId, studentName, status }: Props) {
             </p>
 
             {deleteError && (
-              <div style={{ background: "#fff5f5", border: "0.5px solid #fca5a5", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#c53030" }}>
+              <div style={{ background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#ef4444" }}>
                 {deleteError}
               </div>
             )}
@@ -107,7 +107,7 @@ export function StudentActions({ studentId, studentName, status }: Props) {
               <button
                 onClick={() => deleteStudent.mutate({ id: studentId })}
                 disabled={deleteStudent.isPending}
-                style={{ background: deleteStudent.isPending ? "#94a3b8" : "#dc2626", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 500, cursor: deleteStudent.isPending ? "wait" : "pointer" }}
+                style={{ background: deleteStudent.isPending ? "#64748b" : "#c82014", color: "#fff", border: "none", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 500, cursor: deleteStudent.isPending ? "wait" : "pointer" }}
               >
                 {deleteStudent.isPending ? "Eliminando..." : "Sí, eliminar"}
               </button>

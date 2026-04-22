@@ -460,4 +460,20 @@ export const studentsRouter = createTRPCRouter({
         totalPayments:  payments._count,
       };
     }),
+
+  // ── Generar enlace público compartible ───────────────────────────
+  generateShareLink: tenantProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { db, tenantId } = ctx;
+
+      const student = await db.student.findFirst({
+        where: { id: input.id, tenantId },
+        select: { id: true },
+      });
+      if (!student) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // El CUID del alumno es el token — 25 chars aleatorios, imposible de adivinar
+      return { shareToken: student.id };
+    }),
 });

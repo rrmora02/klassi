@@ -78,8 +78,8 @@ export default async function OnboardingPage() {
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
         
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100">
-            <School className="h-6 w-6 text-blue-700" />
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-sb-light/50">
+            <School className="h-6 w-6 text-sb-accent" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Bienvenido a Klassi</h1>
           <p className="mt-2 text-sm text-gray-500">
@@ -106,7 +106,7 @@ export default async function OnboardingPage() {
 
           <button
             type="submit"
-            className="flex w-full justify-center rounded-xl bg-blue-900 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
+            className="flex w-full justify-center rounded-xl bg-sb-accent px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sb-green focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
           >
             Comenzar periodo de prueba
           </button>

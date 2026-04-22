@@ -6,6 +6,10 @@ import { studentFormSchema, studentFormDefaults, type StudentFormValues } from "
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
+const sanitizePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
+  e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
+};
+
 // ─── Primitivos del formulario ────────────────────────────────────
 
 function Field({ label, error, required, children }: {
@@ -14,11 +18,11 @@ function Field({ label, error, required, children }: {
   return (
     <div>
       <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>
-        {label}{required && <span style={{ color: "#e53e3e", marginLeft: 2 }}>*</span>}
+        {label}{required && <span style={{ color: "#ef4444", marginLeft: 2 }}>*</span>}
       </label>
       {children}
       {error && (
-        <p style={{ fontSize: 12, color: "#c53030", marginTop: 4 }}>{error}</p>
+        <p style={{ fontSize: 12, color: "#ef4444", marginTop: 4 }}>{error}</p>
       )}
     </div>
   );
@@ -26,61 +30,30 @@ function Field({ label, error, required, children }: {
 
 import React from "react";
 
+const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
+
 const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }>(
-  ({ error, ...props }, ref) => {
-    return (
-      <input
-        {...props}
-        ref={ref}
-        style={{
-          width: "100%",
-          border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
-          borderRadius: 8,
-          padding: "8px 12px",
-          fontSize: 14,
-          background: "var(--color-background-primary)",
-          color: "var(--color-text-primary)",
-          outline: "none",
-          boxSizing: "border-box",
-          ...(props.style ?? {}),
-        }}
-        onFocus={e => { e.target.style.borderColor = error ? "#fc8181" : "#378ADD"; e.target.style.boxShadow = "0 0 0 3px rgba(55,138,221,.12)"; }}
-        onBlur={e  => { 
-          e.target.style.borderColor = error ? "#fc8181" : "var(--color-border-secondary)"; 
-          e.target.style.boxShadow = "none";
-          props.onBlur?.(e);
-        }}
-      />
-    );
-  }
+  ({ error, className, ...props }, ref) => (
+    <input
+      {...props}
+      ref={ref}
+      className={cn(inputCls, error && "border-red-300 dark:border-red-500", className)}
+    />
+  )
 );
 Input.displayName = "Input";
 
 const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement> & { error?: boolean }>(
-  ({ error, children, ...props }, ref) => {
-    return (
-      <select
-        {...props}
-        ref={ref}
-        style={{
-          width: "100%",
-          border: `0.5px solid ${error ? "#fc8181" : "var(--color-border-secondary)"}`,
-          borderRadius: 8,
-          padding: "8px 12px",
-          fontSize: 14,
-          background: "var(--color-background-primary)",
-          color: "var(--color-text-primary)",
-          outline: "none",
-          boxSizing: "border-box",
-        }}
-        onBlur={(e) => {
-           props.onBlur?.(e);
-        }}
-      >
-        {children}
-      </select>
-    );
-  }
+  ({ error, className, children, ...props }, ref) => (
+    <select
+      {...props}
+      ref={ref}
+      className={cn(selectCls, error && "border-red-300 dark:border-red-500", className)}
+    >
+      {children}
+    </select>
+  )
 );
 Select.displayName = "Select";
 
@@ -122,14 +95,15 @@ export function StudentForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isDirty },
   } = useForm<StudentFormValues>({
     resolver:      zodResolver(studentFormSchema),
     defaultValues: { ...studentFormDefaults, ...defaultValues },
-    mode:          "onBlur", // validar al salir de cada campo
+    mode:          "onBlur",
   });
 
-  const tutorName = watch("tutorName");
+  const studentPhone = watch("phone");
 
   async function handleFormSubmit(data: StudentFormValues) {
     setIsSubmitting(true);
@@ -149,8 +123,8 @@ export function StudentForm({
       {/* Error global del servidor */}
       {serverError && (
         <div style={{
-          background: "#fff5f5", border: "0.5px solid #fc8181", borderRadius: 8,
-          padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#c53030",
+          background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)", borderRadius: 8,
+          padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#ef4444",
         }}>
           {serverError}
         </div>
@@ -183,6 +157,7 @@ export function StudentForm({
             type="date"
             error={!!errors.birthDate}
             max={new Date().toISOString().split("T")[0]}
+            className="[color-scheme:light] dark:[color-scheme:dark]"
           />
         </Field>
         <Field label="Sexo" error={errors.gender?.message}>
@@ -195,9 +170,11 @@ export function StudentForm({
         </Field>
         <Field label="Teléfono" error={errors.phone?.message}>
           <Input
-            {...register("phone")}
+            {...register("phone", { onChange: sanitizePhone })}
             type="tel"
-            placeholder="Ej: 81 1234 5678"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="10 dígitos"
             error={!!errors.phone}
           />
         </Field>
@@ -217,16 +194,16 @@ export function StudentForm({
       {/* ── Tutor / Responsable ──────────────────────── */}
       <SectionTitle>Tutor / Responsable</SectionTitle>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-        <Field label="Nombre del tutor" error={errors.tutorName?.message}>
+        <Field label="Nombre del tutor" required error={errors.tutorName?.message}>
           <Input
             {...register("tutorName")}
             placeholder="Ej: Roberto López"
             error={!!errors.tutorName}
           />
         </Field>
-        <Field label="Relación" error={errors.tutorRelationship?.message}>
+        <Field label="Relación" required error={errors.tutorRelationship?.message}>
           <Select {...register("tutorRelationship")} error={!!errors.tutorRelationship}>
-            <option value="">Sin especificar</option>
+            <option value="" disabled>Selecciona...</option>
             <option value="madre">Madre</option>
             <option value="padre">Padre</option>
             <option value="tutor">Tutor legal</option>
@@ -237,13 +214,29 @@ export function StudentForm({
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <Field label="Teléfono del tutor" error={errors.tutorPhone?.message}>
+        <Field label="Teléfono del tutor" required error={errors.tutorPhone?.message}>
           <Input
-            {...register("tutorPhone")}
+            {...register("tutorPhone", { onChange: sanitizePhone })}
             type="tel"
-            placeholder="Ej: 81 9876 5432"
+            inputMode="numeric"
+            maxLength={10}
+            placeholder="10 dígitos"
             error={!!errors.tutorPhone}
           />
+          {studentPhone?.length === 10 && (
+            <button
+              type="button"
+              onClick={() => setValue("tutorPhone", studentPhone, { shouldValidate: true })}
+              style={{
+                marginTop: 6, fontSize: 11, fontWeight: 500,
+                color: "#00754A", background: "none", border: "none",
+                cursor: "pointer", padding: 0, textDecoration: "underline",
+                textUnderlineOffset: 2,
+              }}
+            >
+              Usar el mismo número del alumno ({studentPhone})
+            </button>
+          )}
         </Field>
         <Field label="Correo del tutor" error={errors.tutorEmail?.message}>
           <Input
@@ -263,19 +256,10 @@ export function StudentForm({
             {...register("notes")}
             placeholder="Alergias, condiciones médicas relevantes, observaciones del instructor..."
             rows={3}
-            style={{
-              width: "100%",
-              border: `0.5px solid ${errors.notes ? "#fc8181" : "var(--color-border-secondary)"}`,
-              borderRadius: 8,
-              padding: "8px 12px",
-              fontSize: 14,
-              background: "var(--color-background-primary)",
-              color: "var(--color-text-primary)",
-              outline: "none",
-              resize: "vertical",
-              boxSizing: "border-box",
-              fontFamily: "inherit",
-            }}
+            className={cn(
+              "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none resize-y focus:border-sb-accent dark:focus:border-sb-accent transition-colors",
+              errors.notes && "border-red-300 dark:border-red-500"
+            )}
           />
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
             Solo visible para el personal de la escuela
@@ -301,7 +285,7 @@ export function StudentForm({
           type="submit"
           disabled={isSubmitting || (isEdit && !isDirty)}
           style={{
-            background: isSubmitting || (isEdit && !isDirty) ? "#94a3b8" : "#1e3a5f",
+            background: isSubmitting || (isEdit && !isDirty) ? "#64748b" : "#006241",
             color: "#fff", border: "none", borderRadius: 8,
             padding: "8px 24px", fontSize: 13, fontWeight: 500, cursor: isSubmitting ? "wait" : "pointer",
           }}

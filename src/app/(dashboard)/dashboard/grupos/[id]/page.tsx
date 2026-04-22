@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 import { GroupActions } from "@/components/grupos/group-actions";
@@ -68,8 +69,8 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
               {group.name}
             </h1>
             <span style={{
-              background: group.isActive ? "#f0fdf4" : "#f8fafc",
-              color:      group.isActive ? "#15803d" : "#475569",
+              background: group.isActive ? "rgba(16,185,129,0.12)" : "rgba(100,116,139,0.10)",
+              color:      group.isActive ? "#10b981" : "#94a3b8",
               borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 500,
             }}>
               {group.isActive ? "Activo" : "Inactivo"}
@@ -77,14 +78,14 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{
-              background: "#eff6ff", color: "#1d4ed8",
+              background: "#d4e9e2", color: "#006241",
               borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
             }}>
               {group.discipline.name}
             </span>
             <span style={{
-              background: group.type === "FIXED" ? "#f8fafc" : "#fdf4ff", 
-              color: group.type === "FIXED" ? "#475569" : "#a21caf",
+              background: group.type === "FIXED" ? "rgba(100,116,139,0.10)" : "rgba(0,117,74,0.12)", 
+              color: group.type === "FIXED" ? "#475569" : "#00754A",
               borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500,
             }}>
               {group.type === "FIXED" ? "Estación Fija" : "Grupo Generacional"}
@@ -111,8 +112,8 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
           <div
             key={k.label}
             style={{
-              background: k.alert ? "#fff5f5" : "var(--color-background-primary)",
-              border: `0.5px solid ${k.alert ? "#fca5a5" : "var(--color-border-tertiary)"}`,
+              background: k.alert ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)",
+              border: `0.5px solid ${k.alert ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`,
               borderRadius: 10, padding: "12px 14px",
             }}
           >
@@ -169,14 +170,14 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
       </div>
 
       {/* Alumnos inscritos */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
           <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>
             Alumnos inscritos <span style={{ fontSize: 12, color: "var(--color-text-secondary)", fontWeight: 400 }}>({group.enrollments.length})</span>
           </h2>
           <EnrollStudentModal groupId={group.id} />
         </div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", minWidth: 560, borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Alumno", "Estado", "Inscripción", ""].map((h) => (
@@ -211,8 +212,8 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
                   {formatDate(e.startDate)}
                 </td>
                 <td style={{ padding: "10px 16px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${e.student.id}`} style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}>
-                    Ver →
+                  <Link href={`/dashboard/alumnos/${e.student.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
+                    Ver <ArrowRight className="h-3 w-3" />
                   </Link>
                 </td>
               </tr>

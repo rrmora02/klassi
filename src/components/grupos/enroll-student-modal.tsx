@@ -38,7 +38,7 @@ export function EnrollStudentModal({ groupId }: Props) {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: "#1e3a5f", color: "#fff", border: "none", cursor: "pointer", transition: "all 0.2s" }}
+        style={{ padding: "6px 14px", borderRadius: 8, fontSize: 12, fontWeight: 500, background: "#00754A", color: "#fff", border: "none", cursor: "pointer", transition: "all 0.2s" }}
         onMouseOver={e => e.currentTarget.style.opacity = "0.9"}
         onMouseOut={e => e.currentTarget.style.opacity = "1"}
       >
@@ -51,7 +51,7 @@ export function EnrollStudentModal({ groupId }: Props) {
           background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
         }}>
           <div style={{
-            background: "#ffffff", width: 440, borderRadius: 12, 
+            background: "var(--color-background-primary)", width: 440, borderRadius: 12, 
             padding: 24, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>Añadir Alumno al Grupo</h2>
@@ -61,17 +61,17 @@ export function EnrollStudentModal({ groupId }: Props) {
               <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
 
             {data?.isFull && (
-               <div style={{ padding: "8px 12px", background: "#fef2f2", color: "#991b1b", fontSize: 12, borderRadius: 6 }}>
+               <div style={{ padding: "8px 12px", background: "rgba(220,38,38,0.10)", color: "#ef4444", fontSize: 12, borderRadius: 6 }}>
                  Atención: Este grupo ya ha alcanzado su capacidad máxima ({data.enrolledCount}/{data.capacity}).
                </div>
             )}
 
             <div>
               <label style={{ display: "block", fontSize: 13, marginBottom: 6, color: "var(--color-text-secondary)" }}>Selecciona un Alumno</label>
-              <select 
-                 value={studentId} 
+              <select
+                 value={studentId}
                  onChange={e => setStudentId(e.target.value)}
-                 style={{ width: "100%", padding: "10px 14px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", outline: "none", fontSize: 14, background: "#fff" }}
+                 className="w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors"
                  required
               >
                 <option value="">Buscar estudiante...</option>
@@ -88,7 +88,7 @@ export function EnrollStudentModal({ groupId }: Props) {
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
               <button type="button" onClick={handleClose} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "transparent", cursor: "pointer" }}>Cancelar</button>
-              <button type="submit" disabled={!studentId || enroll.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#1e3a5f", color: "#fff", cursor: (!studentId || enroll.isLoading) ? "not-allowed" : "pointer", opacity: (!studentId || enroll.isLoading) ? 0.7 : 1 }}>
+              <button type="submit" disabled={!studentId || enroll.isLoading} style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#00754A", color: "#fff", cursor: (!studentId || enroll.isLoading) ? "not-allowed" : "pointer", opacity: (!studentId || enroll.isLoading) ? 0.7 : 1 }}>
                 {enroll.isLoading ? "Guardando..." : "Inscribir Alumno"}
               </button>
             </div>

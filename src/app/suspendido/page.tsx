@@ -25,13 +25,13 @@ export default async function SuspendidoPage() {
         </p>
         <Link
           href="/precios"
-          className="mt-6 inline-block rounded-lg bg-blue-900 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-800"
+          className="mt-6 inline-block rounded-lg bg-sb-accent px-6 py-2.5 text-sm font-medium text-white hover:bg-sb-green"
         >
           Ver planes y reactivar
         </Link>
         <p className="mt-4 text-xs text-gray-400">
           ¿Necesitas ayuda? Escríbenos a{" "}
-          <a href="mailto:soporte@klassi.io" className="text-blue-600 hover:underline">
+          <a href="mailto:soporte@klassi.io" className="text-sb-accent hover:underline">
             soporte@klassi.io
           </a>
         </p>

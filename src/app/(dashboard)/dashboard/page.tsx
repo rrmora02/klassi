@@ -119,8 +119,8 @@ export default async function DashboardPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Inicio</h1>
-        <p className="mt-0.5 text-sm text-gray-500">{tenant.name}</p>
+        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Inicio</h1>
+        <p className="mt-0.5 text-sm text-gray-500 dark:text-sb-light/70">{tenant.name}</p>
       </div>
 
       {/* Trial banner */}
@@ -138,7 +138,7 @@ export default async function DashboardPage() {
                 : `Tu período de prueba vence en ${daysLeft} ${daysLeft === 1 ? "día" : "días"}.`}
             </p>
           </div>
-          <span className="ml-4 rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
+          <span className="ml-4 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
             Actualizar plan
           </span>
         </div>
@@ -173,13 +173,13 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
 
         {/* Adeudos vencidos */}
-        <section className="lg:col-span-3 rounded-xl border border-gray-200 bg-white">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <section className="lg:col-span-3 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-[rgba(255,255,255,0.07)] px-5 py-4">
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-red-500" />
-              <h2 className="text-sm font-semibold text-gray-900">Adeudos vencidos</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Adeudos vencidos</h2>
               {stats.overdueCount > 0 && (
-                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+                <span className="rounded-full bg-red-100 dark:bg-red-900 px-2 py-0.5 text-xs font-medium text-red-700 dark:text-red-300">
                   {stats.overdueCount}
                 </span>
               )}
@@ -187,7 +187,7 @@ export default async function DashboardPage() {
             {stats.overdueCount > 0 && (
               <Link
                 href="/dashboard/pagos?status=OVERDUE"
-                className="flex items-center gap-1 text-xs text-blue-700 hover:underline"
+                className="flex items-center gap-1 text-xs text-sb-accent hover:underline"
               >
                 Ver todos <ChevronRight className="h-3 w-3" />
               </Link>
@@ -196,20 +196,20 @@ export default async function DashboardPage() {
 
           {overduePayments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50">
-                <CreditCard className="h-5 w-5 text-green-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-50 dark:bg-green-950">
+                <CreditCard className="h-5 w-5 text-green-600 dark:text-green-400" />
               </div>
-              <p className="mt-3 text-sm font-medium text-gray-700">Sin adeudos vencidos</p>
-              <p className="mt-0.5 text-xs text-gray-400">Todos los pagos están al corriente</p>
+              <p className="mt-3 text-sm font-medium text-gray-700 dark:text-sb-light/80">Sin adeudos vencidos</p>
+              <p className="mt-0.5 text-xs text-gray-400 dark:text-sb-light/50">Todos los pagos están al corriente</p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-50">
+            <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
               {overduePayments.map((p) => {
                 const days = p.dueDate ? daysOverdue(p.dueDate) : 0;
                 return (
                   <li key={p.id} className="flex items-center gap-3 px-5 py-3.5">
                     {/* Avatar */}
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900 text-xs font-semibold text-red-700 dark:text-red-300">
                       {initials(p.student.firstName, p.student.lastName)}
                     </span>
 
@@ -217,25 +217,25 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/alumnos/${p.student.id}`}
-                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
                       >
                         {fullName(p.student.firstName, p.student.lastName)}
                       </Link>
-                      <p className="truncate text-xs text-gray-400">{p.concept}</p>
+                      <p className="truncate text-xs text-gray-400 dark:text-sb-light/50">{p.concept}</p>
                     </div>
 
                     {/* Amount */}
-                    <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                    <span className="text-sm font-semibold text-gray-900 dark:text-gray-100 tabular-nums">
                       {formatCurrency(p.amount)}
                     </span>
 
                     {/* Days overdue */}
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                       days > 30
-                        ? "bg-red-100 text-red-700"
+                        ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
                         : days > 7
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-yellow-100 text-yellow-700"
+                        ? "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300"
+                        : "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
                     }`}>
                       {days}d
                     </span>
@@ -247,15 +247,15 @@ export default async function DashboardPage() {
         </section>
 
         {/* Alumnos recientes */}
-        <section className="lg:col-span-2 rounded-xl border border-gray-200 bg-white">
-          <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+        <section className="lg:col-span-2 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-[rgba(255,255,255,0.07)] px-5 py-4">
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-blue-500" />
-              <h2 className="text-sm font-semibold text-gray-900">Alumnos recientes</h2>
+              <Users className="h-4 w-4 text-sb-accent dark:text-sb-light" />
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Alumnos recientes</h2>
             </div>
             <Link
               href="/dashboard/alumnos"
-              className="flex items-center gap-1 text-xs text-blue-700 hover:underline"
+              className="flex items-center gap-1 text-xs text-sb-accent hover:underline"
             >
               Ver todos <ChevronRight className="h-3 w-3" />
             </Link>
@@ -263,25 +263,25 @@ export default async function DashboardPage() {
 
           {recentStudents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50">
-                <Users className="h-5 w-5 text-blue-600" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sb-light/30 dark:bg-sb-house">
+                <Users className="h-5 w-5 text-sb-accent dark:text-sb-light" />
               </div>
-              <p className="mt-3 text-sm font-medium text-gray-700">Sin alumnos aún</p>
+              <p className="mt-3 text-sm font-medium text-gray-700 dark:text-sb-light/80">Sin alumnos aún</p>
               <Link
                 href="/dashboard/alumnos/nuevo"
-                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-blue-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green"
               >
                 <Plus className="h-3.5 w-3.5" /> Agregar alumno
               </Link>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-50">
+            <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
               {recentStudents.map((s) => {
                 const disc = s.enrollments[0]?.group.discipline;
                 return (
                   <li key={s.id} className="flex items-center gap-3 px-5 py-3.5">
                     {/* Avatar */}
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-800">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-sb-light/50 dark:bg-sb-house text-xs font-semibold text-sb-green dark:text-sb-light">
                       {initials(s.firstName, s.lastName)}
                     </span>
 
@@ -289,19 +289,19 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         href={`/dashboard/alumnos/${s.id}`}
-                        className="text-sm font-medium text-gray-900 hover:text-blue-700"
+                        className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
                       >
                         {fullName(s.firstName, s.lastName)}
                       </Link>
                       {disc ? (
-                        <p className="text-xs text-gray-400">{disc.name}</p>
+                        <p className="text-xs text-gray-400 dark:text-sb-light/50">{disc.name}</p>
                       ) : (
-                        <p className="text-xs text-gray-400">Sin grupo activo</p>
+                        <p className="text-xs text-gray-400 dark:text-sb-light/50">Sin grupo activo</p>
                       )}
                     </div>
 
                     {/* Date */}
-                    <span className="flex-shrink-0 text-xs text-gray-400 tabular-nums">
+                    <span className="flex-shrink-0 text-xs text-gray-400 dark:text-sb-light/50 tabular-nums">
                       {formatDate(s.createdAt)}
                     </span>
                   </li>
@@ -314,25 +314,25 @@ export default async function DashboardPage() {
 
       {/* Quick actions */}
       <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-sb-light/50">
           Acciones rápidas
         </h2>
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard/alumnos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift px-4 py-3 text-sm font-medium text-gray-700 dark:text-sb-light/80 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <Plus className="h-4 w-4" /> Nuevo alumno
           </Link>
           <Link
             href="/dashboard/grupos/nuevo"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift px-4 py-3 text-sm font-medium text-gray-700 dark:text-sb-light/80 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <BookOpen className="h-4 w-4" /> Nuevo grupo
           </Link>
           <Link
             href="/dashboard/alumnos"
-            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:border-blue-300 hover:text-blue-800"
+            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift px-4 py-3 text-sm font-medium text-gray-700 dark:text-sb-light/80 shadow-sm transition hover:border-sb-accent dark:hover:border-sb-accent hover:text-sb-green dark:hover:text-sb-light"
           >
             <Users className="h-4 w-4" /> Ver alumnos
           </Link>

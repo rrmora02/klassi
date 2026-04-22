@@ -22,9 +22,9 @@ export function DeleteDialog({ groupName, onConfirm, onCancel, isLoading, error 
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
           <div style={{
             width: 40, height: 40, borderRadius: "50%",
-            background: "#fff5f5", border: "0.5px solid #fca5a5",
+            background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 18, color: "#dc2626", flexShrink: 0,
+            fontSize: 18, color: "#ef4444", flexShrink: 0,
           }}>!</div>
           <div>
             <p style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>
@@ -42,9 +42,9 @@ export function DeleteDialog({ groupName, onConfirm, onCancel, isLoading, error 
 
         {error && (
           <div style={{
-            background: "#fff5f5", border: "0.5px solid #fca5a5",
+            background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)",
             borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-            fontSize: 13, color: "#c53030",
+            fontSize: 13, color: "#ef4444",
           }}>
             {error}
           </div>
@@ -66,7 +66,7 @@ export function DeleteDialog({ groupName, onConfirm, onCancel, isLoading, error 
             onClick={onConfirm}
             disabled={isLoading}
             style={{
-              background: isLoading ? "#94a3b8" : "#dc2626",
+              background: isLoading ? "#64748b" : "#c82014",
               color: "#fff", border: "none", borderRadius: 8,
               padding: "8px 20px", fontSize: 13, fontWeight: 500,
               cursor: isLoading ? "wait" : "pointer",

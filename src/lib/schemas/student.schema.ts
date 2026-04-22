@@ -1,9 +1,5 @@
 import { z } from "zod";
 
-// ─── Schema base ──────────────────────────────────────────────────
-// Se usa en el formulario (client) y en el router (server).
-// Centralizar aquí evita duplicar validaciones.
-
 export const studentFormSchema = z.object({
   firstName: z
     .string()
@@ -27,7 +23,7 @@ export const studentFormSchema = z.object({
 
   phone: z
     .string()
-    .regex(/^[\d\s\+\-\(\)]{7,20}$/, "Teléfono inválido")
+    .regex(/^\d{10}$/, "El teléfono debe tener exactamente 10 dígitos")
     .optional()
     .or(z.literal("")),
 
@@ -38,28 +34,26 @@ export const studentFormSchema = z.object({
     .optional()
     .or(z.literal("")),
 
+  // ── Tutor (requerido) ─────────────────────────────────────────────
   tutorName: z
     .string()
     .min(2, "Mínimo 2 caracteres")
-    .max(120, "Máximo 120 caracteres")
-    .optional()
-    .or(z.literal("")),
+    .max(120, "Máximo 120 caracteres"),
 
   tutorPhone: z
     .string()
-    .regex(/^[\d\s\+\-\(\)]{7,20}$/, "Teléfono del tutor inválido")
-    .optional()
-    .or(z.literal("")),
+    .regex(/^\d{10}$/, "El teléfono debe tener exactamente 10 dígitos"),
+
+  tutorRelationship: z.enum(
+    ["madre", "padre", "tutor", "abuelo", "otro"],
+    { required_error: "Selecciona la relación con el alumno" }
+  ),
 
   tutorEmail: z
     .string()
     .email("Correo del tutor inválido")
     .optional()
     .or(z.literal("")),
-
-  tutorRelationship: z
-    .enum(["madre", "padre", "tutor", "abuelo", "otro"])
-    .optional(),
 
   notes: z
     .string()
@@ -70,7 +64,6 @@ export const studentFormSchema = z.object({
 
 export type StudentFormValues = z.infer<typeof studentFormSchema>;
 
-// Valores por defecto para el formulario en blanco
 export const studentFormDefaults: StudentFormValues = {
   firstName:         "",
   lastName:          "",

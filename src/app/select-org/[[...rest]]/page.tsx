@@ -37,7 +37,7 @@ export default function SelectOrgPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-900" />
+          <Loader2 className="h-8 w-8 animate-spin text-sb-green" />
           <p className="text-sm font-medium text-gray-500">Preparando tu entorno...</p>
         </div>
       </main>
@@ -48,7 +48,7 @@ export default function SelectOrgPage() {
     <main className="flex min-h-screen items-center justify-center bg-gray-50">
       <div className="flex w-full max-w-md flex-col items-center gap-6">
         <div className="text-center">
-          <span className="text-2xl font-semibold text-blue-900">Klassi</span>
+          <span className="text-2xl font-semibold text-sb-green">Klassi</span>
           <p className="mt-1 text-sm text-gray-500">
             Selecciona tu escuela para continuar
           </p>
@@ -60,7 +60,7 @@ export default function SelectOrgPage() {
             elements: {
               rootBox:           "w-full",
               card:              "rounded-2xl border border-gray-200 shadow-none w-full",
-              formButtonPrimary: "bg-blue-900 hover:bg-blue-800 text-sm normal-case",
+              formButtonPrimary: "bg-sb-accent hover:bg-sb-green text-sm normal-case",
               footer:            "hidden",
             },
           }}

@@ -5,11 +5,11 @@ export default function HomePage() {
     <main className="min-h-screen bg-white">
       {/* Nav */}
       <nav className="flex items-center justify-between border-b border-gray-100 px-8 py-4">
-        <span className="text-xl font-semibold text-blue-900">Klassi</span>
+        <span className="text-xl font-semibold text-sb-green">Klassi</span>
         <div className="flex items-center gap-4">
           <Link href="/precios" className="text-sm text-gray-600 hover:text-gray-900">Precios</Link>
           <Link href="/sign-in" className="text-sm text-gray-600 hover:text-gray-900">Iniciar sesión</Link>
-          <Link href="/sign-up" className="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-800">
+          <Link href="/sign-up" className="rounded-lg bg-sb-accent px-4 py-2 text-sm font-medium text-white hover:bg-sb-green">
             Prueba gratis
           </Link>
         </div>
@@ -25,7 +25,7 @@ export default function HomePage() {
           Funciona para fútbol, ballet, baile y cualquier disciplina que ofrezcas.
         </p>
         <div className="mt-10 flex items-center justify-center gap-4">
-          <Link href="/sign-up" className="rounded-lg bg-blue-900 px-6 py-3 font-medium text-white hover:bg-blue-800">
+          <Link href="/sign-up" className="rounded-lg bg-sb-accent px-6 py-3 font-medium text-white hover:bg-sb-green">
             Empieza gratis 14 días
           </Link>
           <Link href="/precios" className="rounded-lg border border-gray-200 px-6 py-3 font-medium text-gray-700 hover:bg-gray-50">

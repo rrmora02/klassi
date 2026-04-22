@@ -25,22 +25,22 @@ const NAV_ITEMS = [
   { label: "Pagos",        href: "/dashboard/pagos",                    icon: CreditCard },
   { label: "Reportes",     href: "/dashboard/reportes",                 icon: BarChart2 },
   { label: "Comunicados",  href: "/dashboard/comunicados",              icon: Bell },
-] as const;
+];
 
 const CONFIG_ITEMS = [
   { label: "Equipo",       href: "/dashboard/configuracion/equipo",      icon: Users },
   { label: "Disciplinas",  href: "/dashboard/configuracion/disciplinas", icon: Tag },
   { label: "Mi escuela",   href: "/dashboard/configuracion/escuela",     icon: Building2 },
-] as const;
+];
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-60 flex-col border-r border-gray-200 bg-white">
+    <div className="flex h-full w-full flex-col border-r border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-house md:w-60">
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-gray-200 px-6">
-        <span className="text-xl font-semibold text-blue-900">Klassi</span>
+      <div className="flex h-16 items-center border-b border-gray-200 dark:border-[rgba(255,255,255,0.10)] px-6">
+        <span className="text-xl font-semibold text-sb-green dark:text-sb-light">Klassi</span>
       </div>
 
       {/* Nav principal */}
@@ -54,11 +54,11 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-blue-50 text-blue-900"
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
+                  : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
               )}
             >
-              <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-blue-700" : "text-gray-400")} />
+              <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
               {label}
             </Link>
           );
@@ -66,7 +66,7 @@ export function Sidebar() {
 
         {/* Configuración */}
         <div className="pt-4">
-          <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-sb-light/50">
             Configuración
           </p>
           {CONFIG_ITEMS.map(({ label, href, icon: Icon }) => {
@@ -78,17 +78,17 @@ export function Sidebar() {
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-blue-50 text-blue-900"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
+                    : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
                 )}
               >
-                <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-blue-700" : "text-gray-400")} />
+                <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
                 {label}
               </Link>
             );
           })}
         </div>
       </nav>
-    </aside>
+    </div>
   );
 }

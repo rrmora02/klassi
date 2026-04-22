@@ -46,11 +46,11 @@ export function TeamClientView() {
       </div>
 
       {/* Miembros Activos */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border-tertiary)", background: "#f8fafc" }}>
-          <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0 }}>Usuarios Activos</h2>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0, color: "var(--color-text-primary)" }}>Usuarios Activos</h2>
         </div>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table style={{ width: "100%", minWidth: 500, borderCollapse: "collapse" }}>
           <thead>
             <tr>
               <th style={thStyle}>Nombre / Correo</th>
@@ -71,7 +71,7 @@ export function TeamClientView() {
                   <p style={{ margin: 0, fontSize: 12, color: "var(--color-text-secondary)" }}>{m.user.email}</p>
                 </td>
                 <td style={tdStyle}>
-                  <span style={{ background: m.role === "ADMIN" ? "#eff6ff" : (m.role === "INSTRUCTOR" ? "#fdf4ff" : "#f0fdf4"), color: m.role === "ADMIN" ? "#1d4ed8" : (m.role === "INSTRUCTOR" ? "#a21caf" : "#15803d"), padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500 }}>
+                  <span style={{ background: m.role === "ADMIN" ? "#d4e9e2" : (m.role === "INSTRUCTOR" ? "rgba(0,117,74,0.12)" : "#f0fdf4"), color: m.role === "ADMIN" ? "#006241" : (m.role === "INSTRUCTOR" ? "#00754A" : "#15803d"), padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500 }}>
                     {m.role}
                   </span>
                 </td>
@@ -93,12 +93,12 @@ export function TeamClientView() {
       </div>
 
       {/* Invitaciones Pendientes */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border-tertiary)", background: "#fefce8" }}>
-          <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0, color: "#854d0e" }}>Invitaciones Pendientes ⏳</h2>
-          <p style={{ margin: "2px 0 0", fontSize: 12, color: "#a16207" }}>Usuarios que no han aceptado el Link o no han creado su cuenta.</p>
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--color-border-tertiary)", background: "var(--color-background-secondary)" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0, color: "var(--color-text-primary)" }}>Invitaciones Pendientes ⏳</h2>
+          <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--color-text-secondary)" }}>Usuarios que no han aceptado el Link o no han creado su cuenta.</p>
         </div>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table style={{ width: "100%", minWidth: 500, borderCollapse: "collapse" }}>
           <thead>
             <tr>
               <th style={thStyle}>Correo Invitado</th>
@@ -121,7 +121,7 @@ export function TeamClientView() {
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                     <button 
                       onClick={() => copyToClipboard(inv.token)}
-                      style={{ padding: "6px 12px", background: "#1e3a5f", color: "#fff", border: "none", borderRadius: 6, fontSize: 11, cursor: "pointer" }}
+                      style={{ padding: "6px 12px", background: "#00754A", color: "#fff", border: "none", borderRadius: 6, fontSize: 11, cursor: "pointer" }}
                     >
                       Copiar Link
                     </button>
