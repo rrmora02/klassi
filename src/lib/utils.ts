@@ -44,3 +44,14 @@ export function calcAge(birthDate: Date | string | null | undefined): number | n
   if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
   return age;
 }
+
+/** Traduce estado de pago al español */
+export function translatePaymentStatus(status: string): string {
+  const translations: Record<string, string> = {
+    PAID: "Pagado",
+    PENDING: "Pendiente",
+    OVERDUE: "Vencido",
+    CANCELLED: "Cancelado",
+  };
+  return translations[status] ?? status;
+}

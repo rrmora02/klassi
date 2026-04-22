@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { fullName, formatDate, calcAge, formatCurrency } from "@/lib/utils";
+import { fullName, formatDate, calcAge, formatCurrency, translatePaymentStatus } from "@/lib/utils";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 import { StudentActions } from "@/components/alumnos/student-actions";
 import { EnrollToGroupModal } from "@/components/alumnos/enroll-to-group-modal";
@@ -142,7 +142,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           {student.parents.map(p => (
             <div key={p.id} style={{ padding: "10px 0", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               <p style={{ fontWeight: 500, fontSize: 13, margin: 0 }}>{p.user.name}</p>
-              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{p.relationship ?? ""} · {p.user.email}</p>
+              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{p.relationship ?? ""} · {p.user.phone ?? "—"}</p>
             </div>
           ))}
         </div>
@@ -202,7 +202,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <p style={{ margin: 0, fontWeight: 500 }}>{formatCurrency(p.amount, p.currency)}</p>
-                  <span style={{ background: c.bg, color: c.color, borderRadius: 20, padding: "1px 8px", fontSize: 11 }}>{p.status}</span>
+                  <span style={{ background: c.bg, color: c.color, borderRadius: 20, padding: "1px 8px", fontSize: 11 }}>{translatePaymentStatus(p.status)}</span>
                 </div>
               </div>
             );

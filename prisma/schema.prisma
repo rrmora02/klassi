@@ -150,6 +150,7 @@ model User {
   activeTenant   Tenant?  @relation("ActiveTenant", fields: [activeTenantId], references: [id])
   email          String
   name           String
+  phone          String?
   avatar         String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt

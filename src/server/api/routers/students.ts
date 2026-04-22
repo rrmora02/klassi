@@ -225,17 +225,22 @@ export const studentsRouter = createTRPCRouter({
       });
 
       // Crear o vincular tutor si se proporcionaron datos
-      if (tutorName || tutorEmail) {
-        const contactEmail = tutorEmail || `tutor_${student.id}@klassi.local`;
-        const contactName = tutorName || "Tutor de " + student.firstName;
-        
-        let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
+      if (tutorName || tutorEmail || tutorPhone) {
+        if (!tutorEmail) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "El correo del tutor es requerido",
+          });
+        }
+
+        let parentUser = await db.user.findFirst({ where: { email: tutorEmail } });
         if (!parentUser) {
           parentUser = await db.user.create({
             data: {
               clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
-              email: contactEmail,
-              name: contactName,
+              email: tutorEmail,
+              name: tutorName || "Tutor de " + student.firstName,
+              phone: tutorPhone || null,
             }
           });
         }
@@ -303,7 +308,14 @@ export const studentsRouter = createTRPCRouter({
       });
 
       // Actualizar 1er tutor principal si se proporcionaron datos
-      if (tutorName || tutorEmail || tutorRelationship) {
+      if (tutorName || tutorEmail || tutorPhone || tutorRelationship) {
+        if ((tutorName || tutorPhone) && !tutorEmail) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "El correo del tutor es requerido",
+          });
+        }
+
         const existingParentLink = await db.parentStudent.findFirst({
           where: { studentId: id },
           include: { user: true },
@@ -317,6 +329,7 @@ export const studentsRouter = createTRPCRouter({
               data: {
                 name: tutorName || existingParentLink.user.name,
                 email: tutorEmail || existingParentLink.user.email,
+                phone: tutorPhone !== undefined ? tutorPhone : existingParentLink.user.phone,
               }
             });
             if (tutorRelationship) {
@@ -325,17 +338,16 @@ export const studentsRouter = createTRPCRouter({
                 data: { relationship: tutorRelationship }
               });
             }
-        } else if (tutorName || tutorEmail) {
+        } else if (tutorEmail) {
             // O crearlo si antes no tenía
-            const contactEmail = tutorEmail || `tutor_${id}@klassi.local`;
-            const contactName = tutorName || "Tutor de " + data.firstName;
-            let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
+            let parentUser = await db.user.findFirst({ where: { email: tutorEmail } });
             if (!parentUser) {
               parentUser = await db.user.create({
                 data: {
                   clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
-                  email: contactEmail,
-                  name: contactName,
+                  email: tutorEmail,
+                  name: tutorName || "Tutor de " + existing.firstName,
+                  phone: tutorPhone || null,
                 }
               });
             }
