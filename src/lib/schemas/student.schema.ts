@@ -60,18 +60,7 @@ export const studentFormSchema = z.object({
     .max(500, "Máximo 500 caracteres")
     .optional()
     .or(z.literal("")),
-}).refine(
-  (data) => {
-    if ((data.tutorName || data.tutorPhone) && !data.tutorEmail) {
-      return false;
-    }
-    return true;
-  },
-  {
-    message: "El correo del tutor es requerido si proporciona nombre o teléfono",
-    path: ["tutorEmail"],
-  }
-);
+});
 
 export type StudentFormValues = z.infer<typeof studentFormSchema>;
 

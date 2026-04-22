@@ -225,21 +225,17 @@ export const studentsRouter = createTRPCRouter({
       });
 
       // Crear o vincular tutor si se proporcionaron datos
-      if (tutorName || tutorPhone) {
-        if (!tutorEmail) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "El correo del tutor es requerido si proporciona nombre o teléfono",
-          });
-        }
+      if (tutorName || tutorEmail || tutorPhone) {
+        const contactEmail = tutorEmail || `tutor_${student.id}@klassi.local`;
+        const contactName = tutorName || "Tutor de " + student.firstName;
 
-        let parentUser = await db.user.findFirst({ where: { email: tutorEmail } });
+        let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
         if (!parentUser) {
           parentUser = await db.user.create({
             data: {
               clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
-              email: tutorEmail,
-              name: tutorName || "Tutor de " + student.firstName,
+              email: contactEmail,
+              name: contactName,
               phone: tutorPhone || null,
             }
           });
@@ -331,21 +327,18 @@ export const studentsRouter = createTRPCRouter({
                 data: { relationship: tutorRelationship }
               });
             }
-        } else if (tutorName || tutorEmail) {
-            // Crear nuevo tutor solo si hay nombre o email
-            if (!tutorEmail) {
-              throw new TRPCError({
-                code: "BAD_REQUEST",
-                message: "El correo del tutor es requerido para crear un nuevo tutor",
-              });
-            }
-            let parentUser = await db.user.findFirst({ where: { email: tutorEmail } });
+        } else if (tutorName || tutorEmail || tutorPhone) {
+            // Crear nuevo tutor si hay datos
+            const contactEmail = tutorEmail || `tutor_${id}@klassi.local`;
+            const contactName = tutorName || "Tutor de " + existing.firstName;
+
+            let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
             if (!parentUser) {
               parentUser = await db.user.create({
                 data: {
                   clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
-                  email: tutorEmail,
-                  name: tutorName || "Tutor de " + existing.firstName,
+                  email: contactEmail,
+                  name: contactName,
                   phone: tutorPhone || null,
                 }
               });
