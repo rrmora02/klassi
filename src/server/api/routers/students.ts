@@ -309,13 +309,6 @@ export const studentsRouter = createTRPCRouter({
 
       // Actualizar 1er tutor principal si se proporcionaron datos
       if (tutorName || tutorEmail || tutorPhone || tutorRelationship) {
-        if ((tutorName || tutorPhone) && !tutorEmail) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "El correo del tutor es requerido",
-          });
-        }
-
         const existingParentLink = await db.parentStudent.findFirst({
           where: { studentId: id },
           include: { user: true },
@@ -329,7 +322,7 @@ export const studentsRouter = createTRPCRouter({
               data: {
                 name: tutorName || existingParentLink.user.name,
                 email: tutorEmail || existingParentLink.user.email,
-                phone: tutorPhone !== undefined ? tutorPhone : existingParentLink.user.phone,
+                phone: tutorPhone || existingParentLink.user.phone,
               }
             });
             if (tutorRelationship) {
@@ -338,8 +331,14 @@ export const studentsRouter = createTRPCRouter({
                 data: { relationship: tutorRelationship }
               });
             }
-        } else if (tutorEmail) {
-            // O crearlo si antes no tenía
+        } else if (tutorName || tutorEmail) {
+            // Crear nuevo tutor solo si hay nombre o email
+            if (!tutorEmail) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "El correo del tutor es requerido para crear un nuevo tutor",
+              });
+            }
             let parentUser = await db.user.findFirst({ where: { email: tutorEmail } });
             if (!parentUser) {
               parentUser = await db.user.create({
