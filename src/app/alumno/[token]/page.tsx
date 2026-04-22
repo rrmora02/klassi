@@ -6,20 +6,15 @@ import type { Metadata } from "next";
 // ─── Helpers ──────────────────────────────────────────────────────
 
 const DAY_LABELS: Record<string, string> = {
-  MON: "Lun", TUE: "Mar", WED: "Mié", THU: "Jue",
-  FRI: "Vie", SAT: "Sáb", SUN: "Dom",
+  MON: "Lunes", TUE: "Martes", WED: "Miércoles",
+  THU: "Jueves", FRI: "Viernes", SAT: "Sábado", SUN: "Domingo",
 };
-
-const ATTENDANCE_CONFIG = {
-  PRESENT:   { label: "Presente",   color: "#16a34a", bg: "#dcfce7" },
-  ABSENT:    { label: "Falta",      color: "#b91c1c", bg: "#fee2e2" },
-  LATE:      { label: "Tarde",      color: "#d97706", bg: "#fef3c7" },
-  JUSTIFIED: { label: "Justificada",color: "#0284c7", bg: "#e0f2fe" },
-} as const;
+const DAY_ORDER = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+const DAY_INDEX: Record<string, number> = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
 
 const PAYMENT_STATUS_CONFIG = {
-  PAID:      { label: "Pagado",    color: "#16a34a", bg: "#dcfce7", border: "#86efac" },
-  PENDING:   { label: "Pendiente", color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
+  PAID:      { label: "Pagado",    color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" },
+  PENDING:   { label: "Pendiente", color: "#b45309", bg: "#fffbeb", border: "#fde68a" },
   OVERDUE:   { label: "Vencido",   color: "#b91c1c", bg: "#fff1f2", border: "#fecdd3" },
   CANCELLED: { label: "Cancelado", color: "#6b7280", bg: "#f9fafb", border: "#e5e7eb" },
 } as const;
@@ -28,6 +23,72 @@ const METHOD_LABELS: Record<string, string> = {
   CASH: "Efectivo", TRANSFER: "Transferencia",
   CARD: "Tarjeta",  OXXO: "OXXO", SPEI: "SPEI",
 };
+
+// ─── Lógica tabla semanal ─────────────────────────────────────────
+
+type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "JUSTIFIED";
+
+type WeekRow = {
+  label: string;       // "21 abr – 27 abr 2026"
+  days:  Record<string, AttendanceStatus | "NO_CLASS" | null>;
+};
+
+function getMonday(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getUTCDay(); // 0 = Sunday
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setUTCDate(d.getUTCDate() + diff);
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
+}
+
+function dateToDay(date: Date): string {
+  return DAY_ORDER[date.getUTCDay() === 0 ? 6 : date.getUTCDay() - 1];
+}
+
+const MONTH_SHORT: Record<number, string> = {
+  0: "ene", 1: "feb", 2: "mar", 3: "abr", 4: "may", 5: "jun",
+  6: "jul", 7: "ago", 8: "sep", 9: "oct", 10: "nov", 11: "dic",
+};
+
+function fmtDay(d: Date) {
+  return `${d.getUTCDate()} ${MONTH_SHORT[d.getUTCMonth()]}`;
+}
+
+function buildWeeklyTable(
+  attendances: { status: string; session: { date: Date } }[],
+  scheduleDays: string[],   // ['MON', 'WED', 'FRI']
+): WeekRow[] {
+  const sorted = [...attendances].sort(
+    (a, b) => new Date(a.session.date).getTime() - new Date(b.session.date).getTime()
+  );
+
+  const weekMap = new Map<string, WeekRow>();
+
+  for (const att of sorted) {
+    const date     = new Date(att.session.date);
+    const monday   = getMonday(date);
+    const key      = monday.toISOString().slice(0, 10);
+    const sunday   = new Date(monday); sunday.setUTCDate(monday.getUTCDate() + 6);
+    const sameYear = monday.getUTCFullYear() === sunday.getUTCFullYear();
+    const label    = `${fmtDay(monday)} – ${fmtDay(sunday)} ${sunday.getUTCFullYear()}`;
+
+    if (!weekMap.has(key)) {
+      weekMap.set(key, {
+        label,
+        days: Object.fromEntries(scheduleDays.map(d => [d, "NO_CLASS" as const])),
+      });
+    }
+
+    const dayKey = dateToDay(date);
+    const row    = weekMap.get(key)!;
+    if (dayKey in row.days) row.days[dayKey] = att.status as AttendanceStatus;
+  }
+
+  return [...weekMap.entries()]
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([, v]) => v);
+}
 
 // ─── Metadata dinámica ────────────────────────────────────────────
 
@@ -79,11 +140,11 @@ export default async function AlumnoPublicPage({ params }: { params: { token: st
             },
           },
           attendances: {
-            orderBy: { session: { date: "desc" } },
-            take: 40,
+            orderBy: { session: { date: "asc" } },
+            take: 60,
             select: {
               status:  true,
-              session: { select: { date: true, startTime: true, endTime: true } },
+              session: { select: { date: true } },
             },
           },
         },
@@ -106,257 +167,275 @@ export default async function AlumnoPublicPage({ params }: { params: { token: st
 
   if (!student) notFound();
 
-  const accentColor = student.tenant.primaryColor ?? "#00754A";
+  const accent = student.tenant.primaryColor ?? "#00754A";
+  const dark   = "#1E3932";
 
-  // Estadísticas rápidas por enrollment activo
-  const allAttendances = student.enrollments.flatMap(e => e.attendances);
-  const totalSessions  = allAttendances.length;
-  const presentCount   = allAttendances.filter(a => a.status === "PRESENT").length;
-  const attendanceRate = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : null;
+  const allAttendances  = student.enrollments.flatMap(e => e.attendances);
+  const totalSessions   = allAttendances.length;
+  const presentCount    = allAttendances.filter(a => a.status === "PRESENT" || a.status === "LATE").length;
+  const attendanceRate  = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : null;
   const pendingPayments = student.payments.filter(p => p.status === "PENDING" || p.status === "OVERDUE");
-
   const age = calcAge(student.birthDate);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f4f6f8", fontFamily: "var(--font-sans, system-ui, sans-serif)" }}>
+    <div style={{ minHeight: "100vh", background: "#f0f4f2", fontFamily: "ui-sans-serif, system-ui, sans-serif" }}>
 
-      {/* ── Header escuela ──────────────────────────────────────────── */}
-      <header style={{
-        background: accentColor, color: "#fff",
-        padding: "14px 24px",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
+      {/* ── Header ────────────────────────────────────────────────── */}
+      <header style={{ background: dark, color: "#fff", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {student.tenant.logo ? (
-            <img src={student.tenant.logo} alt={student.tenant.name} style={{ height: 32, borderRadius: 6 }} />
+            <img src={student.tenant.logo} alt={student.tenant.name} style={{ height: 30, borderRadius: 6 }} />
           ) : (
-            <div style={{
-              width: 32, height: 32, borderRadius: 6,
-              background: "rgba(255,255,255,0.25)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 14, fontWeight: 700,
-            }}>
+            <div style={{ width: 30, height: 30, borderRadius: 6, background: accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700 }}>
               {student.tenant.name[0]}
             </div>
           )}
           <span style={{ fontSize: 15, fontWeight: 600 }}>{student.tenant.name}</span>
         </div>
-        <span style={{ fontSize: 12, opacity: 0.8 }}>Historial del alumno</span>
+        <span style={{ fontSize: 12, color: "#d4e9e2", opacity: 0.8 }}>Historial del alumno</span>
       </header>
 
-      <main style={{ maxWidth: 720, margin: "0 auto", padding: "24px 16px 48px" }}>
-
-        {/* ── Tarjeta del alumno ──────────────────────────────────── */}
-        <div style={{
-          background: "#fff", borderRadius: 16, padding: "24px 24px 20px",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.08)", marginBottom: 16,
-          display: "flex", alignItems: "center", gap: 18,
-        }}>
+      {/* ── Franja verde ───────────────────────────────────────────── */}
+      <div style={{ background: accent, padding: "20px 20px 28px" }}>
+        <div style={{ maxWidth: 700, margin: "0 auto", display: "flex", alignItems: "center", gap: 16 }}>
           <div style={{
-            width: 64, height: 64, borderRadius: "50%",
-            background: `${accentColor}22`, color: accentColor,
+            width: 60, height: 60, borderRadius: "50%",
+            background: "rgba(255,255,255,0.20)",
+            border: "2px solid rgba(255,255,255,0.40)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 22, fontWeight: 700, flexShrink: 0,
+            fontSize: 22, fontWeight: 700, color: "#fff", flexShrink: 0,
           }}>
             {initials(student.firstName, student.lastName)}
           </div>
           <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 4px", color: "#111" }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: "#fff", margin: "0 0 4px" }}>
               {fullName(student.firstName, student.lastName)}
             </h1>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, fontSize: 13, color: "#6b7280" }}>
-              {age !== null && <span>{age} años</span>}
-              {student.gender && <span>· {student.gender === "F" ? "Femenino" : student.gender === "M" ? "Masculino" : "Otro"}</span>}
-              <span>· Alta: {formatDate(student.createdAt)}</span>
-            </div>
-          </div>
-
-          {/* KPIs */}
-          <div style={{ display: "flex", gap: 16, flexShrink: 0 }}>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: 22, fontWeight: 700, margin: 0, color: attendanceRate !== null && attendanceRate < 70 ? "#b91c1c" : accentColor }}>
-                {attendanceRate !== null ? `${attendanceRate}%` : "—"}
-              </p>
-              <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>Asistencia</p>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <p style={{ fontSize: 22, fontWeight: 700, margin: 0, color: pendingPayments.length > 0 ? "#b91c1c" : accentColor }}>
-                {pendingPayments.length > 0 ? pendingPayments.length : "✓"}
-              </p>
-              <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>
-                {pendingPayments.length > 0 ? "Pendientes" : "Al corriente"}
-              </p>
-            </div>
+            <p style={{ fontSize: 13, color: "#d4e9e2", margin: 0 }}>
+              {age !== null ? `${age} años` : ""}
+              {student.birthDate ? ` · Nacimiento: ${formatDate(student.birthDate)}` : ""}
+              {` · Inscrito desde ${formatDate(student.createdAt)}`}
+            </p>
           </div>
         </div>
+      </div>
 
-        {/* ── Grupos activos ──────────────────────────────────────── */}
-        {student.enrollments.length > 0 && (
-          <section style={{ marginBottom: 16 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", margin: "0 0 10px" }}>
-              Grupos inscritos
-            </h2>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {student.enrollments.map(enr => {
-                const schedule = (enr.group.schedule as any[]) ?? [];
-                const discColor = enr.group.discipline.color ?? accentColor;
+      {/* ── KPIs ───────────────────────────────────────────────────── */}
+      <div style={{ maxWidth: 700, margin: "-14px auto 0", padding: "0 20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+          <div style={{ background: "#fff", borderRadius: 12, padding: "14px 18px", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", borderLeft: `4px solid ${accent}` }}>
+            <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Asistencia general</p>
+            <p style={{ fontSize: 26, fontWeight: 700, margin: 0, color: attendanceRate !== null && attendanceRate < 70 ? "#b91c1c" : dark }}>
+              {attendanceRate !== null ? `${attendanceRate}%` : "—"}
+            </p>
+            <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>{totalSessions} sesiones registradas</p>
+          </div>
+          <div style={{ background: "#fff", borderRadius: 12, padding: "14px 18px", boxShadow: "0 1px 4px rgba(0,0,0,0.07)", borderLeft: `4px solid ${pendingPayments.length > 0 ? "#f59e0b" : accent}` }}>
+            <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 4px", textTransform: "uppercase", letterSpacing: "0.05em" }}>Estado de pagos</p>
+            <p style={{ fontSize: 26, fontWeight: 700, margin: 0, color: pendingPayments.length > 0 ? "#b45309" : dark }}>
+              {pendingPayments.length > 0 ? `${pendingPayments.length} pendiente${pendingPayments.length > 1 ? "s" : ""}` : "Al corriente"}
+            </p>
+            <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>
+              {pendingPayments.length > 0 ? "Requiere atención" : "Sin adeudos"}
+            </p>
+          </div>
+        </div>
+      </div>
 
-                return (
-                  <div key={enr.id} style={{
-                    background: "#fff", borderRadius: 12,
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden",
-                  }}>
-                    {/* Banda de disciplina */}
-                    <div style={{ background: discColor, padding: "8px 18px", display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: "#fff" }}>{enr.group.discipline.name}</span>
-                    </div>
+      {/* ── Contenido principal ────────────────────────────────────── */}
+      <div style={{ maxWidth: 700, margin: "0 auto", padding: "0 20px 48px" }}>
 
-                    <div style={{ padding: "14px 18px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                        <div>
-                          <p style={{ fontSize: 15, fontWeight: 600, margin: 0, color: "#111" }}>{enr.group.name}</p>
-                          <p style={{ fontSize: 12, color: "#6b7280", margin: "2px 0 0" }}>
-                            {enr.group.instructor?.user.name ?? "Sin instructor asignado"}
-                            {enr.group.room ? ` · ${enr.group.room}` : ""}
-                          </p>
-                        </div>
-                        {enr.discount > 0 && (
-                          <span style={{ fontSize: 11, fontWeight: 500, background: "#fffbeb", color: "#92400e", padding: "2px 8px", borderRadius: 20, border: "1px solid #fde68a" }}>
-                            {enr.discount}% desc.
-                          </span>
-                        )}
-                      </div>
+        {/* Grupos + tabla de asistencias */}
+        {student.enrollments.map(enr => {
+          const schedule    = (enr.group.schedule as any[]) ?? [];
+          const scheduleDays = schedule
+            .map((s: any) => s.day as string)
+            .sort((a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b));
+          const weeks = buildWeeklyTable(enr.attendances, scheduleDays);
+          const discColor = enr.group.discipline.color ?? accent;
 
-                      {/* Horario */}
-                      {schedule.length > 0 && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-                          {schedule.map((slot: any, i: number) => (
-                            <span key={i} style={{
-                              fontSize: 12, padding: "3px 10px", borderRadius: 20,
-                              background: `${discColor}18`, color: discColor,
-                              fontWeight: 500, border: `1px solid ${discColor}33`,
-                            }}>
-                              {DAY_LABELS[slot.day] ?? slot.day} {slot.startTime}–{slot.endTime}
-                            </span>
+          return (
+            <section key={enr.id} style={{ marginBottom: 20 }}>
+              {/* Cabecera del grupo */}
+              <div style={{ background: dark, borderRadius: "12px 12px 0 0", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#d4e9e2", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    {enr.group.discipline.name}
+                  </span>
+                  <h2 style={{ fontSize: 15, fontWeight: 600, color: "#fff", margin: "2px 0 0" }}>
+                    {enr.group.name}
+                  </h2>
+                </div>
+                {enr.group.instructor && (
+                  <span style={{ fontSize: 12, color: "#d4e9e2" }}>
+                    {enr.group.instructor.user.name}
+                  </span>
+                )}
+              </div>
+
+              {/* Horario chips */}
+              <div style={{ background: "#e8f0ee", padding: "10px 18px", display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {schedule.map((s: any, i: number) => (
+                  <span key={i} style={{ fontSize: 12, fontWeight: 500, color: dark, background: "#d4e9e2", padding: "3px 10px", borderRadius: 20, border: `1px solid ${accent}40` }}>
+                    {DAY_LABELS[s.day] ?? s.day} {s.startTime}–{s.endTime}
+                  </span>
+                ))}
+                {enr.group.room && (
+                  <span style={{ fontSize: 12, color: "#6b7280" }}>· {enr.group.room}</span>
+                )}
+              </div>
+
+              {/* Tabla semanal */}
+              <div style={{ background: "#fff", borderRadius: "0 0 12px 12px", boxShadow: "0 2px 8px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+                {weeks.length === 0 ? (
+                  <p style={{ padding: "20px 18px", fontSize: 13, color: "#9ca3af", margin: 0 }}>
+                    Sin clases registradas aún.
+                  </p>
+                ) : (
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ background: "#f8faf9", borderBottom: "2px solid #e2ece8" }}>
+                          <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600, color: dark, whiteSpace: "nowrap", minWidth: 160 }}>
+                            Semana
+                          </th>
+                          {scheduleDays.map(day => (
+                            <th key={day} style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, color: dark, whiteSpace: "nowrap" }}>
+                              {DAY_LABELS[day]}
+                            </th>
                           ))}
-                        </div>
-                      )}
-
-                      {/* Historial de asistencias */}
-                      {enr.attendances.length > 0 && (
-                        <div>
-                          <p style={{ fontSize: 11, fontWeight: 500, color: "#9ca3af", marginBottom: 8 }}>
-                            Últimas {enr.attendances.length} sesiones
-                          </p>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
-                            {[...enr.attendances].reverse().map((att, i) => {
-                              const cfg = ATTENDANCE_CONFIG[att.status as keyof typeof ATTENDANCE_CONFIG];
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {weeks.map((week, wi) => (
+                          <tr key={wi} style={{ borderBottom: "0.5px solid #f1f5f3" }}>
+                            <td style={{ padding: "10px 16px", color: "#374151", whiteSpace: "nowrap", fontSize: 12 }}>
+                              {week.label}
+                            </td>
+                            {scheduleDays.map(day => {
+                              const status = week.days[day];
+                              if (status === "NO_CLASS" || status == null) {
+                                return (
+                                  <td key={day} style={{ padding: "10px 14px", textAlign: "center", color: "#d1d5db" }}>—</td>
+                                );
+                              }
+                              const cfg = {
+                                PRESENT:   { icon: "✓", color: "#15803d", bg: "#f0fdf4", label: "Presente" },
+                                ABSENT:    { icon: "✗", color: "#b91c1c", bg: "#fff1f2", label: "Falta" },
+                                LATE:      { icon: "T", color: "#b45309", bg: "#fffbeb", label: "Tarde" },
+                                JUSTIFIED: { icon: "J", color: "#0369a1", bg: "#eff6ff", label: "Justificada" },
+                              }[status] ?? { icon: "?", color: "#6b7280", bg: "#f9fafb", label: status };
                               return (
-                                <div
-                                  key={i}
-                                  title={`${formatDate(att.session.date)} — ${cfg.label}`}
-                                  style={{
+                                <td key={day} style={{ padding: "8px 14px", textAlign: "center" }}>
+                                  <span title={cfg.label} style={{
+                                    display: "inline-flex", alignItems: "center", justifyContent: "center",
                                     width: 28, height: 28, borderRadius: 6,
-                                    background: cfg.bg,
-                                    border: `1.5px solid ${cfg.color}`,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontSize: 11, color: cfg.color, fontWeight: 700,
-                                    cursor: "default",
-                                  }}
-                                >
-                                  {att.status === "PRESENT" ? "✓" : att.status === "ABSENT" ? "✗" : att.status === "LATE" ? "T" : "J"}
-                                </div>
+                                    background: cfg.bg, color: cfg.color,
+                                    fontWeight: 700, fontSize: 13,
+                                  }}>
+                                    {cfg.icon}
+                                  </span>
+                                </td>
                               );
                             })}
-                          </div>
-                          {/* Leyenda */}
-                          <div style={{ display: "flex", gap: 12, marginTop: 8, flexWrap: "wrap" }}>
-                            {Object.entries(ATTENDANCE_CONFIG).map(([k, v]) => (
-                              <span key={k} style={{ fontSize: 10, color: "#9ca3af", display: "flex", alignItems: "center", gap: 4 }}>
-                                <span style={{ width: 10, height: 10, borderRadius: 3, background: v.bg, border: `1.5px solid ${v.color}`, display: "inline-block" }} />
-                                {v.label}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {enr.attendances.length === 0 && (
-                        <p style={{ fontSize: 12, color: "#9ca3af", margin: 0 }}>Sin sesiones registradas aún.</p>
-                      )}
-                    </div>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
+                )}
+
+                {/* Leyenda */}
+                {weeks.length > 0 && (
+                  <div style={{ padding: "10px 16px", borderTop: "0.5px solid #f1f5f3", display: "flex", gap: 16, flexWrap: "wrap" }}>
+                    {[
+                      { icon: "✓", color: "#15803d", bg: "#f0fdf4", label: "Presente" },
+                      { icon: "✗", color: "#b91c1c", bg: "#fff1f2", label: "Falta" },
+                      { icon: "T", color: "#b45309", bg: "#fffbeb", label: "Tarde" },
+                      { icon: "J", color: "#0369a1", bg: "#eff6ff", label: "Justificada" },
+                    ].map(l => (
+                      <span key={l.label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "#6b7280" }}>
+                        <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: 4, background: l.bg, color: l.color, fontWeight: 700, fontSize: 11 }}>{l.icon}</span>
+                        {l.label}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+          );
+        })}
 
         {student.enrollments.length === 0 && (
-          <div style={{ background: "#fff", borderRadius: 12, padding: "24px", textAlign: "center", marginBottom: 16, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+          <div style={{ background: "#fff", borderRadius: 12, padding: 24, textAlign: "center", marginBottom: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
             <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Sin grupos inscritos actualmente.</p>
           </div>
         )}
 
-        {/* ── Historial de pagos ──────────────────────────────────── */}
+        {/* ── Historial de pagos ───────────────────────────────────── */}
         <section>
-          <h2 style={{ fontSize: 13, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9ca3af", margin: "0 0 10px" }}>
-            Estado de pagos
+          <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: dark, margin: "0 0 10px" }}>
+            Historial de pagos
           </h2>
+
           {student.payments.length === 0 ? (
-            <div style={{ background: "#fff", borderRadius: 12, padding: "24px", textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+            <div style={{ background: "#fff", borderRadius: 12, padding: 24, textAlign: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
               <p style={{ fontSize: 13, color: "#9ca3af", margin: 0 }}>Sin historial de pagos.</p>
             </div>
           ) : (
-            <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 1px 4px rgba(0,0,0,0.06)", overflow: "hidden" }}>
-              {student.payments.map((p, i) => {
-                const cfg  = PAYMENT_STATUS_CONFIG[p.status as keyof typeof PAYMENT_STATUS_CONFIG];
-                const isLast = i === student.payments.length - 1;
-                return (
-                  <div key={i} style={{
-                    padding: "14px 18px",
-                    borderBottom: isLast ? "none" : "0.5px solid #f1f5f9",
-                    display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
-                  }}>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 13, fontWeight: 500, margin: 0, color: "#111" }}>{p.concept}</p>
-                      <p style={{ fontSize: 11, color: "#9ca3af", margin: "2px 0 0" }}>
-                        {p.status === "PAID" && p.paidAt
-                          ? `Pagado el ${formatDate(p.paidAt)}${p.method ? ` · ${METHOD_LABELS[p.method] ?? p.method}` : ""}`
-                          : p.dueDate
-                          ? `Vence: ${formatDate(p.dueDate)}`
-                          : "Sin fecha"
-                        }
-                      </p>
-                    </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>
-                        {formatCurrency(p.amount)}
-                      </span>
-                      <span style={{
-                        fontSize: 11, fontWeight: 500, padding: "3px 10px", borderRadius: 20,
-                        background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`,
-                      }}>
-                        {cfg.label}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+            <div style={{ background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.07)", overflow: "hidden" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: "#f8faf9", borderBottom: "2px solid #e2ece8" }}>
+                    <th style={{ padding: "10px 16px", textAlign: "left", fontWeight: 600, color: dark }}>Concepto</th>
+                    <th style={{ padding: "10px 14px", textAlign: "center", fontWeight: 600, color: dark, whiteSpace: "nowrap" }}>Fecha</th>
+                    <th style={{ padding: "10px 14px", textAlign: "right", fontWeight: 600, color: dark }}>Monto</th>
+                    <th style={{ padding: "10px 16px", textAlign: "center", fontWeight: 600, color: dark }}>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {student.payments.map((p, i) => {
+                    const cfg = PAYMENT_STATUS_CONFIG[p.status as keyof typeof PAYMENT_STATUS_CONFIG];
+                    return (
+                      <tr key={i} style={{ borderBottom: i < student.payments.length - 1 ? "0.5px solid #f1f5f3" : "none" }}>
+                        <td style={{ padding: "11px 16px", color: "#111827" }}>
+                          <span style={{ fontWeight: 500 }}>{p.concept}</span>
+                          {p.method && p.status === "PAID" && (
+                            <span style={{ fontSize: 11, color: "#9ca3af", display: "block", marginTop: 1 }}>
+                              {METHOD_LABELS[p.method] ?? p.method}
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: "11px 14px", textAlign: "center", color: "#6b7280", fontSize: 12, whiteSpace: "nowrap" }}>
+                          {p.status === "PAID" && p.paidAt ? formatDate(p.paidAt) : p.dueDate ? formatDate(p.dueDate) : "—"}
+                        </td>
+                        <td style={{ padding: "11px 14px", textAlign: "right", fontWeight: 600, color: "#111827", whiteSpace: "nowrap" }}>
+                          {formatCurrency(p.amount)}
+                        </td>
+                        <td style={{ padding: "11px 16px", textAlign: "center" }}>
+                          <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 20, background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}`, whiteSpace: "nowrap" }}>
+                            {cfg.label}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </section>
 
-        {/* ── Footer ─────────────────────────────────────────────── */}
+        {/* Footer */}
         <div style={{ marginTop: 40, textAlign: "center" }}>
-          <p style={{ fontSize: 11, color: "#d1d5db" }}>
-            Historial generado por {student.tenant.name}
-            {student.tenant.phone ? ` · ${student.tenant.phone}` : ""}
-            {student.tenant.email ? ` · ${student.tenant.email}` : ""}
-          </p>
-          <p style={{ fontSize: 10, color: "#e5e7eb", marginTop: 4 }}>Powered by Klassi</p>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 18px", background: "#fff", borderRadius: 20, boxShadow: "0 1px 4px rgba(0,0,0,0.07)" }}>
+            <div style={{ width: 16, height: 16, borderRadius: "50%", background: accent }} />
+            <span style={{ fontSize: 12, color: "#6b7280" }}>{student.tenant.name}</span>
+            {student.tenant.phone && <span style={{ fontSize: 12, color: "#9ca3af" }}>· {student.tenant.phone}</span>}
+          </div>
+          <p style={{ fontSize: 10, color: "#d1d5db", marginTop: 10 }}>Powered by Klassi</p>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
