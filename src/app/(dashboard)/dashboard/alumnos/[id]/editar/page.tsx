@@ -3,7 +3,7 @@ import { db } from "@/server/db";
 import { notFound, redirect } from "next/navigation";
 import { fullName } from "@/lib/utils";
 import Link from "next/link";
-import { StudentEditForm } from "@/components/alumnos/student-edit-form";
+import { StudentEditFormClient } from "@/components/alumnos/student-edit-form-client";
 
 export default async function EditarAlumnoPage({ params }: { params: { id: string } }) {
   const { userId } = await auth();
@@ -17,7 +17,7 @@ export default async function EditarAlumnoPage({ params }: { params: { id: strin
     where: { id: params.id, tenantId: tenant.id },
     include: { parents: { include: { user: true } } }
   });
-  
+
   if (!student) notFound();
 
   const name = fullName(student.firstName, student.lastName);
@@ -38,7 +38,7 @@ export default async function EditarAlumnoPage({ params }: { params: { id: strin
       </h1>
 
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 28 }}>
-        <StudentEditForm student={student} />
+        <StudentEditFormClient student={student} studentId={params.id} />
       </div>
     </div>
   );

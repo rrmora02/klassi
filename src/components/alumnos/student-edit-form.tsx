@@ -7,7 +7,7 @@ import type { StudentFormValues } from "@/lib/schemas/student.schema";
 import type { Student } from "@prisma/client";
 
 interface Props {
-  student: Student & { parents?: { relationship: string | null; user: { name: string; email: string; } }[] };
+  student: Student & { parents?: { relationship: string | null; user: { name: string; email: string; phone: string | null; } }[] };
 }
 
 export function StudentEditForm({ student }: Props) {
@@ -29,6 +29,7 @@ export function StudentEditForm({ student }: Props) {
     notes:      student.notes  ?? "",
     tutorName:  primaryParent?.user.name ?? "",
     tutorEmail: primaryParent?.user.email ?? "",
+    tutorPhone: primaryParent?.user.phone ?? "",
     tutorRelationship: (primaryParent?.relationship as any) ?? undefined,
   };
 

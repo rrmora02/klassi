@@ -225,11 +225,11 @@ export const studentsRouter = createTRPCRouter({
       });
 
       // Crear o vincular tutor si se proporcionaron datos
-      if (tutorName || tutorEmail || tutorPhone) {
+      if (tutorName || tutorPhone) {
         if (!tutorEmail) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "El correo del tutor es requerido",
+            message: "El correo del tutor es requerido si proporciona nombre o teléfono",
           });
         }
 
