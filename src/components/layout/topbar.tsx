@@ -13,7 +13,9 @@ export async function TopBar() {
   if (userId) {
     user = await db.user.findUnique({
       where: { clerkId: userId },
-      select: { id: true, activeTenantId: true, activeTenant: true },
+      include: {
+        activeTenant: true,
+      },
     });
 
     if (user && user.activeTenantId) {
