@@ -33,7 +33,7 @@ async function createTenantAction(formData: FormData) {
     });
   }
 
-  // 2. Crear Tenant
+  // 2. Crear Tenant en BD
   const base = schoolName.toLowerCase().trim().replace(/\s+/g, "-");
   const slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
 
@@ -46,7 +46,21 @@ async function createTenantAction(formData: FormData) {
     }
   });
 
-  // 3. Vincular Usuario <-> Tenant como ADMIN
+  // 3. Crear organización en Clerk
+  let clerkOrgId = null;
+  try {
+    const { clerkClient } = await import("@clerk/nextjs/server");
+    const client = await clerkClient();
+    const clerkOrg = await client.organizations.createOrganization({
+      name: schoolName.trim(),
+      createdBy: userId,
+    });
+    clerkOrgId = clerkOrg.id;
+  } catch (error) {
+    console.error("Error creating Clerk organization:", error);
+  }
+
+  // 4. Vincular Usuario <-> Tenant como ADMIN
   await db.tenantUser.create({
     data: {
       userId: user.id,
@@ -55,13 +69,13 @@ async function createTenantAction(formData: FormData) {
     }
   });
 
-  // 4. Actualizar activeTenantId del usuario
+  // 5. Actualizar activeTenantId del usuario
   await db.user.update({
     where: { id: user.id },
     data: { activeTenantId: tenant.id }
   });
 
-  // 5. Si viene de una invitación, redirigir a aceptar invitación
+  // 6. Si viene de una invitación, redirigir a aceptar invitación
   if (invitationToken) {
     redirect(`/aceptar-invitacion?token=${invitationToken}`);
   }
