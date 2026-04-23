@@ -4,6 +4,9 @@ import { db } from "@/server/db";
 import { TenantSwitcher } from "./tenant-switcher";
 import { ThemeToggle } from "./theme-toggle";
 
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
 export async function TopBar() {
   const { userId } = await auth();
   let tenants: any[] = [];
@@ -17,8 +20,6 @@ export async function TopBar() {
         activeTenant: true,
       },
     });
-
-    console.log("[TopBar Debug] User:", { id: user?.id, activeTenantId: user?.activeTenantId });
 
     if (user && user.activeTenantId) {
       const memberships = await db.tenantUser.findMany({
@@ -38,13 +39,9 @@ export async function TopBar() {
         },
       });
 
-      console.log("[TopBar Debug] TenantUser:", { tenantId: user.activeTenantId, role: tenantUser?.role });
-
       userRole = tenantUser?.role || "RECEPTIONIST";
     }
   }
-
-  console.log("[TopBar Debug] Final userRole:", userRole);
 
   const roleLabels: Record<string, string> = {
     ADMIN: "Administrador",
@@ -57,8 +54,8 @@ export async function TopBar() {
       <div className="flex items-center gap-3">
         {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} userRole={userRole} />}
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex flex-col items-end">
+      <div className="flex items-center gap-3">
+        <div className="flex flex-col items-center justify-center">
           <ThemeToggle />
           <p className="text-xs text-gray-500 dark:text-sb-light/60 mt-1">{roleLabels[userRole]}</p>
         </div>
