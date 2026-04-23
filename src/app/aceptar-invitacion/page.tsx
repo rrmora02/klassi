@@ -15,7 +15,7 @@ export default function AceptarInvitacionPage() {
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [accepted, setAccepted] = useState(false);
-  const [acceptingInProgress, setAcceptingInProgress] = useState(false);
+  const [acceptAttempted, setAcceptAttempted] = useState(false);
 
   const token = searchParams.get("token");
 
@@ -39,21 +39,20 @@ export default function AceptarInvitacionPage() {
 
   // Auto-accept invitation when user becomes authenticated
   useEffect(() => {
-    if (isLoaded && userId && invitation && !acceptingInProgress && !accepted) {
+    if (isLoaded && userId && invitation && !acceptAttempted && !accepted) {
+      setAcceptAttempted(true);
       handleAccept();
     }
-  }, [isLoaded, userId, invitation, acceptingInProgress, accepted]);
+  }, [isLoaded, userId, invitation]);
 
   const handleAccept = async () => {
     if (!userId || !isLoaded) {
       return;
     }
 
-    if (acceptingInProgress || accepted) {
+    if (accepted) {
       return;
     }
-
-    setAcceptingInProgress(true);
 
     try {
       const userResponse = await fetch("/api/auth/user");
@@ -80,6 +79,7 @@ export default function AceptarInvitacionPage() {
 
       // Check if it's a "already member" error
       if (err.message?.includes("miembro") || err.data?.code === "CONFLICT") {
+        setAccepted(true);
         setToast({ message: "Ya eres miembro de este equipo. Redirigiendo...", type: "success" });
         setTimeout(() => {
           router.push("/dashboard");
@@ -87,7 +87,6 @@ export default function AceptarInvitacionPage() {
       } else {
         setToast({ message: err.message || "Error al aceptar invitación", type: "error" });
       }
-      setAcceptingInProgress(false);
     }
   };
 
@@ -168,7 +167,7 @@ export default function AceptarInvitacionPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
             <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">Verificando sesión...</p>
           </div>
-        ) : accepted || acceptingInProgress ? (
+        ) : acceptAttempted || acceptInvitation.isPending ? (
           <div className="text-center py-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
             <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">Aceptando invitación...</p>
@@ -176,10 +175,10 @@ export default function AceptarInvitacionPage() {
         ) : userId ? (
           <button
             onClick={handleAccept}
-            disabled={acceptingInProgress || accepted}
+            disabled={acceptAttempted || accepted || acceptInvitation.isPending}
             className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
-            {acceptingInProgress ? "Aceptando..." : "Aceptar Invitación"}
+            {acceptInvitation.isPending ? "Aceptando..." : "Aceptar Invitación"}
           </button>
         ) : (
           <button

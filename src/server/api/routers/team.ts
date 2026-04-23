@@ -144,8 +144,8 @@ export const teamRouter = createTRPCRouter({
          throw new TRPCError({ code: "BAD_REQUEST", message: "La invitación ha expirado." });
        }
 
-       // Validate that the email matches the invitation
-       if (invitation.email !== input.email) {
+       // Validate that the email matches the invitation (case-insensitive)
+       if (invitation.email.toLowerCase() !== input.email.toLowerCase()) {
          throw new TRPCError({ code: "FORBIDDEN", message: "El correo no coincide con la invitación. Esta invitación fue dirigida a " + invitation.email });
        }
 
