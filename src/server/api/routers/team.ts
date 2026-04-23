@@ -30,7 +30,7 @@ export const teamRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
        // Validate not already active
-       const existingUser = await ctx.db.user.findUnique({ where: { email: input.email } });
+       const existingUser = await ctx.db.user.findFirst({ where: { email: input.email } });
        if (existingUser) {
          const isMember = await ctx.db.tenantUser.findFirst({
            where: { tenantId: ctx.tenantId, userId: existingUser.id }
