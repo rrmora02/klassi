@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { TenantForm } from "./tenant-form";
 
 export default async function EscuelaConfigPage() {
@@ -16,6 +16,14 @@ export default async function EscuelaConfigPage() {
   });
 
   if (!tenant) notFound();
+
+  // Solo ADMIN
+  const tenantUser = await db.tenantUser.findFirst({
+    where: { tenantId: tenant.id, userId: user.id }
+  });
+  if (tenantUser?.role !== "ADMIN") {
+    redirect("/dashboard");
+  }
 
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", paddingBottom: 40 }}>

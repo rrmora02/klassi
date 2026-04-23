@@ -24,7 +24,7 @@ const ALL_NAV_ITEMS = [
   { label: "Grupos",       href: "/dashboard/grupos",                   icon: BookOpen,        roles: ["ADMIN", "RECEPTIONIST"] },
   { label: "Asistencia",   href: "/dashboard/asistencia",               icon: ClipboardList,   roles: ["ADMIN", "RECEPTIONIST", "INSTRUCTOR"] },
   { label: "Pagos",        href: "/dashboard/pagos",                    icon: CreditCard,      roles: ["ADMIN", "RECEPTIONIST"] },
-  { label: "Reportes",     href: "/dashboard/reportes",                 icon: BarChart2,       roles: ["ADMIN", "RECEPTIONIST"] },
+  { label: "Reportes",     href: "/dashboard/reportes",                 icon: BarChart2,       roles: ["ADMIN"] },
   { label: "Comunicados",  href: "/dashboard/comunicados",              icon: Bell,            roles: ["ADMIN", "RECEPTIONIST"] },
 ];
 
