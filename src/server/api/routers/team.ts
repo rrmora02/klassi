@@ -195,6 +195,12 @@ export const teamRouter = createTRPCRouter({
          }
        });
 
+       // Set this tenant as the user's active tenant
+       await ctx.db.user.update({
+         where: { id: user.id },
+         data: { activeTenantId: invitation.tenantId }
+       });
+
        // Mark invitation as accepted
        await ctx.db.teamInvitation.update({
          where: { id: invitation.id },
