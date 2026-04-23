@@ -10,14 +10,16 @@ export async function GET() {
 
     const user = await currentUser();
 
-    // Get primary email or first email
-    const primaryEmail = user?.emailAddresses?.find(e => e.id === user.primaryEmailAddressId)?.emailAddress ||
-                        user?.emailAddresses?.[0]?.emailAddress;
+    // Get primary email or first email and trim whitespace
+    const primaryEmail = (user?.emailAddresses?.find(e => e.id === user.primaryEmailAddressId)?.emailAddress ||
+                        user?.emailAddresses?.[0]?.emailAddress || "")
+                        .toLowerCase()
+                        .trim();
 
     return NextResponse.json({
       id: user?.id,
       email: primaryEmail,
-      name: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.emailAddresses?.[0]?.emailAddress || "User"
+      name: user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || primaryEmail || "User"
     });
   } catch (error) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

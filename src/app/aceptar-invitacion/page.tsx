@@ -61,6 +61,8 @@ export default function AceptarInvitacionPage() {
       }
       const user = await userResponse.json();
 
+      console.log("Aceptando invitación con email:", user.email);
+
       await acceptInvitation.mutateAsync({
         token: token || "",
         clerkId: userId,
@@ -85,6 +87,8 @@ export default function AceptarInvitacionPage() {
           router.push("/dashboard");
         }, 2000);
       } else {
+        // Reset acceptAttempted to allow retry on error
+        setAcceptAttempted(false);
         setToast({ message: err.message || "Error al aceptar invitación", type: "error" });
       }
     }
