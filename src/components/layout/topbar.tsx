@@ -34,7 +34,7 @@ export async function TopBar() {
 
       const tenantUser = await db.tenantUser.findFirst({
         where: {
-          userId,
+          userId: user.id,
           tenantId: user.activeTenantId,
         },
       });
