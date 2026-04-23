@@ -14,6 +14,7 @@ export default function AceptarInvitacionPage() {
   const [invitation, setInvitation] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [accepted, setAccepted] = useState(false);
   const [acceptingInProgress, setAcceptingInProgress] = useState(false);
 
   const token = searchParams.get("token");
@@ -24,14 +25,6 @@ export default function AceptarInvitacionPage() {
   );
 
   const acceptInvitation = api.team.acceptInvitation.useMutation();
-
-  // Auto-accept invitation when user becomes authenticated
-  useEffect(() => {
-    if (isLoaded && userId && invitation && !acceptingInProgress) {
-      setAcceptingInProgress(true);
-      handleAccept();
-    }
-  }, [isLoaded, userId, invitation]);
 
   useEffect(() => {
     if (getInvitation.isSuccess) {
@@ -44,13 +37,24 @@ export default function AceptarInvitacionPage() {
     }
   }, [getInvitation.isSuccess, getInvitation.isError, getInvitation.data, getInvitation.error]);
 
+  // Auto-accept invitation when user becomes authenticated
+  useEffect(() => {
+    if (isLoaded && userId && invitation && !acceptingInProgress && !accepted) {
+      handleAccept();
+    }
+  }, [isLoaded, userId, invitation, acceptingInProgress, accepted]);
+
   const handleAccept = async () => {
     if (!userId || !isLoaded) {
-      setError("Debes iniciar sesión para aceptar la invitación");
       return;
     }
 
-    // Get user info from Clerk
+    if (acceptingInProgress || accepted) {
+      return;
+    }
+
+    setAcceptingInProgress(true);
+
     try {
       const userResponse = await fetch("/api/auth/user");
       if (!userResponse.ok) {
@@ -65,6 +69,7 @@ export default function AceptarInvitacionPage() {
         name: user.name || user.email
       });
 
+      setAccepted(true);
       setToast({ message: "¡Invitación aceptada! Redirigiendo...", type: "success" });
 
       setTimeout(() => {
@@ -72,7 +77,16 @@ export default function AceptarInvitacionPage() {
       }, 2000);
     } catch (err: any) {
       console.error("Error al aceptar invitación:", err);
-      setToast({ message: err.message || "Error al aceptar invitación", type: "error" });
+
+      // Check if it's a "already member" error
+      if (err.message?.includes("miembro") || err.data?.code === "CONFLICT") {
+        setToast({ message: "Ya eres miembro de este equipo. Redirigiendo...", type: "success" });
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 2000);
+      } else {
+        setToast({ message: err.message || "Error al aceptar invitación", type: "error" });
+      }
       setAcceptingInProgress(false);
     }
   };
@@ -154,7 +168,7 @@ export default function AceptarInvitacionPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
             <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">Verificando sesión...</p>
           </div>
-        ) : acceptInvitation.isPending ? (
+        ) : accepted || acceptingInProgress ? (
           <div className="text-center py-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
             <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">Aceptando invitación...</p>
@@ -162,10 +176,10 @@ export default function AceptarInvitacionPage() {
         ) : userId ? (
           <button
             onClick={handleAccept}
-            disabled={acceptInvitation.isPending}
+            disabled={acceptingInProgress || accepted}
             className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
-            {acceptInvitation.isPending ? "Aceptando..." : "Aceptar Invitación"}
+            {acceptingInProgress ? "Aceptando..." : "Aceptar Invitación"}
           </button>
         ) : (
           <button
