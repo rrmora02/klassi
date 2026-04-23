@@ -14,6 +14,7 @@ export default function AceptarInvitacionPage() {
   const [invitation, setInvitation] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [acceptingInProgress, setAcceptingInProgress] = useState(false);
 
   const token = searchParams.get("token");
 
@@ -23,6 +24,14 @@ export default function AceptarInvitacionPage() {
   );
 
   const acceptInvitation = api.team.acceptInvitation.useMutation();
+
+  // Auto-accept invitation when user becomes authenticated
+  useEffect(() => {
+    if (isLoaded && userId && invitation && !acceptingInProgress) {
+      setAcceptingInProgress(true);
+      handleAccept();
+    }
+  }, [isLoaded, userId, invitation]);
 
   useEffect(() => {
     if (getInvitation.isSuccess) {
@@ -42,9 +51,13 @@ export default function AceptarInvitacionPage() {
     }
 
     // Get user info from Clerk
-    const user = await fetch("/api/auth/user").then(r => r.json());
-
     try {
+      const userResponse = await fetch("/api/auth/user");
+      if (!userResponse.ok) {
+        throw new Error("Error al obtener información del usuario");
+      }
+      const user = await userResponse.json();
+
       await acceptInvitation.mutateAsync({
         token: token || "",
         clerkId: userId,
@@ -58,7 +71,9 @@ export default function AceptarInvitacionPage() {
         router.push("/dashboard");
       }, 2000);
     } catch (err: any) {
+      console.error("Error al aceptar invitación:", err);
       setToast({ message: err.message || "Error al aceptar invitación", type: "error" });
+      setAcceptingInProgress(false);
     }
   };
 
@@ -137,6 +152,12 @@ export default function AceptarInvitacionPage() {
         {!isLoaded ? (
           <div className="text-center py-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">Verificando sesión...</p>
+          </div>
+        ) : acceptInvitation.isPending ? (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-2">Aceptando invitación...</p>
           </div>
         ) : userId ? (
           <button
@@ -148,10 +169,13 @@ export default function AceptarInvitacionPage() {
           </button>
         ) : (
           <button
-            onClick={() => router.push("/sign-in")}
+            onClick={() => {
+              const redirectUrl = `${window.location.origin}/aceptar-invitacion?token=${token}`;
+              router.push(`/sign-in?redirect_url=${encodeURIComponent(redirectUrl)}`);
+            }}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
           >
-            Iniciar Sesión
+            Iniciar Sesión / Registrarse
           </button>
         )}
       </div>
