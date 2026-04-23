@@ -21,5 +21,7 @@ WHERE
     'Attendance', 'Payment'
   )
   AND t.relkind = 'r'
+GROUP BY
+  t.relname, i.relname, ix.indisunique
 ORDER BY
   t.relname, i.relname;
