@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 const inviteSchema = z.object({
   email: z.string().email("Correo inválido"),
-  role: z.enum(["ADMIN", "RECEPTIONIST"], { required_error: "Selecciona un rol" }),
+  role: z.enum(["ADMIN", "RECEPTIONIST", "INSTRUCTOR"], { required_error: "Selecciona un rol" }),
 });
 
 type InviteValues = z.infer<typeof inviteSchema>;
@@ -60,7 +60,7 @@ export function InviteUserModal({ onSuccess }: Props) {
           <div style={{
             background: "var(--color-background-primary)", width: 400, borderRadius: 12, padding: 24, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)"
           }}>
-            <h2 style={{ fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>Invitar Analista / Recepcionista</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>Invitar Miembro al Equipo</h2>
             
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <div style={fieldStyle}>
@@ -73,6 +73,7 @@ export function InviteUserModal({ onSuccess }: Props) {
                 <label style={labelStyle}>Puesto / Acceso</label>
                 <select {...register("role")} className={selectCls}>
                   <option value="RECEPTIONIST">Recepcionista</option>
+                  <option value="INSTRUCTOR">Instructor</option>
                   <option value="ADMIN">Administrador Regional</option>
                 </select>
                 {errors.role && <span style={{ color: "#e53e3e", fontSize: 12 }}>{errors.role.message}</span>}
