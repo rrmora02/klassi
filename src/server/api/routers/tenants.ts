@@ -1,9 +1,41 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, protectedProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
 export const tenantsRouter = createTRPCRouter({
-  
+
+  createTenant: protectedProcedure
+    .input(z.object({
+      name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      // Create new tenant
+      const tenant = await ctx.db.tenant.create({
+        data: {
+          name: input.name,
+          slug: input.name.toLowerCase().replace(/\s+/g, "-"),
+          primaryColor: "#00754A",
+        }
+      });
+
+      // Add user as ADMIN to the tenant
+      await ctx.db.tenantUser.create({
+        data: {
+          tenantId: tenant.id,
+          userId: ctx.dbUser!.id,
+          role: "ADMIN"
+        }
+      });
+
+      // Set as active tenant for the user
+      await ctx.db.user.update({
+        where: { id: ctx.dbUser!.id },
+        data: { activeTenantId: tenant.id }
+      });
+
+      return tenant;
+    }),
+
   getMyTenant: tenantProcedure
     .query(async ({ ctx }) => {
       const tenant = await ctx.db.tenant.findUnique({
