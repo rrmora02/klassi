@@ -6,6 +6,33 @@ export const attendanceRouter = createTRPCRouter({
 
   getGroups: tenantProcedure
     .query(async ({ ctx }) => {
+       // Obtener el rol del usuario en el tenant
+       const tenantUser = await ctx.db.tenantUser.findFirst({
+          where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id }
+       });
+
+       const userRole = tenantUser?.role || "RECEPTIONIST";
+
+       // Si es INSTRUCTOR, solo mostrar sus grupos
+       if (userRole === "INSTRUCTOR") {
+          const instructor = await ctx.db.instructor.findFirst({
+             where: { userId: ctx.dbUser!.id, tenantId: ctx.tenantId }
+          });
+
+          if (!instructor) {
+             throw new TRPCError({
+                code: "FORBIDDEN",
+                message: "No tienes grupos asignados como instructor"
+             });
+          }
+
+          return ctx.db.group.findMany({
+             where: { tenantId: ctx.tenantId, isActive: true, instructorId: instructor.id },
+             orderBy: { name: "asc" },
+          });
+       }
+
+       // ADMIN y RECEPTIONIST ven todos los grupos
        return ctx.db.group.findMany({
           where: { tenantId: ctx.tenantId, isActive: true },
           orderBy: { name: "asc" },

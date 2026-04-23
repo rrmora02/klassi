@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import type { UserRole } from "@prisma/client";
 import {
   LayoutDashboard,
   Users,
@@ -16,25 +17,33 @@ import {
   Building2,
 } from "lucide-react";
 
-const NAV_ITEMS = [
-  { label: "Inicio",       href: "/dashboard",                          icon: LayoutDashboard },
-  { label: "Alumnos",      href: "/dashboard/alumnos",                  icon: Users },
-  { label: "Instructores", href: "/dashboard/instructores",             icon: UserCheck },
-  { label: "Grupos",       href: "/dashboard/grupos",                   icon: BookOpen },
-  { label: "Asistencia",   href: "/dashboard/asistencia",               icon: ClipboardList },
-  { label: "Pagos",        href: "/dashboard/pagos",                    icon: CreditCard },
-  { label: "Reportes",     href: "/dashboard/reportes",                 icon: BarChart2 },
-  { label: "Comunicados",  href: "/dashboard/comunicados",              icon: Bell },
+const ALL_NAV_ITEMS = [
+  { label: "Inicio",       href: "/dashboard",                          icon: LayoutDashboard, roles: ["ADMIN", "RECEPTIONIST", "INSTRUCTOR"] },
+  { label: "Alumnos",      href: "/dashboard/alumnos",                  icon: Users,           roles: ["ADMIN", "RECEPTIONIST"] },
+  { label: "Instructores", href: "/dashboard/instructores",             icon: UserCheck,       roles: ["ADMIN"] },
+  { label: "Grupos",       href: "/dashboard/grupos",                   icon: BookOpen,        roles: ["ADMIN", "RECEPTIONIST"] },
+  { label: "Asistencia",   href: "/dashboard/asistencia",               icon: ClipboardList,   roles: ["ADMIN", "RECEPTIONIST", "INSTRUCTOR"] },
+  { label: "Pagos",        href: "/dashboard/pagos",                    icon: CreditCard,      roles: ["ADMIN", "RECEPTIONIST"] },
+  { label: "Reportes",     href: "/dashboard/reportes",                 icon: BarChart2,       roles: ["ADMIN", "RECEPTIONIST"] },
+  { label: "Comunicados",  href: "/dashboard/comunicados",              icon: Bell,            roles: ["ADMIN", "RECEPTIONIST"] },
 ];
 
-const CONFIG_ITEMS = [
-  { label: "Equipo",       href: "/dashboard/configuracion/equipo",      icon: Users },
-  { label: "Disciplinas",  href: "/dashboard/configuracion/disciplinas", icon: Tag },
-  { label: "Mi escuela",   href: "/dashboard/configuracion/escuela",     icon: Building2 },
+const ALL_CONFIG_ITEMS = [
+  { label: "Equipo",       href: "/dashboard/configuracion/equipo",      icon: Users,      roles: ["ADMIN"] },
+  { label: "Disciplinas",  href: "/dashboard/configuracion/disciplinas", icon: Tag,        roles: ["ADMIN"] },
+  { label: "Mi escuela",   href: "/dashboard/configuracion/escuela",     icon: Building2,  roles: ["ADMIN"] },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  userRole?: UserRole;
+}
+
+export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
   const pathname = usePathname();
+
+  // Filtrar items según el rol
+  const NAV_ITEMS = ALL_NAV_ITEMS.filter(item => item.roles.includes(userRole));
+  const CONFIG_ITEMS = ALL_CONFIG_ITEMS.filter(item => item.roles.includes(userRole));
 
   return (
     <div className="flex h-full w-full flex-col border-r border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-house md:w-60">

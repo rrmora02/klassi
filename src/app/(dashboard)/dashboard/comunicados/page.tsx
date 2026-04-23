@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { redirect } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import { AnnouncementActions } from "@/components/comunicados/announcement-actions";
 import Link from "next/link";
@@ -16,6 +17,14 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
   const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
   const tenant = user?.activeTenant;
   if (!tenant) return null;
+
+  // Solo ADMIN y RECEPTIONIST
+  const tenantUser = await db.tenantUser.findFirst({
+    where: { tenantId: tenant.id, userId: user.id }
+  });
+  if (tenantUser?.role === "INSTRUCTOR") {
+    redirect("/dashboard");
+  }
 
   const page     = Math.max(1, Number(searchParams.page ?? 1));
   const pageSize = 20;

@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 import type { ScheduleSlot } from "@/lib/schemas/group.schema";
@@ -37,6 +38,14 @@ export default async function GruposPage({ searchParams }: PageProps) {
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
   if (!tenant) return null;
+
+  // Solo ADMIN y RECEPTIONIST
+  const tenantUser = await db.tenantUser.findFirst({
+    where: { tenantId: tenant.id, userId: user.id }
+  });
+  if (tenantUser?.role === "INSTRUCTOR") {
+    redirect("/dashboard");
+  }
 
   const page     = Math.max(1, Number(searchParams.page ?? 1));
   const pageSize = 20;

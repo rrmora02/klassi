@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { fullName, calcAge } from "@/lib/utils";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 
@@ -15,6 +16,14 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
   const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
   const tenant = user?.activeTenant;
   if (!tenant) return null;
+
+  // Proteger acceso: solo ADMIN y RECEPTIONIST
+  const tenantUser = await db.tenantUser.findFirst({
+    where: { tenantId: tenant.id, userId: user.id }
+  });
+  if (tenantUser?.role === "INSTRUCTOR") {
+    redirect("/dashboard");
+  }
 
   const page     = Math.max(1, Number(searchParams.page ?? 1));
   const pageSize = 20;

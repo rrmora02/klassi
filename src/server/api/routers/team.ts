@@ -26,7 +26,7 @@ export const teamRouter = createTRPCRouter({
   inviteMember: tenantProcedure
     .input(z.object({
        email: z.string().email("Correo inválido"),
-       role:  z.enum(["ADMIN", "RECEPTIONIST"]),
+       role:  z.enum(["ADMIN", "RECEPTIONIST", "INSTRUCTOR"]),
     }))
     .mutation(async ({ ctx, input }) => {
        // Validate not already active

@@ -18,8 +18,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding");
   }
 
+  // Obtener el rol del usuario en el tenant
+  const tenantUser = await db.tenantUser.findFirst({
+    where: {
+      userId: user.id,
+      tenantId: user.activeTenantId
+    },
+  });
+
+  const userRole = tenantUser?.role || "RECEPTIONIST";
+
   return (
-    <DashboardShell sidebar={<Sidebar />} topbar={<TopBar />}>
+    <DashboardShell sidebar={<Sidebar userRole={userRole} />} topbar={<TopBar />}>
       {children}
     </DashboardShell>
   );

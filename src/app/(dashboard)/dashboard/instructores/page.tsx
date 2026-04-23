@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 
 interface PageProps {
@@ -13,6 +14,14 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
   const tenant = user?.activeTenant;
   if (!tenant) return null;
+
+  // Solo ADMIN
+  const tenantUser = await db.tenantUser.findFirst({
+    where: { tenantId: tenant.id, userId: user.id }
+  });
+  if (tenantUser?.role !== "ADMIN") {
+    redirect("/dashboard");
+  }
 
   const page = Math.max(1, Number(searchParams.page ?? 1));
   const pageSize = 20;

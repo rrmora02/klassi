@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { TeamClientView } from "./team-client-view";
 
 export default async function EquipoPage() {
@@ -13,6 +13,14 @@ export default async function EquipoPage() {
 
   const tenant = await db.tenant.findUnique({ where: { id: tenantId } });
   if (!tenant) notFound();
+
+  // Solo ADMIN
+  const tenantUser = await db.tenantUser.findFirst({
+    where: { tenantId: tenant.id, userId: user.id }
+  });
+  if (tenantUser?.role !== "ADMIN") {
+    redirect("/dashboard");
+  }
 
   return (
     <div style={{ maxWidth: 960, margin: "0 auto", paddingBottom: 40 }}>
