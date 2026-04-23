@@ -50,13 +50,13 @@ const isAuthenticated = t.middleware(({ ctx, next }) => {
   if (!ctx.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
   }
-  return next({ ctx: { ...ctx, userId: ctx.userId } });
+  return next({ ctx: { ...ctx, userId: ctx.userId, dbUser: ctx.dbUser } });
 });
 
 const hasTenant = t.middleware(({ ctx, next }) => {
   if (!ctx.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
   if (!ctx.tenantId) throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
-  return next({ ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId } });
+  return next({ ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId, dbUser: ctx.dbUser } });
 });
 
 // ─── Exports ─────────────────────────────────────────────────────
