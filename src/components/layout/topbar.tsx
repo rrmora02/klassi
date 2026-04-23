@@ -38,13 +38,22 @@ export async function TopBar() {
     }
   }
 
+  const roleLabels: Record<string, string> = {
+    ADMIN: "Administrador",
+    RECEPTIONIST: "Recepcionista",
+    INSTRUCTOR: "Instructor",
+  };
+
   return (
     <div className="flex h-16 flex-1 items-center justify-between bg-white dark:bg-sb-uplift px-4 md:px-6">
       <div className="flex items-center gap-3">
         {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} userRole={userRole} />}
       </div>
-      <div className="flex items-center gap-2">
-        <ThemeToggle />
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col items-end">
+          <ThemeToggle />
+          <p className="text-xs text-gray-500 dark:text-sb-light/60 mt-1">{roleLabels[userRole]}</p>
+        </div>
         <UserButton afterSignOutUrl="/" />
       </div>
     </div>
