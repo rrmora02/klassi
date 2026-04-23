@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
 export const teamRouter = createTRPCRouter({
@@ -95,5 +95,97 @@ export const teamRouter = createTRPCRouter({
        return ctx.db.tenantUser.delete({
          where: { id: input.id }
        });
+    }),
+
+  getInvitationByToken: publicProcedure
+    .input(z.object({ token: z.string() }))
+    .query(async ({ ctx, input }) => {
+       const invitation = await ctx.db.teamInvitation.findFirst({
+         where: { token: input.token, status: "PENDING" },
+         include: {
+           tenant: { select: { id: true, name: true } }
+         }
+       });
+
+       if (!invitation) {
+         throw new TRPCError({ code: "NOT_FOUND", message: "Invitación no válida o expirada." });
+       }
+
+       if (new Date() > invitation.expiresAt) {
+         throw new TRPCError({ code: "BAD_REQUEST", message: "La invitación ha expirado." });
+       }
+
+       return {
+         email: invitation.email,
+         role: invitation.role,
+         tenantName: invitation.tenant.name,
+         tenantId: invitation.tenant.id,
+         invitationId: invitation.id
+       };
+    }),
+
+  acceptInvitation: publicProcedure
+    .input(z.object({
+      token: z.string(),
+      clerkId: z.string(),
+      email: z.string().email(),
+      name: z.string()
+    }))
+    .mutation(async ({ ctx, input }) => {
+       const invitation = await ctx.db.teamInvitation.findFirst({
+         where: { token: input.token, status: "PENDING" }
+       });
+
+       if (!invitation) {
+         throw new TRPCError({ code: "NOT_FOUND", message: "Invitación no válida." });
+       }
+
+       if (new Date() > invitation.expiresAt) {
+         throw new TRPCError({ code: "BAD_REQUEST", message: "La invitación ha expirado." });
+       }
+
+       if (invitation.email !== input.email) {
+         throw new TRPCError({ code: "FORBIDDEN", message: "El correo no coincide con la invitación." });
+       }
+
+       // Get or create user
+       let user = await ctx.db.user.findUnique({
+         where: { clerkId: input.clerkId }
+       });
+
+       if (!user) {
+         user = await ctx.db.user.create({
+           data: {
+             clerkId: input.clerkId,
+             email: input.email,
+             name: input.name
+           }
+         });
+       }
+
+       // Add user to tenant
+       const existingMember = await ctx.db.tenantUser.findFirst({
+         where: { tenantId: invitation.tenantId, userId: user.id }
+       });
+
+       if (existingMember) {
+         throw new TRPCError({ code: "CONFLICT", message: "Ya eres miembro de este equipo." });
+       }
+
+       await ctx.db.tenantUser.create({
+         data: {
+           tenantId: invitation.tenantId,
+           userId: user.id,
+           role: invitation.role
+         }
+       });
+
+       // Mark invitation as accepted
+       await ctx.db.teamInvitation.update({
+         where: { id: invitation.id },
+         data: { status: "ACCEPTED" }
+       });
+
+       return { success: true, tenantId: invitation.tenantId };
     })
 });

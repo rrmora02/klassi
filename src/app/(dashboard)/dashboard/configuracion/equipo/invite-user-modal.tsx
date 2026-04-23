@@ -5,6 +5,7 @@ import { api } from "@/lib/trpc";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Toast } from "@/components/shared/toast";
 
 const inviteSchema = z.object({
   email: z.string().email("Correo inválido"),
@@ -19,6 +20,7 @@ interface Props {
 
 export function InviteUserModal({ onSuccess }: Props) {
   const [isOpen, setIsOpen] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const invite = api.team.inviteMember.useMutation();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<InviteValues>({
@@ -28,13 +30,13 @@ export function InviteUserModal({ onSuccess }: Props) {
 
   const onSubmit = async (data: InviteValues) => {
     try {
-      await invite.mutateAsync(data);
-      alert("Invitación generada con éxito.");
+      const result = await invite.mutateAsync(data);
+      setToast({ message: `Invitación enviada a ${data.email}. Válida por 7 días.`, type: "success" });
       reset();
       setIsOpen(false);
       onSuccess();
     } catch (err: any) {
-      alert(err.message || "Error al generar invitación.");
+      setToast({ message: err.message || "Error al generar invitación.", type: "error" });
     }
   };
 
@@ -45,7 +47,15 @@ export function InviteUserModal({ onSuccess }: Props) {
 
   return (
     <>
-      <button 
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      <button
         onClick={() => setIsOpen(true)}
         style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#00754A", color: "#fff", cursor: "pointer", fontWeight: 500, fontSize: 14 }}
       >
@@ -61,7 +71,7 @@ export function InviteUserModal({ onSuccess }: Props) {
             background: "var(--color-background-primary)", width: 400, borderRadius: 12, padding: 24, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)"
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>Invitar Miembro al Equipo</h2>
-            
+
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
               <div style={fieldStyle}>
                 <label style={labelStyle}>Correo Electrónico (El que usarán para entrar)</label>
