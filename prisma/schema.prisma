@@ -163,6 +163,7 @@ model User {
   invitationsSent TeamInvitation[] @relation("SentInvitations")
 
   @@index([clerkId])
+  @@index([email])
 }
 
 // ─── Membresía (Usuario <-> Escuela) ─────────────────────────────
@@ -179,6 +180,7 @@ model TenantUser {
 
   @@unique([tenantId, userId])
   @@index([userId])
+  @@index([tenantId])
 }
 
 // ─── Invitación a Staff ──────────────────────────────────────────
@@ -197,6 +199,7 @@ model TeamInvitation {
   createdAt DateTime @default(now())
 
   @@unique([tenantId, email])
+  @@index([tenantId, status])
 }
 
 // ─── Disciplina ──────────────────────────────────────────────────
@@ -241,6 +244,7 @@ model Instructor {
 
   @@unique([tenantId, userId])
   @@index([tenantId])
+  @@index([tenantId, isActive])
 }
 
 // ─── Grupo ────────────────────────────────────────────────────────
@@ -273,6 +277,7 @@ model Group {
 
   @@index([tenantId])
   @@index([disciplineId])
+  @@index([tenantId, isActive])
 }
 
 // ─── Alumno ───────────────────────────────────────────────────────
@@ -299,6 +304,8 @@ model Student {
 
   @@index([tenantId])
   @@index([tenantId, lastName])
+  @@index([tenantId, status])
+  @@index([tenantId, createdAt])
 }
 
 // ─── Padre / Tutor <-> Alumno ─────────────────────────────────────
@@ -341,6 +348,8 @@ model Enrollment {
   @@unique([studentId, groupId])
   @@index([groupId])
   @@index([studentId])
+  @@index([groupId, status])
+  @@index([studentId, status])
 }
 
 // ─── Sesión de clase ──────────────────────────────────────────────
@@ -360,6 +369,7 @@ model ClassSession {
 
   @@index([groupId])
   @@index([date])
+  @@index([groupId, date])
 }
 
 // ─── Asistencia ───────────────────────────────────────────────────
@@ -379,6 +389,8 @@ model Attendance {
   @@unique([enrollmentId, sessionId])
   @@index([sessionId])
   @@index([enrollmentId])
+  @@index([sessionId, status])
+  @@index([enrollmentId, status])
 }
 
 // ─── Pago (alumno → escuela) ──────────────────────────────────────
@@ -407,6 +419,8 @@ model Payment {
   @@index([studentId])
   @@index([tenantId, status])
   @@index([tenantId, dueDate])
+  @@index([studentId, status])
+  @@index([tenantId, paidAt])
 }
 
 // ─── Comunicados ──────────────────────────────────────────────────
