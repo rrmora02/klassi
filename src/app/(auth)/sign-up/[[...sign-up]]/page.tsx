@@ -12,7 +12,7 @@ export default function SignUpPage() {
           path="/sign-up" 
           routing="path" 
           signInUrl="/sign-in"
-          afterSignUpUrl="/crear-escuela"
+          afterSignUpUrl="/onboarding"
         />
       </div>
     </main>

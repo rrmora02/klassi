@@ -9,12 +9,13 @@ async function createTenantAction(formData: FormData) {
   if (!userId) throw new Error("No autenticado");
 
   const schoolName = formData.get("schoolName") as string;
+  const invitationToken = formData.get("invitationToken") as string | null;
+
   if (!schoolName || schoolName.trim().length < 3) {
     throw new Error("El nombre de la escuela es muy corto");
   }
 
   // 1. Encontrar o crear al usuario basándose en clerkId
-  // Por si el webhook no alcanzó a procesarse a tiempo
   let user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) {
     const { clerkClient } = await import("@clerk/nextjs/server");
@@ -33,9 +34,9 @@ async function createTenantAction(formData: FormData) {
   }
 
   // 2. Crear Tenant
-  const base = schoolName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s-]/g, "").trim().replace(/\s+/g, "-");
+  const base = schoolName.toLowerCase().trim().replace(/\s+/g, "-");
   const slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
-  
+
   const tenant = await db.tenant.create({
     data: {
       name: schoolName.trim(),
@@ -60,10 +61,19 @@ async function createTenantAction(formData: FormData) {
     data: { activeTenantId: tenant.id }
   });
 
+  // 5. Si viene de una invitación, redirigir a aceptar invitación
+  if (invitationToken) {
+    redirect(`/aceptar-invitacion?token=${invitationToken}`);
+  }
+
   redirect("/dashboard");
 }
 
-export default async function OnboardingPage() {
+interface OnboardingPageProps {
+  searchParams: { token?: string };
+}
+
+export default async function OnboardingPage({ searchParams }: OnboardingPageProps) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
@@ -73,17 +83,21 @@ export default async function OnboardingPage() {
     redirect("/dashboard");
   }
 
+  const invitationToken = searchParams.token;
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        
+
         <div className="mb-8 flex flex-col items-center text-center">
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-sb-light/50">
             <School className="h-6 w-6 text-sb-accent" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Bienvenido a Klassi</h1>
           <p className="mt-2 text-sm text-gray-500">
-            Para comenzar, necesitamos saber el nombre de tu institución deportiva o escuela.
+            {invitationToken
+              ? "Crea tu institución y luego podrás aceptar la invitación"
+              : "Para comenzar, necesitamos saber el nombre de tu institución deportiva o escuela."}
           </p>
         </div>
 
@@ -103,6 +117,10 @@ export default async function OnboardingPage() {
               />
             </div>
           </div>
+
+          {invitationToken && (
+            <input type="hidden" name="invitationToken" value={invitationToken} />
+          )}
 
           <button
             type="submit"
