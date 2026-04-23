@@ -149,7 +149,11 @@ export const teamRouter = createTRPCRouter({
        const inputEmail = input.email.toLowerCase().trim();
 
        if (invitationEmail !== inputEmail) {
-         throw new TRPCError({ code: "FORBIDDEN", message: "El correo no coincide con la invitación. Esta invitación fue dirigida a " + invitation.email });
+         console.log(`[DEBUG] Email mismatch: invitation="${invitationEmail}" vs input="${inputEmail}"`);
+         throw new TRPCError({
+           code: "FORBIDDEN",
+           message: `El correo no coincide. Esperábamos: ${invitation.email}. Recibimos: ${input.email}`
+         });
        }
 
        // Get or create user
