@@ -18,6 +18,8 @@ export async function TopBar() {
       },
     });
 
+    console.log("[TopBar Debug] User:", { id: user?.id, activeTenantId: user?.activeTenantId });
+
     if (user && user.activeTenantId) {
       const memberships = await db.tenantUser.findMany({
         where: { userId },
@@ -36,9 +38,13 @@ export async function TopBar() {
         },
       });
 
+      console.log("[TopBar Debug] TenantUser:", { tenantId: user.activeTenantId, role: tenantUser?.role });
+
       userRole = tenantUser?.role || "RECEPTIONIST";
     }
   }
+
+  console.log("[TopBar Debug] Final userRole:", userRole);
 
   const roleLabels: Record<string, string> = {
     ADMIN: "Administrador",
