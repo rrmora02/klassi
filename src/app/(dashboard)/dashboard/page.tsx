@@ -91,7 +91,7 @@ export default async function DashboardPage() {
   try {
     user = await db.user.findUnique({
       where: { clerkId: userId },
-      include: { activeTenant: true }
+      select: { id: true, activeTenantId: true, activeTenant: true }
     });
   } catch (err) {
     return (
@@ -108,11 +108,58 @@ export default async function DashboardPage() {
 
   const tenant = user.activeTenant;
 
+  // Get user role
+  const tenantUser = await db.tenantUser.findFirst({
+    where: {
+      userId: user.id,
+      tenantId: user.activeTenantId!
+    },
+  });
+  const userRole = tenantUser?.role || "RECEPTIONIST";
+
   const { stats, overduePayments, recentStudents } = await getDashboardData(tenant.id);
 
   const showTrialBanner =
     tenant.status === "TRIAL" && tenant.trialEndsAt && trialDaysLeft(tenant.trialEndsAt) >= 0;
   const daysLeft = tenant.trialEndsAt ? trialDaysLeft(tenant.trialEndsAt) : 0;
+
+  // For INSTRUCTOR role, show simplified dashboard
+  if (userRole === "INSTRUCTOR") {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Inicio</h1>
+          <p className="mt-0.5 text-sm text-gray-500 dark:text-sb-light/70">{tenant.name}</p>
+        </div>
+
+        {/* Trial banner */}
+        {showTrialBanner && (
+          <div className={`flex items-center justify-between rounded-xl px-5 py-4 ${
+            daysLeft <= 3
+              ? "border border-red-200 bg-red-50"
+              : "border border-amber-200 bg-amber-50"
+          }`}>
+            <div className="flex items-center gap-3">
+              <Clock className={`h-5 w-5 flex-shrink-0 ${daysLeft <= 3 ? "text-red-500" : "text-amber-500"}`} />
+              <p className={`text-sm font-medium ${daysLeft <= 3 ? "text-red-800" : "text-amber-800"}`}>
+                {daysLeft === 0
+                  ? "Tu período de prueba vence hoy."
+                  : `Tu período de prueba vence en ${daysLeft} ${daysLeft === 1 ? "día" : "días"}.`}
+              </p>
+            </div>
+            <span className="ml-4 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white whitespace-nowrap">
+              Actualizar plan
+            </span>
+          </div>
+        )}
+
+        <div className="rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift p-8 text-center">
+          <p className="text-sm text-gray-600 dark:text-sb-light/70">Accede a la sección de <strong>Asistencia</strong> desde el menú lateral para registrar la asistencia de los alumnos.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
