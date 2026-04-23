@@ -10,12 +10,14 @@ interface Tenant {
   name: string;
 }
 
-export function TenantSwitcher({ 
-  tenants, 
-  activeTenantId 
-}: { 
-  tenants: Tenant[]; 
-  activeTenantId: string | null; 
+export function TenantSwitcher({
+  tenants,
+  activeTenantId,
+  userRole = "RECEPTIONIST"
+}: {
+  tenants: Tenant[];
+  activeTenantId: string | null;
+  userRole?: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -56,13 +58,17 @@ export function TenantSwitcher({
             {t.id === activeTenantId && <Check className="h-4 w-4 text-sb-accent dark:text-sb-light" />}
           </button>
         ))}
-        <div className="my-1 h-px bg-gray-100 dark:bg-[rgba(255,255,255,0.10)]" />
-        <button
-          onClick={() => router.push("/onboarding")}
-          className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg"
-        >
-          + Agregar otra escuela
-        </button>
+        {userRole === "ADMIN" && (
+          <>
+            <div className="my-1 h-px bg-gray-100 dark:bg-[rgba(255,255,255,0.10)]" />
+            <button
+              onClick={() => router.push("/onboarding")}
+              className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg"
+            >
+              + Agregar otra escuela
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
