@@ -144,10 +144,6 @@ export const teamRouter = createTRPCRouter({
          throw new TRPCError({ code: "BAD_REQUEST", message: "La invitación ha expirado." });
        }
 
-       if (invitation.email !== input.email) {
-         throw new TRPCError({ code: "FORBIDDEN", message: "El correo no coincide con la invitación." });
-       }
-
        // Get or create user
        let user = await ctx.db.user.findUnique({
          where: { clerkId: input.clerkId }

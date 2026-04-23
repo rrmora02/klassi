@@ -4,40 +4,98 @@ import { useState } from "react";
 import { api } from "@/lib/trpc";
 import { formatDate } from "@/lib/utils";
 import { InviteUserModal } from "./invite-user-modal";
+import { Toast } from "@/components/shared/toast";
 
 export function TeamClientView() {
   const { data: members, isLoading: loadingMembers, refetch: refetchMembers } = api.team.getMembers.useQuery();
   const { data: invitations, isLoading: loadingInvites, refetch: refetchInvites } = api.team.getInvitations.useQuery();
+  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ message: string; action: () => void } | null>(null);
 
   const revoke = api.team.revokeInvitation.useMutation();
   const remove = api.team.removeMember.useMutation();
 
   const handleRevoke = async (id: string) => {
-    if (!confirm("¿Cancelar esta invitación?")) return;
-    try {
-      await revoke.mutateAsync({ id });
-      refetchInvites();
-    } catch (err: any) { alert(err.message); }
+    setConfirmDialog({
+      message: "¿Cancelar esta invitación?",
+      action: async () => {
+        try {
+          await revoke.mutateAsync({ id });
+          setToast({ message: "Invitación cancelada", type: "success" });
+          refetchInvites();
+        } catch (err: any) {
+          setToast({ message: err.message || "Error al cancelar", type: "error" });
+        }
+        setConfirmDialog(null);
+      }
+    });
   };
 
   const handleRemove = async (id: string, name: string) => {
-    if (!confirm(`¿Estás seguro de revocar el acceso de ${name}? Ya no podrá entrar al sistema.`)) return;
-    try {
-      await remove.mutateAsync({ id });
-      refetchMembers();
-    } catch (err: any) { alert(err.message); }
+    setConfirmDialog({
+      message: `¿Estás seguro de revocar el acceso de ${name}? Ya no podrá entrar al sistema.`,
+      action: async () => {
+        try {
+          await remove.mutateAsync({ id });
+          setToast({ message: "Usuario removido del equipo", type: "success" });
+          refetchMembers();
+        } catch (err: any) {
+          setToast({ message: err.message || "Error al remover", type: "error" });
+        }
+        setConfirmDialog(null);
+      }
+    });
   };
 
   const copyToClipboard = (token: string) => {
     const link = `${window.location.origin}/aceptar-invitacion?token=${token}`;
-    navigator.clipboard.writeText(link);
-    alert("¡Link mágico copiado! Envíalo por WhatsApp al invitado para que se registre.");
+    navigator.clipboard.writeText(link).then(() => {
+      setToast({ message: "¡Link copiado! Envíalo al invitado para que se registre.", type: "success" });
+    }).catch(() => {
+      setToast({ message: "Error al copiar el link", type: "error" });
+    });
   };
 
   const thStyle = { textAlign: "left" as const, padding: "12px 16px", borderBottom: "1px solid var(--color-border-tertiary)", fontSize: 13, color: "var(--color-text-secondary)", fontWeight: 500 };
   const tdStyle = { padding: "12px 16px", borderBottom: "1px solid var(--color-border-tertiary)", fontSize: 14, color: "var(--color-text-primary)" };
 
   return (
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {confirmDialog && (
+        <div style={{
+          position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
+          background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+        }}>
+          <div style={{
+            background: "var(--color-background-primary)", borderRadius: 12, padding: 24, boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)", maxWidth: 400
+          }}>
+            <p style={{ fontSize: 16, margin: "0 0 20px", color: "var(--color-text-primary)" }}>{confirmDialog.message}</p>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setConfirmDialog(null)}
+                style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "transparent", cursor: "pointer" }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDialog.action}
+                style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: "#e53e3e", color: "#fff", cursor: "pointer" }}
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     <div style={{ display: "grid", gap: 32 }}>
 
       {/* Acciones Generales */}
@@ -140,5 +198,6 @@ export function TeamClientView() {
       </div>
 
     </div>
+    </>
   );
 }
