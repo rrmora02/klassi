@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const user = await db.user.findUnique({
     where: { clerkId: userId },
-    select: { activeTenantId: true },
+    select: { id: true, activeTenantId: true },
   });
 
   if (!user || !user.activeTenantId) {
