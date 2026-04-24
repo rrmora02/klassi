@@ -32,6 +32,8 @@ export function GroupEditClient({ group, disciplines, instructors }: Props) {
     schedule:     schedule.length > 0
       ? schedule
       : [{ day: "MON", startTime: "", endTime: "" }],
+    monthlyFee:   group.monthlyFee ?? null,
+    billingDay:   group.billingDay ?? null,
   };
 
   async function handleSubmit(data: GroupFormValues) {
