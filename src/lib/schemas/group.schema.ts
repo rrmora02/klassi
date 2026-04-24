@@ -57,6 +57,22 @@ export const groupFormSchema = z.object({
   schedule: z
     .array(scheduleSlotSchema)
     .min(1, "Agrega al menos un horario"),
+
+  monthlyFee: z
+    .number({ invalid_type_error: "Ingresa un monto válido" })
+    .int("Debe ser entero")
+    .min(0, "No puede ser negativo")
+    .max(10_000_000, "Monto demasiado alto")
+    .optional()
+    .nullable(),
+
+  billingDay: z
+    .number({ invalid_type_error: "Ingresa un día válido" })
+    .int("Debe ser entero")
+    .min(1, "Mínimo día 1")
+    .max(28, "Máximo día 28")
+    .optional()
+    .nullable(),
 });
 
 export type GroupFormValues = z.infer<typeof groupFormSchema>;
@@ -72,4 +88,6 @@ export const groupFormDefaults: GroupFormValues = {
   capacity:     20,
   room:         "",
   schedule:     [{ day: "MON", startTime: "", endTime: "" }],
+  monthlyFee:   null,
+  billingDay:   null,
 };

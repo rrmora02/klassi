@@ -37,6 +37,8 @@ const groupCreateSchema = z.object({
   capacity:     z.number().int().min(1).max(200),
   room:         z.string().max(60).optional().or(z.literal("")),
   schedule:     z.array(scheduleSlotSchema).min(1),
+  monthlyFee:   z.number().int().min(0).max(10_000_000).optional().nullable(),
+  billingDay:   z.number().int().min(1).max(28).optional().nullable(),
 });
 
 const groupUpdateSchema = groupCreateSchema.partial().extend({
@@ -207,6 +209,8 @@ export const groupsRouter = createTRPCRouter({
           capacity:     input.capacity,
           room:         input.room || null,
           schedule:     input.schedule as unknown as Prisma.InputJsonValue,
+          monthlyFee:   input.monthlyFee ?? null,
+          billingDay:   input.billingDay ?? null,
         },
       });
     }),
@@ -252,6 +256,8 @@ export const groupsRouter = createTRPCRouter({
           ...data,
           instructorId: data.instructorId !== undefined ? (data.instructorId || null) : undefined,
           room:         data.room !== undefined ? (data.room || null) : undefined,
+          monthlyFee:   data.monthlyFee !== undefined ? (data.monthlyFee ?? null) : undefined,
+          billingDay:   data.billingDay !== undefined ? (data.billingDay ?? null) : undefined,
           schedule:     data.schedule
             ? (data.schedule as unknown as Prisma.InputJsonValue)
             : undefined,

@@ -347,6 +347,37 @@ export function GroupForm({
         />
       </div>
 
+      {/* ── Cobro mensual ────────────────────────────── */}
+      <SectionTitle>Cobro mensual (opcional)</SectionTitle>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+        <Field label="Mensualidad (MXN)" error={errors.monthlyFee?.message}>
+          <Input
+            {...register("monthlyFee", { valueAsNumber: true, setValueAs: v => v === "" ? null : Number(v) })}
+            type="number"
+            step="0.01"
+            min={0}
+            placeholder="Ej: 500.00"
+            error={!!errors.monthlyFee}
+          />
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+            Monto que se cobrará automáticamente cada mes a todos los alumnos del grupo.
+          </p>
+        </Field>
+        <Field label="Día de cobro" error={errors.billingDay?.message}>
+          <Input
+            {...register("billingDay", { valueAsNumber: true, setValueAs: v => v === "" ? null : Number(v) })}
+            type="number"
+            min={1}
+            max={28}
+            placeholder="Ej: 5"
+            error={!!errors.billingDay}
+          />
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+            Día del mes en que se generará el cobro (1-28). Deja vacío para no generar cobros automáticos.
+          </p>
+        </Field>
+      </div>
+
       {/* ── Acciones ─────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 16, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
         <button

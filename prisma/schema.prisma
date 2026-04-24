@@ -266,8 +266,10 @@ model Group {
   type         GroupType   @default(FIXED)
   level        GroupLevel  @default(BEGINNER)
   capacity     Int         @default(20)
-  room         String? // aula o cancha
-  schedule     Json // [{ day: DayOfWeek, startTime, endTime }]
+  room         String?
+  schedule     Json
+  monthlyFee   Int?        // Mensualidad en centavos (ej. 50000 = $500.00 MXN)
+  billingDay   Int?        // Día del mes para generar cobros (1-28)
   isActive     Boolean     @default(true)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
