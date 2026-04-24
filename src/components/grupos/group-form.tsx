@@ -352,7 +352,7 @@ export function GroupForm({
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
         <Field label="Mensualidad (MXN)" error={errors.monthlyFee?.message}>
           <Input
-            {...register("monthlyFee", { valueAsNumber: true, setValueAs: v => v === "" ? null : Number(v) })}
+            {...register("monthlyFee", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
             type="number"
             step="0.01"
             min={0}
@@ -365,7 +365,7 @@ export function GroupForm({
         </Field>
         <Field label="Día de cobro" error={errors.billingDay?.message}>
           <Input
-            {...register("billingDay", { valueAsNumber: true, setValueAs: v => v === "" ? null : Number(v) })}
+            {...register("billingDay", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
             type="number"
             min={1}
             max={28}

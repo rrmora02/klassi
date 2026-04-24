@@ -58,21 +58,25 @@ export const groupFormSchema = z.object({
     .array(scheduleSlotSchema)
     .min(1, "Agrega al menos un horario"),
 
-  monthlyFee: z
-    .number({ invalid_type_error: "Ingresa un monto válido" })
-    .int("Debe ser entero")
-    .min(0, "No puede ser negativo")
-    .max(10_000_000, "Monto demasiado alto")
-    .optional()
-    .nullable(),
+  monthlyFee: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined || (typeof v === "number" && isNaN(v))) ? null : Number(v),
+    z.number({ invalid_type_error: "Ingresa un monto válido" })
+      .int("Debe ser entero")
+      .min(0, "No puede ser negativo")
+      .max(10_000_000, "Monto demasiado alto")
+      .nullable()
+      .optional()
+  ),
 
-  billingDay: z
-    .number({ invalid_type_error: "Ingresa un día válido" })
-    .int("Debe ser entero")
-    .min(1, "Mínimo día 1")
-    .max(28, "Máximo día 28")
-    .optional()
-    .nullable(),
+  billingDay: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined || (typeof v === "number" && isNaN(v))) ? null : Number(v),
+    z.number({ invalid_type_error: "Ingresa un día válido" })
+      .int("Debe ser entero")
+      .min(1, "Mínimo día 1")
+      .max(28, "Máximo día 28")
+      .nullable()
+      .optional()
+  ),
 });
 
 export type GroupFormValues = z.infer<typeof groupFormSchema>;
