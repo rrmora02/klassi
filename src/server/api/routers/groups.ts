@@ -250,23 +250,22 @@ export const groupsRouter = createTRPCRouter({
         }
       }
 
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.disciplineId !== undefined) updateData.discipline = { connect: { id: data.disciplineId } };
+      if (data.instructorId !== undefined) {
+        updateData.instructor = data.instructorId ? { connect: { id: data.instructorId } } : { disconnect: true };
+      }
+      if (data.level !== undefined) updateData.level = data.level;
+      if (data.capacity !== undefined) updateData.capacity = data.capacity;
+      if (data.room !== undefined) updateData.room = data.room || null;
+      if (data.schedule !== undefined) updateData.schedule = data.schedule as unknown as Prisma.InputJsonValue;
+      if (data.monthlyFee !== undefined) updateData.monthlyFee = data.monthlyFee ?? null;
+      if (data.billingDay !== undefined) updateData.billingDay = data.billingDay ?? null;
+
       return db.group.update({
         where: { id },
-        data: {
-          name:         data.name !== undefined ? data.name : undefined,
-          discipline:   data.disciplineId !== undefined ? { connect: { id: data.disciplineId } } : undefined,
-          instructor:   data.instructorId !== undefined
-            ? (data.instructorId ? { connect: { id: data.instructorId } } : { disconnect: true })
-            : undefined,
-          level:        data.level !== undefined ? data.level : undefined,
-          capacity:     data.capacity !== undefined ? data.capacity : undefined,
-          room:         data.room !== undefined ? (data.room || null) : undefined,
-          schedule:     data.schedule
-            ? (data.schedule as unknown as Prisma.InputJsonValue)
-            : undefined,
-          monthlyFee:   data.monthlyFee !== undefined ? (data.monthlyFee ?? null) : undefined,
-          billingDay:   data.billingDay !== undefined ? (data.billingDay ?? null) : undefined,
-        },
+        data: updateData,
       });
     }),
 
