@@ -254,7 +254,7 @@ export const groupsRouter = createTRPCRouter({
         where: { id },
         data: {
           name:         data.name !== undefined ? data.name : undefined,
-          disciplineId: data.disciplineId !== undefined ? data.disciplineId : undefined,
+          discipline:   data.disciplineId !== undefined ? { connect: { id: data.disciplineId } } : undefined,
           instructorId: data.instructorId !== undefined ? (data.instructorId || null) : undefined,
           level:        data.level !== undefined ? data.level : undefined,
           capacity:     data.capacity !== undefined ? data.capacity : undefined,
