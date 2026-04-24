@@ -177,7 +177,7 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
             <div>
               <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 4px" }}>Mensualidad</p>
               <p style={{ fontSize: 16, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>
-                {group.monthlyFee ? `$${(group.monthlyFee / 100).toFixed(2)} MXN` : "—"}
+                {group.monthlyFee ? `$${group.monthlyFee.toLocaleString("es-MX")} MXN` : "—"}
               </p>
             </div>
             <div>
