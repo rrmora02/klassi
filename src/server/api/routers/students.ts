@@ -368,7 +368,7 @@ export const studentsRouter = createTRPCRouter({
       const existing = await ctx.db.student.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
         include: {
-          enrollments: { where: { status: "ACTIVE" } },
+          _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
         },
       });
       if (!existing) {
@@ -376,7 +376,7 @@ export const studentsRouter = createTRPCRouter({
       }
 
       // Al desactivar: cancelar inscripciones activas
-      if (input.status === "INACTIVE" && existing.enrollments.length > 0) {
+      if (input.status === "INACTIVE" && existing._count.enrollments > 0) {
         await ctx.db.enrollment.updateMany({
           where:  { studentId: input.id, status: "ACTIVE" },
           data:   { status: "CANCELLED" },
@@ -430,10 +430,12 @@ export const studentsRouter = createTRPCRouter({
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const [attendances, payments] = await Promise.all([
-        db.attendance.findMany({
+      const [totalClasses, presentCount, payments] = await Promise.all([
+        db.attendance.count({
           where: { enrollment: { studentId: input.id } },
-          select: { status: true },
+        }),
+        db.attendance.count({
+          where: { enrollment: { studentId: input.id }, status: "PRESENT" },
         }),
         db.payment.aggregate({
           where:  { studentId: input.id },
@@ -442,13 +444,11 @@ export const studentsRouter = createTRPCRouter({
         }),
       ]);
 
-      const total      = attendances.length;
-      const present    = attendances.filter(a => a.status === "PRESENT").length;
-      const attendance = total > 0 ? Math.round((present / total) * 100) : null;
+      const attendance = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : null;
 
       return {
         attendanceRate: attendance,
-        totalClasses:   total,
+        totalClasses,
         totalPaid:      payments._sum.amount ?? 0,
         totalPayments:  payments._count,
       };

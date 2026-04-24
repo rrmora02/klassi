@@ -108,7 +108,8 @@ export const attendanceRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
        const check = await ctx.db.enrollment.findFirst({
-         where: { id: input.enrollmentId, group: { tenantId: ctx.tenantId } }
+         where:  { id: input.enrollmentId, group: { tenantId: ctx.tenantId } },
+         select: { id: true },
        });
        if (!check) throw new TRPCError({ code: "FORBIDDEN" });
 

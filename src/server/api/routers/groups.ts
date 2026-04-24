@@ -157,7 +157,7 @@ export const groupsRouter = createTRPCRouter({
       }
 
       const enrollmentTotal = await db.enrollment.count({
-        where: { groupId: input.id },
+        where: { groupId: input.id, status: "ACTIVE" },
       });
 
       return { ...group, enrollmentTotal };
