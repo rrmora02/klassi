@@ -253,14 +253,17 @@ export const groupsRouter = createTRPCRouter({
       return db.group.update({
         where: { id },
         data: {
-          ...data,
+          name:         data.name !== undefined ? data.name : undefined,
+          disciplineId: data.disciplineId !== undefined ? data.disciplineId : undefined,
           instructorId: data.instructorId !== undefined ? (data.instructorId || null) : undefined,
+          level:        data.level !== undefined ? data.level : undefined,
+          capacity:     data.capacity !== undefined ? data.capacity : undefined,
           room:         data.room !== undefined ? (data.room || null) : undefined,
-          monthlyFee:   data.monthlyFee !== undefined ? (data.monthlyFee ?? null) : undefined,
-          billingDay:   data.billingDay !== undefined ? (data.billingDay ?? null) : undefined,
           schedule:     data.schedule
             ? (data.schedule as unknown as Prisma.InputJsonValue)
             : undefined,
+          monthlyFee:   data.monthlyFee !== undefined ? (data.monthlyFee ?? null) : undefined,
+          billingDay:   data.billingDay !== undefined ? (data.billingDay ?? null) : undefined,
         },
       });
     }),
