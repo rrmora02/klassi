@@ -14,6 +14,8 @@ const schema = z.object({
   amount:  z.number({ invalid_type_error: "Ingresa un monto" }).positive("Debe ser mayor a 0").max(1_000_000, "Monto demasiado alto"),
   method:  z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"] as [PaymentMethod, ...PaymentMethod[]]),
   dueDate: z.string().refine(v => !v || !isNaN(Date.parse(v)), "Fecha inválida").optional(),
+  markAsPaid: z.boolean().default(false),
+  paidAt: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -34,14 +36,25 @@ const dateCls = `${inputCls} [color-scheme:light] dark:[color-scheme:dark]`;
 export function NewPaymentModal({ students, onClose }: Props) {
   const router  = useRouter();
   const create  = api.payments.create.useMutation();
+  const markPaid = api.payments.markAsPaid.useMutation();
 
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
   const [studentError,    setStudentError]    = useState("");
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const today = new Date().toISOString().split('T')[0];
+
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { method: "CASH" },
+    defaultValues: {
+      method: "CASH",
+      dueDate: today,
+      markAsPaid: false,
+      paidAt: today,
+    },
   });
+
+  const markAsPaid = watch("markAsPaid");
+  const paidAt = watch("paidAt");
 
   const onSubmit = async (data: FormValues) => {
     if (!selectedStudent) {
@@ -49,13 +62,24 @@ export function NewPaymentModal({ students, onClose }: Props) {
       return;
     }
     setStudentError("");
-    await create.mutateAsync({
+
+    const payment = await create.mutateAsync({
       studentId: selectedStudent.id,
       concept:   data.concept,
       amount:    Math.round(data.amount * 100),
       method:    data.method,
       dueDate:   data.dueDate ? new Date(data.dueDate) : undefined,
     });
+
+    // Si se marca como pagado inmediatamente
+    if (data.markAsPaid && paidAt) {
+      await markPaid.mutateAsync({
+        id: payment.id,
+        method: data.method,
+        paidAt: new Date(paidAt),
+      });
+    }
+
     router.refresh();
     onClose();
   };
@@ -110,6 +134,29 @@ export function NewPaymentModal({ students, onClose }: Props) {
             <input type="date" {...register("dueDate")} className={dateCls} />
           </div>
 
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px", backgroundColor: "var(--color-background-secondary)", borderRadius: 8 }}>
+            <input
+              type="checkbox"
+              id="markAsPaid"
+              {...register("markAsPaid")}
+              style={{ cursor: "pointer", width: 18, height: 18 }}
+            />
+            <label htmlFor="markAsPaid" style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", cursor: "pointer", flex: 1 }}>
+              Marcar como pagado inmediatamente
+            </label>
+          </div>
+
+          {markAsPaid && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
+                  Fecha de pago
+                </label>
+                <input type="date" {...register("paidAt")} className={dateCls} />
+              </div>
+            </div>
+          )}
+
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
             <button type="button" onClick={onClose} style={{
               padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
@@ -117,12 +164,13 @@ export function NewPaymentModal({ students, onClose }: Props) {
             }}>
               Cancelar
             </button>
-            <button type="submit" disabled={create.isLoading} style={{
+            <button type="submit" disabled={create.isLoading || markPaid.isLoading} style={{
               padding: "8px 18px", borderRadius: 8, border: "none",
               background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
-              cursor: create.isLoading ? "not-allowed" : "pointer",
+              cursor: (create.isLoading || markPaid.isLoading) ? "not-allowed" : "pointer",
+              opacity: (create.isLoading || markPaid.isLoading) ? 0.6 : 1,
             }}>
-              {create.isLoading ? "Creando..." : "Crear pago"}
+              {create.isLoading ? "Creando..." : markPaid.isLoading ? "Guardando pago..." : "Crear pago"}
             </button>
           </div>
         </form>
