@@ -89,7 +89,7 @@ export function PaymentsClient({ payments, students }: Props) {
                   {(p.status === "PENDING" || p.status === "OVERDUE") && (
                     <button
                       onClick={() => setMarkingId(p.id)}
-                      style={{ fontSize: 12, color: "#006241", background: "none", border: "none", cursor: "pointer", fontWeight: 500, display: "inline-flex", alignItems: "center", minHeight: 32 }}
+                      className="text-xs font-medium text-sb-green dark:text-sb-accent hover:underline cursor-pointer inline-flex items-center"
                     >
                       Marcar pagado
                     </button>
