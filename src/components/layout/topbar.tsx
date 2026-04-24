@@ -23,7 +23,7 @@ export async function TopBar() {
 
     if (user && user.activeTenantId) {
       const memberships = await db.tenantUser.findMany({
-        where: { userId },
+        where: { userId: user.id },
         include: { tenant: true },
       });
 

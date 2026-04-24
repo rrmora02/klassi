@@ -31,7 +31,8 @@ export function TenantSwitcher({
     });
   };
 
-  if (tenants.length === 0) return null;
+  const hasTenantsToShow = tenants.length > 0 || userRole === "ADMIN";
+  if (!hasTenantsToShow) return null;
 
   return (
     <div className="relative group">
@@ -48,26 +49,37 @@ export function TenantSwitcher({
 
       {/* Menú desplegable */}
       <div className="absolute left-0 top-full mt-1 hidden w-64 flex-col rounded-xl border border-gray-100 dark:border-[rgba(255,255,255,0.12)] bg-white dark:bg-sb-uplift p-1 shadow-lg group-hover:flex">
-        {tenants.map(t => (
-          <button
-            key={t.id}
-            onClick={() => handleSwitch(t.id)}
-            className="flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-800 dark:text-sb-light hover:bg-gray-50 dark:hover:bg-sb-house"
-          >
-            <span className="truncate">{t.name}</span>
-            {t.id === activeTenantId && <Check className="h-4 w-4 text-sb-accent dark:text-sb-light" />}
-          </button>
-        ))}
-        {userRole === "ADMIN" && (
+        {tenants.length > 0 ? (
           <>
-            <div className="my-1 h-px bg-gray-100 dark:bg-[rgba(255,255,255,0.10)]" />
-            <button
-              onClick={() => router.push("/onboarding")}
-              className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg"
-            >
-              + Agregar otra escuela
-            </button>
+            {tenants.map(t => (
+              <button
+                key={t.id}
+                onClick={() => handleSwitch(t.id)}
+                className="flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-800 dark:text-sb-light hover:bg-gray-50 dark:hover:bg-sb-house"
+              >
+                <span className="truncate">{t.name}</span>
+                {t.id === activeTenantId && <Check className="h-4 w-4 text-sb-accent dark:text-sb-light" />}
+              </button>
+            ))}
+            {userRole === "ADMIN" && (
+              <>
+                <div className="my-1 h-px bg-gray-100 dark:bg-[rgba(255,255,255,0.10)]" />
+                <button
+                  onClick={() => router.push("/onboarding")}
+                  className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg"
+                >
+                  + Agregar otra escuela
+                </button>
+              </>
+            )}
           </>
+        ) : (
+          <button
+            onClick={() => router.push("/onboarding")}
+            className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg font-medium"
+          >
+            + Agregar escuela
+          </button>
         )}
       </div>
     </div>
