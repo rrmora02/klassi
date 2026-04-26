@@ -200,7 +200,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
               OVERDUE: { bg: "#fff1f2", color: "#be123c" },
               CANCELLED: { bg: "rgba(100,116,139,0.10)", color: "#94a3b8" },
             };
-            const c = colors[p.status] ?? colors.PENDING;
+            const c = colors[p.status] || colors["PENDING"];
             return (
               <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid var(--color-border-tertiary)", fontSize: 13 }}>
                 <div>
