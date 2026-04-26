@@ -31,8 +31,7 @@ export function TenantSwitcher({
     });
   };
 
-  const hasTenantsToShow = tenants.length > 0 || userRole === "ADMIN";
-  if (!hasTenantsToShow) return null;
+  if (userRole !== "ADMIN") return null;
 
   return (
     <div className="relative group">
