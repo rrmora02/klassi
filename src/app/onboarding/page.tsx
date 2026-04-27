@@ -91,12 +91,6 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
-  // Si ya tiene un activeTenantId, mandarlo al dashboard (no necesita onboarding)
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (user?.activeTenantId) {
-    redirect("/dashboard");
-  }
-
   const invitationToken = searchParams.token;
 
   return (
