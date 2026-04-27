@@ -36,10 +36,19 @@ export function TenantSwitcher({
   if (userRole !== "ADMIN") return null;
 
   return (
-    <div className="relative" onMouseLeave={() => setIsOpen(false)}>
+    <div
+      className="relative"
+      onMouseLeave={() => setIsOpen(false)}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) setIsOpen(false);
+      }}
+    >
       <button
         disabled={isPending}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         onMouseEnter={() => setIsOpen(true)}
         className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.15)] px-3 py-2 text-sm font-medium text-gray-700 dark:text-sb-light hover:bg-gray-50 dark:hover:bg-sb-house disabled:opacity-50"
       >
@@ -51,8 +60,24 @@ export function TenantSwitcher({
       </button>
 
       {/* Menú desplegable */}
+<<<<<<< HEAD
       <div className="absolute left-0 top-full mt-1 hidden w-64 flex-col rounded-xl border border-gray-100 dark:border-[rgba(255,255,255,0.12)] bg-white dark:bg-sb-uplift p-1 shadow-lg group-hover:flex">
         {tenants.length > 0 ? (
+=======
+      {isOpen && (
+      <div className={`absolute left-0 top-full mt-1 w-64 flex flex-col rounded-xl border border-gray-100 dark:border-[rgba(255,255,255,0.12)] bg-white dark:bg-sb-uplift p-1 shadow-lg z-50`}>
+        {tenants.map(t => (
+          <button
+            key={t.id}
+            onClick={() => handleSwitch(t.id)}
+            className="flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-800 dark:text-sb-light hover:bg-gray-50 dark:hover:bg-sb-house"
+          >
+            <span className="truncate">{t.name}</span>
+            {t.id === activeTenantId && <Check className="h-4 w-4 text-sb-accent dark:text-sb-light" />}
+          </button>
+        ))}
+        {userRole === "ADMIN" && (
+>>>>>>> b7210a36befbbdde9152aa15a503dbf5bf4751aa
           <>
             {tenants.map(t => (
               <button
@@ -85,6 +110,7 @@ export function TenantSwitcher({
           </button>
         )}
       </div>
+      )}
     </div>
   );
 }
