@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/nextjs";
+import { es } from "@clerk/localizations";
 
 export default function SignUpPage() {
   return (
@@ -8,11 +9,12 @@ export default function SignUpPage() {
           <h1 className="text-3xl font-semibold text-sb-green">Klassi</h1>
           <p className="mt-1 text-sm text-gray-500">Crea tu cuenta y registra tu escuela</p>
         </div>
-        <SignUp 
-          path="/sign-up" 
-          routing="path" 
+        <SignUp
+          path="/sign-up"
+          routing="path"
           signInUrl="/sign-in"
           afterSignUpUrl="/onboarding"
+          localization={es}
         />
       </div>
     </main>
