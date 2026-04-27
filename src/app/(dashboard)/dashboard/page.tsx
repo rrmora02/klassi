@@ -15,7 +15,7 @@ import {
 
 // ─── Data ────────────────────────────────────────────────────────
 
-async function getDashboardData(tenantId: string) {
+async function getDashboardData(tenantId: string, userRole?: string, userId?: string) {
   const now        = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
@@ -24,6 +24,15 @@ async function getDashboardData(tenantId: string) {
   todayStart.setHours(0, 0, 0, 0);
   const todayEnd = new Date(now);
   todayEnd.setHours(23, 59, 59, 999);
+
+  let instructorId: string | undefined;
+  if (userRole === "INSTRUCTOR" && userId) {
+    const instructor = await db.instructor.findUnique({
+      where: { tenantId_userId: { tenantId, userId } },
+      select: { id: true }
+    });
+    instructorId = instructor?.id;
+  }
 
   const [
     totalStudents,
@@ -70,6 +79,7 @@ async function getDashboardData(tenantId: string) {
       where: {
         tenantId,
         isActive: true,
+        ...(userRole === "INSTRUCTOR" && instructorId ? { instructorId } : {}),
       },
       include: {
         discipline: { select: { name: true, color: true } },
@@ -151,7 +161,7 @@ export default async function DashboardPage() {
   });
   const userRole = tenantUser?.role || "RECEPTIONIST";
 
-  const { stats, overduePayments, recentStudents, groupsWithClassesToday } = await getDashboardData(tenant.id);
+  const { stats, overduePayments, recentStudents, groupsWithClassesToday } = await getDashboardData(tenant.id, userRole, user.id);
 
   const showTrialBanner =
     tenant.status === "TRIAL" && tenant.trialEndsAt && trialDaysLeft(tenant.trialEndsAt) >= 0;
