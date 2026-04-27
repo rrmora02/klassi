@@ -195,6 +195,16 @@ export const teamRouter = createTRPCRouter({
          }
        });
 
+       // If role is INSTRUCTOR, create the instructor record
+       if (invitation.role === "INSTRUCTOR") {
+         await ctx.db.instructor.create({
+           data: {
+             tenantId: invitation.tenantId,
+             userId: user.id
+           }
+         });
+       }
+
        // Set this tenant as the user's active tenant
        await ctx.db.user.update({
          where: { id: user.id },
