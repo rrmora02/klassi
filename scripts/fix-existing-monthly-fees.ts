@@ -20,39 +20,33 @@ async function fixExistingMonthlyFees() {
     });
 
     if (groupsToFix.length === 0) {
-      console.log(`✅ No hay groups con monthlyFee en la unidad equivocada`);
+      console.log(`✅ No hay grupos con monthlyFee en la unidad equivocada`);
       return;
     }
 
     console.log(`📋 Grupos encontrados: ${groupsToFix.length}`);
     console.log(`\nCorrecciones a realizar:`);
 
+    let updatedCount = 0;
+
     for (const group of groupsToFix) {
       const oldValue = group.monthlyFee;
       const newValue = (oldValue || 0) * 100;
-      console.log(`   ${group.name}`);
-      console.log(`      Antes: ${oldValue} → Después: ${newValue}`);
+      console.log(`   ${group.name}: ${oldValue} → ${newValue}`);
+
+      // Actualizar cada grupo individualmente
+      await db.group.update({
+        where: { id: group.id },
+        data: {
+          monthlyFee: newValue,
+        },
+      });
+
+      updatedCount++;
     }
 
-    console.log(`\n⚠️  Iniciando corrección...`);
-
-    // Actualizar todos los grupos
-    const result = await db.group.updateMany({
-      where: {
-        monthlyFee: {
-          gte: 1,
-          lt: 1000,
-        },
-      },
-      data: {
-        monthlyFee: {
-          multiply: 100, // Multiplica el valor existente por 100
-        },
-      },
-    });
-
     console.log(`\n✅ COMPLETADO:`);
-    console.log(`   Groups actualizados: ${result.count}`);
+    console.log(`   Grupos actualizados: ${updatedCount}`);
     console.log(`\n🎉 Todos los monthlyFee fueron corregidos a centavos!\n`);
 
   } catch (error) {
@@ -64,3 +58,4 @@ async function fixExistingMonthlyFees() {
 }
 
 fixExistingMonthlyFees();
+
