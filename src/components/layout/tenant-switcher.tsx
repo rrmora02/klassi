@@ -33,7 +33,7 @@ export function TenantSwitcher({
     setIsOpen(false);
   };
 
-  if (userRole !== "ADMIN") return null;
+  if (tenants.length === 0) return null;
 
   return (
     <div
@@ -60,58 +60,7 @@ export function TenantSwitcher({
       </button>
 
       {/* Menú desplegable */}
-<<<<<<< HEAD
-      <div className="absolute left-0 top-full mt-1 hidden w-64 flex-col rounded-xl border border-gray-100 dark:border-[rgba(255,255,255,0.12)] bg-white dark:bg-sb-uplift p-1 shadow-lg group-hover:flex">
-        {tenants.length > 0 ? (
-=======
       {isOpen && (
-<<<<<<< HEAD
-      <div className={`absolute left-0 top-full mt-1 w-64 flex flex-col rounded-xl border border-gray-100 dark:border-[rgba(255,255,255,0.12)] bg-white dark:bg-sb-uplift p-1 shadow-lg z-50`}>
-        {tenants.map(t => (
-          <button
-            key={t.id}
-            onClick={() => handleSwitch(t.id)}
-            className="flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-800 dark:text-sb-light hover:bg-gray-50 dark:hover:bg-sb-house"
-          >
-            <span className="truncate">{t.name}</span>
-            {t.id === activeTenantId && <Check className="h-4 w-4 text-sb-accent dark:text-sb-light" />}
-          </button>
-        ))}
-        {userRole === "ADMIN" && (
->>>>>>> b7210a36befbbdde9152aa15a503dbf5bf4751aa
-          <>
-            {tenants.map(t => (
-              <button
-                key={t.id}
-                onClick={() => handleSwitch(t.id)}
-                className="flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm text-gray-800 dark:text-sb-light hover:bg-gray-50 dark:hover:bg-sb-house"
-              >
-                <span className="truncate">{t.name}</span>
-                {t.id === activeTenantId && <Check className="h-4 w-4 text-sb-accent dark:text-sb-light" />}
-              </button>
-            ))}
-            {userRole === "ADMIN" && (
-              <>
-                <div className="my-1 h-px bg-gray-100 dark:bg-[rgba(255,255,255,0.10)]" />
-                <button
-                  onClick={() => router.push("/onboarding")}
-                  className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg"
-                >
-                  + Agregar otra escuela
-                </button>
-              </>
-            )}
-          </>
-        ) : (
-          <button
-            onClick={() => router.push("/onboarding")}
-            className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg font-medium"
-          >
-            + Agregar escuela
-          </button>
-        )}
-      </div>
-=======
         <div className="absolute left-0 top-full mt-1 w-64 flex flex-col rounded-xl border border-gray-100 dark:border-[rgba(255,255,255,0.12)] bg-white dark:bg-sb-uplift p-1 shadow-lg z-50">
           {tenants.map(t => (
             <button
@@ -135,7 +84,6 @@ export function TenantSwitcher({
             </>
           )}
         </div>
->>>>>>> 0d1294ae3abc2cd8df88d8ee2050c58e7ed052c1
       )}
     </div>
   );
