@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronDown, Check } from "lucide-react";
 import { switchTenantAction } from "./actions";
@@ -22,8 +22,22 @@ export function TenantSwitcher({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const activeTenant = tenants.find(t => t.id === activeTenantId);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isOpen]);
 
   const handleSwitch = (id: string) => {
     startTransition(async () => {
@@ -36,7 +50,7 @@ export function TenantSwitcher({
   if (tenants.length === 0) return null;
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <button
         disabled={isPending}
         onClick={() => setIsOpen(!isOpen)}
