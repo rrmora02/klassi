@@ -15,7 +15,8 @@
     "delete-user": "tsx scripts/delete-user.ts",
     "check-payments": "tsx scripts/check-payments.ts",
     "run-payment-cron": "tsx scripts/run-payment-cron.ts",
-    "fix-monthly-fees": "tsx scripts/fix-existing-monthly-fees.ts"
+    "fix-monthly-fees": "tsx scripts/fix-existing-monthly-fees.ts",
+    "fix-payments": "tsx scripts/fix-existing-payments.ts"
   },
   "dependencies": {
     "@clerk/localizations": "^4.5.5",
