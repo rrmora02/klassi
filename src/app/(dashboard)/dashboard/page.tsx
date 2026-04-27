@@ -76,11 +76,9 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
     }),
 
     db.group.findMany({
-      where: {
-        tenantId,
-        isActive: true,
-        ...(userRole === "INSTRUCTOR" && instructorId ? { instructorId } : {}),
-      },
+      where: userRole === "INSTRUCTOR" && instructorId
+        ? { tenantId, isActive: true, instructorId }
+        : { tenantId, isActive: true },
       include: {
         discipline: { select: { name: true, color: true } },
         instructor: { select: { user: { select: { name: true } } } },
