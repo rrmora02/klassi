@@ -14,7 +14,8 @@
     "db:studio": "prisma studio",
     "delete-user": "tsx scripts/delete-user.ts",
     "check-payments": "tsx scripts/check-payments.ts",
-    "run-payment-cron": "tsx scripts/run-payment-cron.ts"
+    "run-payment-cron": "tsx scripts/run-payment-cron.ts",
+    "fix-monthly-fees": "tsx scripts/fix-existing-monthly-fees.ts"
   },
   "dependencies": {
     "@clerk/localizations": "^4.5.5",
