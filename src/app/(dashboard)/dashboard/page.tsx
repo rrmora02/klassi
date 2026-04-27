@@ -25,15 +25,6 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
   const todayEnd = new Date(now);
   todayEnd.setHours(23, 59, 59, 999);
 
-  let instructorId: string | undefined;
-  if (userRole === "INSTRUCTOR" && userId) {
-    const instructor = await db.instructor.findUnique({
-      where: { tenantId_userId: { tenantId, userId } },
-      select: { id: true }
-    });
-    instructorId = instructor?.id;
-  }
-
   const [
     totalStudents,
     activeGroups,
@@ -76,8 +67,8 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
     }),
 
     db.group.findMany({
-      where: userRole === "INSTRUCTOR" && instructorId
-        ? { tenantId, isActive: true, instructorId }
+      where: userRole === "INSTRUCTOR" && userId
+        ? { tenantId, isActive: true, instructor: { userId } }
         : { tenantId, isActive: true },
       include: {
         discipline: { select: { name: true, color: true } },
