@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronDown, Check } from "lucide-react";
 import { switchTenantAction } from "./actions";
@@ -21,6 +21,7 @@ export function TenantSwitcher({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [isOpen, setIsOpen] = useState(false);
 
   const activeTenant = tenants.find(t => t.id === activeTenantId);
 
@@ -29,14 +30,16 @@ export function TenantSwitcher({
       await switchTenantAction(id);
       router.refresh();
     });
+    setIsOpen(false);
   };
 
   if (tenants.length === 0) return null;
 
   return (
-    <div className="relative group">
+    <div className="relative" onMouseLeave={() => setIsOpen(false)}>
       <button
         disabled={isPending}
+        onMouseEnter={() => setIsOpen(true)}
         className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.15)] px-3 py-2 text-sm font-medium text-gray-700 dark:text-sb-light hover:bg-gray-50 dark:hover:bg-sb-house disabled:opacity-50"
       >
         <Building2 className="h-4 w-4 text-gray-500 dark:text-sb-light/60" />
@@ -47,7 +50,7 @@ export function TenantSwitcher({
       </button>
 
       {/* Menú desplegable */}
-      <div className="absolute left-0 top-full mt-1 hidden w-64 flex-col rounded-xl border border-gray-100 dark:border-[rgba(255,255,255,0.12)] bg-white dark:bg-sb-uplift p-1 shadow-lg group-hover:flex">
+      <div className={`absolute left-0 top-full mt-1 w-64 flex-col rounded-xl border border-gray-100 dark:border-[rgba(255,255,255,0.12)] bg-white dark:bg-sb-uplift p-1 shadow-lg ${isOpen ? 'flex' : 'hidden'}`}>
         {tenants.map(t => (
           <button
             key={t.id}
