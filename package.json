@@ -13,7 +13,8 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "delete-user": "tsx scripts/delete-user.ts",
-    "check-payments": "tsx scripts/check-payments.ts"
+    "check-payments": "tsx scripts/check-payments.ts",
+    "run-payment-cron": "tsx scripts/run-payment-cron.ts"
   },
   "dependencies": {
     "@clerk/localizations": "^4.5.5",
