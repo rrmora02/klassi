@@ -101,7 +101,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
       {/* Filtros */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <form style={{ flex: 1, minWidth: 200, maxWidth: 320 }}>
-          <input name="q" defaultValue={search} placeholder="Buscar nombre, email, teléfono..." className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors" />
+          <input name="q" defaultValue={search} placeholder="Buscar nombre, email, teléfono..." className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-[rgba(255,255,255,0.08)] text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors" />
         </form>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {[{ id: undefined, name: "Todas" }, ...disciplines].map(d => (
