@@ -121,7 +121,7 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
                 id="schoolName"
                 required
                 placeholder="Ej. Academia de Artes Marciales Tigre Blanco"
-                className="block w-full rounded-xl border border-gray-300 px-4 py-3 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
+                className="block w-full rounded-xl border border-gray-300 bg-white text-gray-900 placeholder-gray-400 px-4 py-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm"
               />
             </div>
           </div>
