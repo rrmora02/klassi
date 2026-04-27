@@ -2,7 +2,11 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { AttendanceClient } from "@/components/asistencia/attendance-client";
 
-export default async function AsistenciaPage() {
+interface AsistenciaPageProps {
+  searchParams: Promise<{ groupId?: string }>;
+}
+
+export default async function AsistenciaPage({ searchParams }: AsistenciaPageProps) {
   const { userId } = await auth();
   if (!userId) return null;
 
@@ -10,9 +14,12 @@ export default async function AsistenciaPage() {
   const user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user?.activeTenantId) return null;
 
+  const params = await searchParams;
+  const preselectedGroupId = params.groupId;
+
   return (
     <div>
-       <AttendanceClient />
+       <AttendanceClient initialGroupId={preselectedGroupId} />
     </div>
   );
 }

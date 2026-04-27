@@ -230,6 +230,15 @@ export default async function DashboardPage() {
                     </Link>
                     <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
                   </div>
+
+                  {/* Attendance button */}
+                  <Link
+                    href={`/dashboard/asistencia?groupId=${group.id}`}
+                    className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green transition-colors"
+                  >
+                    <Clock className="h-3.5 w-3.5" />
+                    Asistencia
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -347,6 +356,15 @@ export default async function DashboardPage() {
                     {group.instructor}
                   </span>
                 )}
+
+                {/* Attendance button */}
+                <Link
+                  href={`/dashboard/asistencia?groupId=${group.id}`}
+                  className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green transition-colors"
+                >
+                  <Clock className="h-3.5 w-3.5" />
+                  Asistencia
+                </Link>
               </li>
             ))}
           </ul>
