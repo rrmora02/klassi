@@ -45,6 +45,21 @@ const groupUpdateSchema = groupCreateSchema.partial().extend({
   id: z.string().cuid("ID inválido"),
 });
 
+// ─── Helpers ──────────────────────────────────────────────────────
+
+// Normaliza monthlyFee a centavos
+// Si el valor está entre 1 y 999, asume que está en pesos y multiplica por 100
+function normalizeMonthlyFee(fee: number | null | undefined): number | null {
+  if (!fee) return null;
+
+  // Si es menor a 1000, asumir que está en pesos y convertir a centavos
+  if (fee > 0 && fee < 1000) {
+    return fee * 100;
+  }
+
+  return fee;
+}
+
 // ─── Router ───────────────────────────────────────────────────────
 
 export const groupsRouter = createTRPCRouter({
@@ -209,7 +224,7 @@ export const groupsRouter = createTRPCRouter({
           capacity:     input.capacity,
           room:         input.room || null,
           schedule:     input.schedule as unknown as Prisma.InputJsonValue,
-          monthlyFee:   input.monthlyFee ?? null,
+          monthlyFee:   normalizeMonthlyFee(input.monthlyFee),
           billingDay:   input.billingDay ?? null,
         },
       });
@@ -260,7 +275,7 @@ export const groupsRouter = createTRPCRouter({
       if (data.capacity !== undefined) updateData.capacity = data.capacity;
       if (data.room !== undefined) updateData.room = data.room || null;
       if (data.schedule !== undefined) updateData.schedule = data.schedule as unknown as Prisma.InputJsonValue;
-      if (data.monthlyFee !== undefined) updateData.monthlyFee = data.monthlyFee ?? null;
+      if (data.monthlyFee !== undefined) updateData.monthlyFee = normalizeMonthlyFee(data.monthlyFee);
       if (data.billingDay !== undefined) updateData.billingDay = data.billingDay ?? null;
 
       return db.group.update({
