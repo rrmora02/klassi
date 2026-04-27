@@ -18,11 +18,12 @@ export async function GET(req: Request) {
   let paymentsOverdue   = 0;
 
   // ── 1. Generar mensualidades automáticas ─────────────────────────
-  // Buscar grupos activos con billingDay = hoy y monthlyFee configurado
+  // Buscar grupos activos con billingDay <= hoy y monthlyFee configurado
+  // Esto permite generar pagos retroactivamente si el cron no se ejecutó en el día exacto
   const groups = await db.group.findMany({
     where: {
       isActive:   true,
-      billingDay: todayDay,
+      billingDay: { lte: todayDay }, // billingDay pasó o es hoy
       monthlyFee: { not: null },
     },
     include: {
@@ -100,3 +101,4 @@ export async function GET(req: Request) {
     date: today.toISOString(),
   });
 }
+
