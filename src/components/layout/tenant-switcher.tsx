@@ -36,20 +36,10 @@ export function TenantSwitcher({
   if (tenants.length === 0) return null;
 
   return (
-    <div
-      className="relative"
-      onMouseLeave={() => setIsOpen(false)}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) setIsOpen(false);
-      }}
-    >
+    <div className="relative">
       <button
         disabled={isPending}
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
-        onMouseEnter={() => setIsOpen(true)}
+        onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.15)] px-3 py-2 text-sm font-medium text-gray-700 dark:text-sb-light hover:bg-gray-50 dark:hover:bg-sb-house disabled:opacity-50"
       >
         <Building2 className="h-4 w-4 text-gray-500 dark:text-sb-light/60" />
