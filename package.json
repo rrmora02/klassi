@@ -17,7 +17,8 @@
     "run-payment-cron": "tsx scripts/run-payment-cron.ts",
     "fix-monthly-fees": "tsx scripts/fix-existing-monthly-fees.ts",
     "fix-payments": "tsx scripts/fix-existing-payments.ts",
-    "debug-payments": "tsx scripts/debug-all-payments.ts"
+    "debug-payments": "tsx scripts/debug-all-payments.ts",
+    "fix-cron-payments": "tsx scripts/fix-cron-payments.ts"
   },
   "dependencies": {
     "@clerk/localizations": "^4.5.5",
