@@ -1,5 +1,4 @@
 import { SignUp } from "@clerk/nextjs";
-import { es } from "@clerk/localizations";
 
 export default function SignUpPage() {
   return (
@@ -14,7 +13,6 @@ export default function SignUpPage() {
           routing="path"
           signInUrl="/sign-in"
           afterSignUpUrl="/onboarding"
-          localization={es}
         />
       </div>
     </main>
