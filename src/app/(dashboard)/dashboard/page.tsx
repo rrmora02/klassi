@@ -20,6 +20,11 @@ async function getDashboardData(tenantId: string) {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
   const [
     totalStudents,
     activeGroups,
@@ -27,6 +32,7 @@ async function getDashboardData(tenantId: string) {
     overdueCount,
     overduePayments,
     recentStudents,
+    todaysSessions,
   ] = await Promise.all([
     db.student.count({ where: { tenantId, status: "ACTIVE" } }),
 
@@ -59,7 +65,34 @@ async function getDashboardData(tenantId: string) {
         },
       },
     }),
+
+    db.classSession.findMany({
+      where: {
+        date: { gte: todayStart, lte: todayEnd },
+        group: { tenantId }
+      },
+      include: {
+        group: {
+          select: {
+            id: true,
+            name: true,
+            discipline: { select: { name: true, color: true } },
+            instructor: { select: { user: { select: { name: true } } } },
+          }
+        }
+      },
+      orderBy: { startTime: "asc" }
+    }),
   ]);
+
+  const groupsWithClassesToday = Array.from(
+    new Map(todaysSessions.map(s => [s.group.id, s])).values()
+  ).map(s => ({
+    id: s.group.id,
+    name: s.group.name,
+    discipline: s.group.discipline,
+    instructor: s.group.instructor?.user.name,
+  }));
 
   return {
     stats: {
@@ -70,6 +103,7 @@ async function getDashboardData(tenantId: string) {
     },
     overduePayments,
     recentStudents,
+    groupsWithClassesToday,
   };
 }
 
@@ -117,7 +151,7 @@ export default async function DashboardPage() {
   });
   const userRole = tenantUser?.role || "RECEPTIONIST";
 
-  const { stats, overduePayments, recentStudents } = await getDashboardData(tenant.id);
+  const { stats, overduePayments, recentStudents, groupsWithClassesToday } = await getDashboardData(tenant.id);
 
   const showTrialBanner =
     tenant.status === "TRIAL" && tenant.trialEndsAt && trialDaysLeft(tenant.trialEndsAt) >= 0;
@@ -153,6 +187,54 @@ export default async function DashboardPage() {
             </span>
           </div>
         )}
+
+        {/* Grupos con clases hoy */}
+        <section className="rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-[rgba(255,255,255,0.07)] px-5 py-4">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-sb-green dark:text-sb-light" />
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Mis clases hoy</h2>
+              {groupsWithClassesToday.length > 0 && (
+                <span className="rounded-full bg-sb-green/20 dark:bg-sb-green/30 px-2 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light">
+                  {groupsWithClassesToday.length}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {groupsWithClassesToday.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sb-light/30 dark:bg-sb-house">
+                <BookOpen className="h-5 w-5 text-gray-400 dark:text-sb-light/50" />
+              </div>
+              <p className="mt-3 text-sm font-medium text-gray-700 dark:text-sb-light/80">Sin clases programadas hoy</p>
+              <p className="mt-0.5 text-xs text-gray-400 dark:text-sb-light/50">Vuelve a revisar mañana</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
+              {groupsWithClassesToday.map((group) => (
+                <li key={group.id} className="flex items-center gap-4 px-5 py-4">
+                  {/* Color indicator */}
+                  <div
+                    className="h-3 w-3 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: group.discipline.color || "#1D3557" }}
+                  />
+
+                  {/* Group info */}
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/dashboard/grupos/${group.id}`}
+                      className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
+                    >
+                      {group.name}
+                    </Link>
+                    <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
 
         <div className="rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift p-8 text-center">
           <p className="text-sm text-gray-600 dark:text-sb-light/70">Accede a la sección de <strong>Asistencia</strong> desde el menú lateral para registrar la asistencia de los alumnos.</p>
@@ -215,6 +297,61 @@ export default async function DashboardPage() {
           alert={stats.overdueCount > 0}
         />
       </div>
+
+      {/* Grupos con clases hoy */}
+      <section className="rounded-xl border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-[rgba(255,255,255,0.07)] px-5 py-4">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-sb-green dark:text-sb-light" />
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Clases hoy</h2>
+            {groupsWithClassesToday.length > 0 && (
+              <span className="rounded-full bg-sb-green/20 dark:bg-sb-green/30 px-2 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light">
+                {groupsWithClassesToday.length}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {groupsWithClassesToday.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sb-light/30 dark:bg-sb-house">
+              <BookOpen className="h-5 w-5 text-gray-400 dark:text-sb-light/50" />
+            </div>
+            <p className="mt-3 text-sm font-medium text-gray-700 dark:text-sb-light/80">Sin clases programadas hoy</p>
+            <p className="mt-0.5 text-xs text-gray-400 dark:text-sb-light/50">Vuelve a revisar mañana</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
+            {groupsWithClassesToday.map((group) => (
+              <li key={group.id} className="flex items-center gap-4 px-5 py-4">
+                {/* Color indicator */}
+                <div
+                  className="h-3 w-3 flex-shrink-0 rounded-full"
+                  style={{ backgroundColor: group.discipline.color || "#1D3557" }}
+                />
+
+                {/* Group info */}
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={`/dashboard/grupos/${group.id}`}
+                    className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
+                  >
+                    {group.name}
+                  </Link>
+                  <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                </div>
+
+                {/* Instructor */}
+                {group.instructor && (
+                  <span className="flex-shrink-0 text-xs text-gray-500 dark:text-sb-light/60">
+                    {group.instructor}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* Main content: two columns */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
