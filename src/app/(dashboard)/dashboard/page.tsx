@@ -32,7 +32,7 @@ async function getDashboardData(tenantId: string) {
     overdueCount,
     overduePayments,
     recentStudents,
-    todaysSessions,
+    activeGroupsData,
   ] = await Promise.all([
     db.student.count({ where: { tenantId, status: "ACTIVE" } }),
 
@@ -66,33 +66,33 @@ async function getDashboardData(tenantId: string) {
       },
     }),
 
-    db.classSession.findMany({
+    db.group.findMany({
       where: {
-        date: { gte: todayStart, lte: todayEnd },
-        group: { tenantId }
+        tenantId,
+        isActive: true,
       },
       include: {
-        group: {
-          select: {
-            id: true,
-            name: true,
-            discipline: { select: { name: true, color: true } },
-            instructor: { select: { user: { select: { name: true } } } },
-          }
-        }
+        discipline: { select: { name: true, color: true } },
+        instructor: { select: { user: { select: { name: true } } } },
       },
-      orderBy: { startTime: "asc" }
+      orderBy: { name: "asc" }
     }),
   ]);
 
-  const groupsWithClassesToday = Array.from(
-    new Map(todaysSessions.map(s => [s.group.id, s])).values()
-  ).map(s => ({
-    id: s.group.id,
-    name: s.group.name,
-    discipline: s.group.discipline,
-    instructor: s.group.instructor?.user.name,
-  }));
+  const dayOfWeekMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const todayDayOfWeek = dayOfWeekMap[now.getDay()];
+
+  const groupsWithClassesToday = activeGroupsData
+    .filter(group => {
+      const schedule = group.schedule as Array<{ day: string }>;
+      return Array.isArray(schedule) && schedule.some(s => s.day === todayDayOfWeek);
+    })
+    .map(group => ({
+      id: group.id,
+      name: group.name,
+      discipline: group.discipline,
+      instructor: group.instructor?.user.name,
+    }));
 
   return {
     stats: {
