@@ -36,9 +36,8 @@ export const reportsRouter = createTRPCRouter({
           groups: {
             where: { tenantId: ctx.tenantId },
             select: {
-              enrollments: {
-                where: { status: "ACTIVE" },
-                select: { _count: true },
+              _count: {
+                select: { enrollments: { where: { status: "ACTIVE" } } },
               },
             },
           },
@@ -50,7 +49,7 @@ export const reportsRouter = createTRPCRouter({
         id:       d.id,
         name:     d.name,
         color:    d.color,
-        students: d.groups.reduce((acc, g) => acc + g.enrollments.length, 0),
+        students: d.groups.reduce((acc, g) => acc + g._count.enrollments, 0),
       }));
     }),
 

@@ -187,7 +187,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
         <table style={{ width: "100%", minWidth: 800, borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              {["Grupo", "Disciplina", "Instructor", "Nivel", "Horario", "Alumnos", "Estado", ""].map((h) => (
+              {["Grupo", "Disciplina", "Instructor", "Nivel", "Horario", "Día de Cobro", "Alumnos", "Estado", ""].map((h) => (
                 <th
                   key={h}
                   style={{
@@ -204,7 +204,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
           <tbody>
             {groups.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ textAlign: "center", padding: "48px 0", color: "var(--color-text-tertiary)" }}>
+                <td colSpan={9} style={{ textAlign: "center", padding: "48px 0", color: "var(--color-text-tertiary)" }}>
                   No se encontraron grupos
                 </td>
               </tr>
@@ -240,6 +240,9 @@ export default async function GruposPage({ searchParams }: PageProps) {
                   </td>
                   <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12, maxWidth: 200 }}>
                     {schedule.length > 0 ? formatSchedule(schedule) : "—"}
+                  </td>
+                  <td style={{ padding: "11px 14px", color: g.billingDay ? "var(--color-text-primary)" : "var(--color-text-tertiary)" }}>
+                    {g.billingDay ? `${g.billingDay}° de mes` : "—"}
                   </td>
                   <td style={{ padding: "11px 14px" }}>
                     <span style={{ color: isFull ? "#b91c1c" : "var(--color-text-primary)", fontWeight: isFull ? 500 : 400 }}>

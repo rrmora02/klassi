@@ -84,6 +84,7 @@ export const paymentsRouter = createTRPCRouter({
       const { id, ...data } = input;
       const payment = await ctx.db.payment.findFirst({
         where: { id, tenantId: ctx.tenantId },
+        select: { id: true },
       });
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
       return ctx.db.payment.update({

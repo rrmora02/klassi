@@ -37,6 +37,8 @@ const groupCreateSchema = z.object({
   capacity:     z.number().int().min(1).max(200),
   room:         z.string().max(60).optional().or(z.literal("")),
   schedule:     z.array(scheduleSlotSchema).min(1),
+  monthlyFee:   z.number().int().min(0).max(10_000_000).optional().nullable(),
+  billingDay:   z.number().int().min(1).max(28).optional().nullable(),
 });
 
 const groupUpdateSchema = groupCreateSchema.partial().extend({
@@ -157,7 +159,7 @@ export const groupsRouter = createTRPCRouter({
       }
 
       const enrollmentTotal = await db.enrollment.count({
-        where: { groupId: input.id },
+        where: { groupId: input.id, status: "ACTIVE" },
       });
 
       return { ...group, enrollmentTotal };
@@ -207,6 +209,8 @@ export const groupsRouter = createTRPCRouter({
           capacity:     input.capacity,
           room:         input.room || null,
           schedule:     input.schedule as unknown as Prisma.InputJsonValue,
+          monthlyFee:   input.monthlyFee ?? null,
+          billingDay:   input.billingDay ?? null,
         },
       });
     }),
@@ -246,16 +250,22 @@ export const groupsRouter = createTRPCRouter({
         }
       }
 
+      const updateData: any = {};
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.disciplineId !== undefined) updateData.discipline = { connect: { id: data.disciplineId } };
+      if (data.instructorId !== undefined) {
+        updateData.instructor = data.instructorId ? { connect: { id: data.instructorId } } : { disconnect: true };
+      }
+      if (data.level !== undefined) updateData.level = data.level;
+      if (data.capacity !== undefined) updateData.capacity = data.capacity;
+      if (data.room !== undefined) updateData.room = data.room || null;
+      if (data.schedule !== undefined) updateData.schedule = data.schedule as unknown as Prisma.InputJsonValue;
+      if (data.monthlyFee !== undefined) updateData.monthlyFee = data.monthlyFee ?? null;
+      if (data.billingDay !== undefined) updateData.billingDay = data.billingDay ?? null;
+
       return db.group.update({
         where: { id },
-        data: {
-          ...data,
-          instructorId: data.instructorId !== undefined ? (data.instructorId || null) : undefined,
-          room:         data.room !== undefined ? (data.room || null) : undefined,
-          schedule:     data.schedule
-            ? (data.schedule as unknown as Prisma.InputJsonValue)
-            : undefined,
-        },
+        data: updateData,
       });
     }),
 
