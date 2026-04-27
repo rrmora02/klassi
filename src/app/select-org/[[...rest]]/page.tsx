@@ -3,6 +3,7 @@
 import { OrganizationList, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { es } from "@clerk/localizations";
 
 export default function SelectOrgPage() {
   const { orgId, getToken } = useAuth();
@@ -56,6 +57,7 @@ export default function SelectOrgPage() {
 
         <OrganizationList
           hideSlug
+          localization={es}
           appearance={{
             elements: {
               rootBox:           "w-full",
