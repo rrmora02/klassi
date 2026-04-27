@@ -65,7 +65,11 @@ async function runPaymentCron() {
       }
 
       // Aplicar descuento de la inscripción si existe
-      const base    = group.monthlyFee!;
+      // Si monthlyFee < 1000, asumir que está en pesos y convertir a centavos
+      let base = group.monthlyFee!;
+      if (base < 1000) {
+        base = base * 100;
+      }
       const amount  = enrollment.discount > 0
         ? Math.round(base * (1 - enrollment.discount / 100))
         : base;
