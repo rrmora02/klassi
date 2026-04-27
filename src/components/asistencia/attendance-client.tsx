@@ -4,10 +4,10 @@ import { useState } from "react";
 import { api } from "@/lib/trpc";
 import { AttendanceStatus } from "@prisma/client";
 
-export function AttendanceClient() {
+export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }) {
   const today = new Date().toISOString().split("T")[0];
   const [dateStr, setDateStr] = useState<string>(today);
-  const [groupId, setGroupId] = useState<string>("");
+  const [groupId, setGroupId] = useState<string>(initialGroupId || "");
 
   const { data: groups, isLoading: loadingGroups } = api.attendance.getGroups.useQuery();
 
