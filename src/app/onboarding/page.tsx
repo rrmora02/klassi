@@ -139,14 +139,12 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           </button>
         </form>
 
-        {invitationToken && (
-          <Link
-            href="/dashboard"
-            className="mt-4 flex w-full justify-center rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
-          >
-            Cancelar
-          </Link>
-        )}
+        <Link
+          href="/dashboard"
+          className="mt-4 flex w-full justify-center rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
+        >
+          Cancelar
+        </Link>
 
       </div>
     </main>
