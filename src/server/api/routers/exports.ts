@@ -25,11 +25,11 @@ export const exportsRouter = createTRPCRouter({
   exportStudents: protectedProcedure
     .input(z.object({ month: z.number(), year: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.user.activeTenantId;
-      if (!tenantId) throw new Error("No tenant");
+      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
+      const tenantId = ctx.dbUser.activeTenantId;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.user.id }
+        where: { tenantId, userId: ctx.dbUser.id }
       });
       if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
 
@@ -60,11 +60,11 @@ export const exportsRouter = createTRPCRouter({
 
   exportInstructors: protectedProcedure
     .mutation(async ({ ctx }) => {
-      const tenantId = ctx.user.activeTenantId;
-      if (!tenantId) throw new Error("No tenant");
+      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
+      const tenantId = ctx.dbUser.activeTenantId;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.user.id }
+        where: { tenantId, userId: ctx.dbUser.id }
       });
       if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
 
@@ -93,11 +93,11 @@ export const exportsRouter = createTRPCRouter({
 
   exportGroups: protectedProcedure
     .mutation(async ({ ctx }) => {
-      const tenantId = ctx.user.activeTenantId;
-      if (!tenantId) throw new Error("No tenant");
+      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
+      const tenantId = ctx.dbUser.activeTenantId;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.user.id }
+        where: { tenantId, userId: ctx.dbUser.id }
       });
       if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
 
@@ -132,11 +132,11 @@ export const exportsRouter = createTRPCRouter({
   exportPayments: protectedProcedure
     .input(z.object({ month: z.number(), year: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.user.activeTenantId;
-      if (!tenantId) throw new Error("No tenant");
+      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
+      const tenantId = ctx.dbUser.activeTenantId;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.user.id }
+        where: { tenantId, userId: ctx.dbUser.id }
       });
       if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
 
@@ -176,11 +176,11 @@ export const exportsRouter = createTRPCRouter({
   exportAttendance: protectedProcedure
     .input(z.object({ month: z.number(), year: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.user.activeTenantId;
-      if (!tenantId) throw new Error("No tenant");
+      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
+      const tenantId = ctx.dbUser.activeTenantId;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.user.id }
+        where: { tenantId, userId: ctx.dbUser.id }
       });
       if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
 

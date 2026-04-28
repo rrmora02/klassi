@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { api } from "@/lib/trpc";
-import { Download, AlertCircle } from "lucide-react";
+import { Download, AlertCircle, ChevronDown } from "lucide-react";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 export function DataExportsClient() {
+  const [isOpen, setIsOpen] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [loading, setLoading] = useState<string | null>(null);
@@ -71,110 +72,147 @@ export function DataExportsClient() {
   ];
 
   return (
-    <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "20px 24px" }}>
-      <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 20px" }}>
-        Descargar datos
-      </h2>
+    <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
+      {/* Header del acordeón */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "16px 20px",
+          background: "transparent",
+          border: "none",
+          cursor: "pointer",
+          transition: "all 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "var(--color-background-secondary)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "transparent";
+        }}
+      >
+        <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>
+          Descargar datos
+        </h2>
+        <ChevronDown
+          size={20}
+          style={{
+            color: "var(--color-text-secondary)",
+            transition: "transform 0.2s",
+            transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+          }}
+        />
+      </button>
 
-      {/* Filtros */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-        <div>
-          <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>Mes</label>
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            style={{
-              marginTop: 6,
-              width: "100%",
-              padding: "8px 12px",
-              fontSize: 13,
-              border: "0.5px solid var(--color-border-secondary)",
-              borderRadius: 8,
-              background: "var(--color-background-secondary)",
-              color: "var(--color-text-primary)",
-            }}
-          >
-            {months.filter(m => m <= maxMonth).map(m => (
-              <option key={m} value={m}>{MONTHS[m - 1]}</option>
+      {/* Contenido del acordeón */}
+      {isOpen && (
+        <div style={{ padding: "0 20px 20px", borderTop: "0.5px solid var(--color-border-tertiary)" }}>
+          {/* Filtros */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20, marginTop: 16 }}>
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>Mes</label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                style={{
+                  marginTop: 6,
+                  width: "100%",
+                  padding: "8px 12px",
+                  fontSize: 13,
+                  border: "0.5px solid var(--color-border-secondary)",
+                  borderRadius: 8,
+                  background: "var(--color-background-secondary)",
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                {months.filter(m => m <= maxMonth).map(m => (
+                  <option key={m} value={m}>{MONTHS[m - 1]}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>Año</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                style={{
+                  marginTop: 6,
+                  width: "100%",
+                  padding: "8px 12px",
+                  fontSize: 13,
+                  border: "0.5px solid var(--color-border-secondary)",
+                  borderRadius: 8,
+                  background: "var(--color-background-secondary)",
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                {years.map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Info */}
+          <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 20, padding: "12px 14px", background: "rgba(59, 130, 246, 0.10)", borderRadius: 8, border: "0.5px solid rgba(59, 130, 246, 0.2)" }}>
+            <AlertCircle size={16} style={{ color: "#3b82f6", flexShrink: 0, marginTop: 1 }} />
+            <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>
+              Los datos se descargarán en formato CSV. Puedes abrir los archivos con Excel, Google Sheets o cualquier editor de texto.
+            </p>
+          </div>
+
+          {/* Botones de descarga */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
+            {exports.map(exp => (
+              <button
+                key={exp.type}
+                onClick={() => handleExport(exp.type as any)}
+                disabled={loading !== null}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "14px 12px",
+                  background: loading === exp.type ? "#e5e7eb" : "var(--color-background-secondary)",
+                  border: "0.5px solid var(--color-border-secondary)",
+                  borderRadius: 10,
+                  cursor: loading === exp.type ? "wait" : "pointer",
+                  opacity: loading && loading !== exp.type ? 0.5 : 1,
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => {
+                  if (loading === null) {
+                    e.currentTarget.style.background = "#f3f4f6";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (loading === null) {
+                    e.currentTarget.style.background = "var(--color-background-secondary)";
+                  }
+                }}
+              >
+                <span style={{ fontSize: 20 }}>{exp.icon}</span>
+                <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-primary)", textAlign: "center" }}>
+                  {exp.label}
+                </span>
+                {loading === exp.type && (
+                  <span style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}>Descargando...</span>
+                )}
+                {loading !== exp.type && (
+                  <Download size={14} style={{ color: "var(--color-text-secondary)" }} />
+                )}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
-
-        <div>
-          <label style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)" }}>Año</label>
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            style={{
-              marginTop: 6,
-              width: "100%",
-              padding: "8px 12px",
-              fontSize: 13,
-              border: "0.5px solid var(--color-border-secondary)",
-              borderRadius: 8,
-              background: "var(--color-background-secondary)",
-              color: "var(--color-text-primary)",
-            }}
-          >
-            {years.map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Info */}
-      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 20, padding: "12px 14px", background: "rgba(59, 130, 246, 0.10)", borderRadius: 8, border: "0.5px solid rgba(59, 130, 246, 0.2)" }}>
-        <AlertCircle size={16} style={{ color: "#3b82f6", flexShrink: 0, marginTop: 1 }} />
-        <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>
-          Los datos se descargarán en formato CSV. Puedes abrir los archivos con Excel, Google Sheets o cualquier editor de texto.
-        </p>
-      </div>
-
-      {/* Botones de descarga */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
-        {exports.map(exp => (
-          <button
-            key={exp.type}
-            onClick={() => handleExport(exp.type as any)}
-            disabled={loading !== null}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 8,
-              padding: "14px 12px",
-              background: loading === exp.type ? "#e5e7eb" : "var(--color-background-secondary)",
-              border: "0.5px solid var(--color-border-secondary)",
-              borderRadius: 10,
-              cursor: loading === exp.type ? "wait" : "pointer",
-              opacity: loading && loading !== exp.type ? 0.5 : 1,
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              if (loading === null) {
-                e.currentTarget.style.background = "#f3f4f6";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (loading === null) {
-                e.currentTarget.style.background = "var(--color-background-secondary)";
-              }
-            }}
-          >
-            <span style={{ fontSize: 20 }}>{exp.icon}</span>
-            <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-primary)", textAlign: "center" }}>
-              {exp.label}
-            </span>
-            {loading === exp.type && (
-              <span style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}>Descargando...</span>
-            )}
-            {loading !== exp.type && (
-              <Download size={14} style={{ color: "var(--color-text-secondary)" }} />
-            )}
-          </button>
-        ))}
-      </div>
+      )}
     </div>
   );
 }
+
