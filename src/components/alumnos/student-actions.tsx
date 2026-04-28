@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/trpc";
 import Link from "next/link";
@@ -18,6 +18,20 @@ export function StudentActions({ studentId, studentName, status }: Props) {
   const [showMenu,   setShowMenu]   = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMenu]);
 
   const setStatus = api.students.setStatus.useMutation({
     onSuccess: () => { router.refresh(); setShowMenu(false); },
@@ -36,7 +50,7 @@ export function StudentActions({ studentId, studentName, status }: Props) {
 
   return (
     <>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", position: "relative" }}>
+      <div ref={menuRef} style={{ display: "flex", gap: 8, alignItems: "center", position: "relative" }}>
         <Link
           href={`/dashboard/alumnos/${studentId}/editar`}
           style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "7px 16px", fontSize: 13, color: "var(--color-text-secondary)", textDecoration: "none", background: "var(--color-background-primary)" }}
