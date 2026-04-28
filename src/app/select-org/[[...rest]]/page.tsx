@@ -3,6 +3,7 @@
 import { OrganizationList, useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 export default function SelectOrgPage() {
   const { orgId, getToken } = useAuth();
@@ -65,6 +66,13 @@ export default function SelectOrgPage() {
             },
           }}
         />
+
+        <Link
+          href="/"
+          className="mt-4 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          Cancelar
+        </Link>
       </div>
     </main>
   );
