@@ -55,7 +55,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
       {/* Nav principal */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href;
+          const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
               key={href}
@@ -79,7 +79,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
             Configuración
           </p>
           {CONFIG_ITEMS.map(({ label, href, icon: Icon }) => {
-            const active = pathname === href;
+            const active = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
                 key={href}
