@@ -2,6 +2,29 @@ import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { db } from "@/server/db";
 import { z } from "zod";
 
+const statusTranslations: { [key: string]: string } = {
+  // Student Status
+  "ACTIVE": "Activo",
+  "INACTIVE": "Inactivo",
+  "SUSPENDED": "Suspendido",
+  // Enrollment Status
+  "ACTIVE": "Activo",
+  "INACTIVE": "Inactivo",
+  // Payment Status
+  "PENDING": "Pendiente",
+  "PAID": "Pagado",
+  "OVERDUE": "Vencido",
+  // Attendance Status
+  "PRESENT": "Presente",
+  "ABSENT": "Ausente",
+  "JUSTIFIED": "Justificado",
+  "LATE": "Tarde",
+};
+
+function translateStatus(value: string): string {
+  return statusTranslations[value] || value;
+}
+
 function convertToCSV(data: any[]): string {
   if (data.length === 0) return "";
 
@@ -10,8 +33,14 @@ function convertToCSV(data: any[]): string {
 
   const dataRows = data.map(row =>
     headers.map(header => {
-      const value = row[header];
+      let value = row[header];
       if (value === null || value === undefined) return '""';
+
+      // Traducir estados si es necesario
+      if (header === "Estado") {
+        value = translateStatus(String(value));
+      }
+
       // Convertir todos los valores a string y encomillar
       const stringValue = String(value).replace(/"/g, '""');
       return `"${stringValue}"`;
