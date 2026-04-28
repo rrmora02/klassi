@@ -36,7 +36,7 @@ export const exportsRouter = createTRPCRouter({
       const students = await db.student.findMany({
         where: { tenantId },
         include: {
-          groupEnrollments: {
+          enrollments: {
             include: { group: true }
           }
         },
@@ -45,9 +45,9 @@ export const exportsRouter = createTRPCRouter({
 
       const data = students.map(s => ({
         "Nombre": `${s.firstName} ${s.lastName}`,
-        "Email": s.email,
+        "Email": s.email || "",
         "Teléfono": s.phone || "",
-        "Grupos": s.groupEnrollments.map(e => e.group.name).join("; "),
+        "Grupos": s.enrollments.map(e => e.group.name).join("; "),
         "Estado": s.status,
         "Fecha de Inscripción": s.createdAt.toISOString().split("T")[0],
       }));
@@ -189,7 +189,7 @@ export const exportsRouter = createTRPCRouter({
 
       const attendance = await db.attendance.findMany({
         where: {
-          classSession: {
+          session: {
             group: { tenantId }
           },
           createdAt: {
@@ -198,20 +198,20 @@ export const exportsRouter = createTRPCRouter({
           }
         },
         include: {
-          student: true,
-          classSession: {
-            include: { group: true }
-          }
+          enrollment: {
+            include: { student: true, group: true }
+          },
+          session: true
         },
         orderBy: { createdAt: "desc" }
       });
 
       const data = attendance.map(a => ({
-        "Alumno": `${a.student.firstName} ${a.student.lastName}`,
-        "Grupo": a.classSession.group.name,
+        "Alumno": `${a.enrollment.student.firstName} ${a.enrollment.student.lastName}`,
+        "Grupo": a.enrollment.group.name,
         "Fecha": a.createdAt.toISOString().split("T")[0],
         "Estado": a.status,
-        "Nota": a.note || "",
+        "Justificación": a.justification || "",
       }));
 
       return {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc";
 import { Download, AlertCircle, ChevronDown } from "lucide-react";
+import { Toast, useToast } from "@/components/shared/toast";
 
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
@@ -11,6 +12,7 @@ export function DataExportsClient() {
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [loading, setLoading] = useState<string | null>(null);
+  const { show: showToast, toasts, remove: removeToast } = useToast();
 
   const exportStudents = api.exports.exportStudents.useMutation();
   const exportInstructors = api.exports.exportInstructors.useMutation();
@@ -48,8 +50,9 @@ export function DataExportsClient() {
           break;
       }
       downloadCSV(result.content, result.filename);
+      showToast("Descarga completada", "success");
     } catch (error: any) {
-      alert("Error al descargar: " + (error.message || "Intenta de nuevo"));
+      showToast("Error al descargar: " + (error.message || "Intenta de nuevo"), "error");
     } finally {
       setLoading(null);
     }
@@ -72,7 +75,18 @@ export function DataExportsClient() {
   ];
 
   return (
-    <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
+    <>
+      {toasts.map(toast => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
+
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflow: "hidden" }}>
       {/* Header del acordeón */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -212,7 +226,8 @@ export function DataExportsClient() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
