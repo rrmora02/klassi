@@ -11,13 +11,17 @@ function convertToCSV(data: any[]): string {
   const dataRows = data.map(row =>
     headers.map(header => {
       const value = row[header];
-      if (value === null || value === undefined) return "";
-      if (typeof value === "string") return `"${value.replace(/"/g, '""')}"`;
-      return String(value);
+      if (value === null || value === undefined) return '""';
+      // Convertir todos los valores a string y encomillar
+      const stringValue = String(value).replace(/"/g, '""');
+      return `"${stringValue}"`;
     }).join(",")
   );
 
-  return [headerRow, ...dataRows].join("\n");
+  // Agregar BOM de UTF-8 para que Excel interprete correctamente los acentos
+  const csv = [headerRow, ...dataRows].join("\n");
+  const utf8BOM = "﻿";
+  return utf8BOM + csv;
 }
 
 export const exportsRouter = createTRPCRouter({
@@ -45,11 +49,11 @@ export const exportsRouter = createTRPCRouter({
 
       const data = students.map(s => ({
         "Nombre": `${s.firstName} ${s.lastName}`,
-        "Email": s.email || "",
+        "Correo": s.email || "",
         "Teléfono": s.phone || "",
         "Grupos": s.enrollments.map(e => e.group.name).join("; "),
         "Estado": s.status,
-        "Fecha de Inscripción": s.createdAt.toISOString().split("T")[0],
+        "Fecha Inscripción": s.createdAt.toISOString().split("T")[0],
       }));
 
       return {
@@ -79,10 +83,10 @@ export const exportsRouter = createTRPCRouter({
 
       const data = instructors.map(i => ({
         "Nombre": i.user.name,
-        "Email": i.user.email,
+        "Correo": i.user.email,
         "Grupos": i.groups.map(g => g.name).join("; "),
         "Estado": i.isActive ? "Activo" : "Inactivo",
-        "Fecha de Inscripción": i.createdAt.toISOString().split("T")[0],
+        "Fecha Inscripción": i.createdAt.toISOString().split("T")[0],
       }));
 
       return {
@@ -117,10 +121,10 @@ export const exportsRouter = createTRPCRouter({
         "Nombre": g.name,
         "Instructor": g.instructor?.user.name || "Sin asignar",
         "Disciplina": g.discipline?.name || "",
-        "Cantidad de Alumnos": g.enrollments.length,
+        "Cantidad Alumnos": g.enrollments.length,
         "Nivel": g.level || "",
         "Estado": g.isActive ? "Activo" : "Inactivo",
-        "Fecha de Creación": g.createdAt.toISOString().split("T")[0],
+        "Fecha Creación": g.createdAt.toISOString().split("T")[0],
       }));
 
       return {
@@ -162,8 +166,8 @@ export const exportsRouter = createTRPCRouter({
         "Monto": (p.amount / 100).toFixed(2),
         "Concepto": p.concept,
         "Estado": p.status,
-        "Fecha de Vencimiento": p.dueDate?.toISOString().split("T")[0] || "",
-        "Fecha de Pago": p.paidAt?.toISOString().split("T")[0] || "",
+        "Fecha Vencimiento": p.dueDate?.toISOString().split("T")[0] || "",
+        "Fecha Pago": p.paidAt?.toISOString().split("T")[0] || "",
         "Método": p.method || "",
       }));
 
@@ -211,7 +215,7 @@ export const exportsRouter = createTRPCRouter({
         "Grupo": a.enrollment.group.name,
         "Fecha": a.createdAt.toISOString().split("T")[0],
         "Estado": a.status,
-        "Justificación": a.justification || "",
+        "Justificacion": a.justification || "",
       }));
 
       return {
