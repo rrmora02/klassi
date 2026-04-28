@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
+import { DataExportsClient } from "./data-exports-client";
 
 const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
@@ -97,6 +98,9 @@ export default async function ReportesPage() {
           Año {year} — {MONTHS[month]} {year}
         </p>
       </div>
+
+      {/* Descargas de datos */}
+      <DataExportsClient />
 
       {/* KPI cards superiores */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
