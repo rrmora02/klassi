@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@/components/clerk-provider";
 import { TRPCReactProvider } from "@/lib/trpc";
+import { ToastProvider } from "@/components/providers/toast-provider";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -24,7 +25,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
         <body className={`${jakarta.variable} font-sans`}>
           <TRPCReactProvider>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </TRPCReactProvider>
         </body>
       </html>
