@@ -6,6 +6,7 @@ import { api } from "@/lib/trpc";
 import { useToast } from "@/hooks/use-toast";
 import { Loader, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { EventInvitationPreview } from "./event-invitation-preview";
 
 interface Group {
   id: string;
@@ -127,8 +128,20 @@ export function CreateEventForm({ groups }: CreateEventFormProps) {
     });
   };
 
+  const groupNames = formData.isSchoolWide
+    ? ["Toda la escuela"]
+    : groups
+        .filter((g) => formData.groupIds.includes(g.id))
+        .map((g) => g.name);
+
+  const previewDate = formData.date ? new Date(formData.date) : new Date();
+  const previewDueDate = formData.dueDate ? new Date(formData.dueDate) : new Date();
+  const previewAmount = formData.amount ? Math.round(parseFloat(formData.amount) * 100) : 0;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Formulario */}
+      <form onSubmit={handleSubmit} className="space-y-6">
       {/* Nombre del evento */}
       <div>
         <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -335,5 +348,18 @@ export function CreateEventForm({ groups }: CreateEventFormProps) {
         </button>
       </div>
     </form>
+
+      {/* Preview */}
+      <div className="sticky top-20">
+        <EventInvitationPreview
+          eventName={formData.name || "Nombre del evento"}
+          description={formData.description || undefined}
+          date={previewDate}
+          groupNames={groupNames}
+          amount={previewAmount}
+          dueDate={previewDueDate}
+        />
+      </div>
+    </div>
   );
 }

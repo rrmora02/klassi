@@ -6,6 +6,7 @@ import { api } from "@/lib/trpc";
 import { useToast } from "@/hooks/use-toast";
 import { Loader } from "lucide-react";
 import Link from "next/link";
+import { EventInvitationPreview } from "./event-invitation-preview";
 
 interface EditEventFormProps {
   eventId: string;
@@ -124,8 +125,13 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
     }
   };
 
+  const previewDate = formData.date ? new Date(formData.date) : initialData.date;
+  const previewAmount = formData.amount ? Math.round(parseFloat(formData.amount) * 100) : initialData.amount;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Formulario */}
+      <form onSubmit={handleSubmit} className="space-y-6">
       {/* Nombre del evento */}
       <div>
         <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -274,6 +280,19 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
           </div>
         </div>
       )}
-    </form>
+      </form>
+
+      {/* Preview */}
+      <div className="sticky top-20">
+        <EventInvitationPreview
+          eventName={formData.name || "Nombre del evento"}
+          description={formData.description || undefined}
+          date={previewDate}
+          groupNames={["Toda la escuela"]}
+          amount={previewAmount}
+          dueDate={initialData.date}
+        />
+      </div>
+    </div>
   );
 }
