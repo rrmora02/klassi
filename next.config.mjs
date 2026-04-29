@@ -16,7 +16,7 @@ const nextConfig = {
         };
     }
 
-    // Handle pdfkit - only use on server side
+    // Handle pdfkit - exclude from client bundle completely
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -25,7 +25,16 @@ const nextConfig = {
         'fs': false,
         'buffer': false,
         'util': false,
+        'zlib': false,
+        'fontkit': false,
+        'png-js': false,
       };
+    } else {
+      // On server, mark pdfkit as external to prevent bundling
+      if (!config.externals) config.externals = [];
+      if (Array.isArray(config.externals)) {
+        config.externals.push('pdfkit');
+      }
     }
 
     return config;

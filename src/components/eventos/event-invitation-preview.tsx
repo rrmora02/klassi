@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+
 interface EventInvitationPreviewProps {
   eventName: string;
   description?: string;
@@ -108,6 +111,7 @@ export function EventInvitationPreview({
   amount,
   dueDate,
 }: EventInvitationPreviewProps) {
+  const [isOpen, setIsOpen] = useState(true);
   const htmlContent = generateInvitationHTML({
     eventName,
     description,
@@ -118,14 +122,30 @@ export function EventInvitationPreview({
   });
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift p-5">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-        Vista previa de la invitación
-      </h2>
-      <div
-        className="max-w-none overflow-auto"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
+    <div className="rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift overflow-hidden">
+      {/* Header acordeón */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between gap-3 px-5 py-4 hover:bg-gray-50 dark:hover:bg-sb-house/50 transition-colors border-b border-gray-200 dark:border-[rgba(255,255,255,0.07)]"
+      >
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Vista previa de la invitación
+        </h2>
+        <ChevronDown
+          className={`h-5 w-5 text-gray-600 dark:text-sb-light/70 transition-transform duration-200 ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+
+      {/* Contenido acordeón */}
+      {isOpen && (
+        <div className="p-5 max-w-none overflow-auto">
+          <div
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+          />
+        </div>
+      )}
     </div>
   );
 }
