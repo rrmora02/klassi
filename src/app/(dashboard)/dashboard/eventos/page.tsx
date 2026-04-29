@@ -32,7 +32,6 @@ export default async function EventosPage() {
     orderBy: { date: "desc" },
     include: {
       groups: { select: { id: true, name: true } },
-      _count: { select: { eventPayments: true } },
     },
   });
 
