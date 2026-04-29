@@ -333,12 +333,14 @@ export const groupsRouter = createTRPCRouter({
       return ctx.db.group.delete({ where: { id: input.id } });
     }),
 
-  getTodayAttendance: protectedProcedure
+  getTodayAttendance: tenantProcedure
     .input(z.object({ groupId: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
+      const { tenantId, db } = ctx;
+
       // Obtener el grupo y verificar que pertenece al tenant del usuario
-      const group = await ctx.db.group.findFirst({
-        where: { id: input.groupId },
+      const group = await db.group.findFirst({
+        where: { id: input.groupId, tenantId },
         include: {
           enrollments: {
             where: { status: "ACTIVE" },
