@@ -86,12 +86,18 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
       const schedule = group.schedule as Array<{ day: string }>;
       return Array.isArray(schedule) && schedule.some(s => s.day === todayDayOfWeek);
     })
-    .map(group => ({
-      id: group.id,
-      name: group.name,
-      discipline: group.discipline,
-      instructor: group.instructor?.user.name,
-    }));
+    .map(group => {
+      const schedule = group.schedule as Array<{ day: string; startTime: string; endTime: string }>;
+      const todaySchedule = schedule.find(s => s.day === todayDayOfWeek);
+      return {
+        id: group.id,
+        name: group.name,
+        discipline: group.discipline,
+        instructor: group.instructor?.user.name,
+        startTime: todaySchedule?.startTime,
+        endTime: todaySchedule?.endTime,
+      };
+    });
 
   return {
     stats: {
@@ -227,7 +233,18 @@ export default async function DashboardPage() {
                     >
                       {group.name}
                     </Link>
-                    <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                      {group.startTime && group.endTime && (
+                        <>
+                          <span className="text-gray-300 dark:text-sb-light/30">•</span>
+                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-sb-light/60">
+                            <Clock className="h-3 w-3" />
+                            {group.startTime} - {group.endTime}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
 
                   {/* Attendance button */}
@@ -346,7 +363,18 @@ export default async function DashboardPage() {
                   >
                     {group.name}
                   </Link>
-                  <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                    {group.startTime && group.endTime && (
+                      <>
+                        <span className="text-gray-300 dark:text-sb-light/30">•</span>
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-sb-light/60">
+                          <Clock className="h-3 w-3" />
+                          {group.startTime} - {group.endTime}
+                        </div>
+                      </>
+                    )}
+                  </div>
                 </div>
 
                 {/* Instructor */}
