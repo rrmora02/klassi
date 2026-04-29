@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { AdminInstructorBanner } from "@/components/instructores/admin-instructor-banner";
 
 interface PageProps {
   searchParams: { q?: string; active?: string; page?: string; };
@@ -15,11 +16,11 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   const tenant = user?.activeTenant;
   if (!tenant) return null;
 
-  // Solo ADMIN
+  // Solo ADMIN o INSTRUCTOR
   const tenantUser = await db.tenantUser.findFirst({
     where: { tenantId: tenant.id, userId: user.id }
   });
-  if (tenantUser?.role !== "ADMIN") {
+  if (tenantUser?.role !== "ADMIN" && tenantUser?.role !== "INSTRUCTOR") {
     redirect("/dashboard");
   }
 
@@ -55,6 +56,11 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   const countMap = Object.fromEntries(counts.map(c => [String(c.isActive), c._count]));
   const totalAll = (countMap["true"] ?? 0) + (countMap["false"] ?? 0);
 
+  // Verificar si el usuario actual es instructor
+  const currentUserInstructor = await db.instructor.findFirst({
+    where: { tenantId: tenant.id, userId: user.id }
+  });
+
   function buildUrl(params: Record<string, string | undefined>) {
     const sp = new URLSearchParams();
     const merged = { q: search || undefined, active: activeFilter !== undefined ? String(activeFilter) : undefined, ...params };
@@ -64,6 +70,11 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
 
   return (
     <div>
+      <AdminInstructorBanner
+        isAdmin={tenantUser.role === "ADMIN"}
+        isAlreadyInstructor={!!currentUserInstructor}
+      />
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Instructores</h1>

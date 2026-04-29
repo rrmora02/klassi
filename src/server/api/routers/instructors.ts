@@ -238,4 +238,41 @@ export const instructorsRouter = createTRPCRouter({
 
       return ctx.db.instructor.delete({ where: { id: input.id } });
     }),
+
+  // ── Admin se registra como Instructor ────────────────────────────
+  registerAdminAsInstructor: tenantProcedure
+    .mutation(async ({ ctx }) => {
+      // Verify user is ADMIN
+      const adminUser = await ctx.db.tenantUser.findFirst({
+        where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id }
+      });
+
+      if (adminUser?.role !== "ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo administradores pueden registrarse como instructores"
+        });
+      }
+
+      // Check if already registered as instructor
+      const existingInstructor = await ctx.db.instructor.findFirst({
+        where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id }
+      });
+
+      if (existingInstructor) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Ya estás registrado como instructor"
+        });
+      }
+
+      // Create instructor record
+      return ctx.db.instructor.create({
+        data: {
+          tenantId: ctx.tenantId,
+          userId: ctx.dbUser!.id
+        },
+        include: { user: true }
+      });
+    }),
 });
