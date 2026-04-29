@@ -219,7 +219,7 @@ export default async function DashboardPage() {
           ) : (
             <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
               {groupsWithClassesToday.map((group) => (
-                <li key={group.id} className="flex items-center gap-4 px-5 py-4">
+                <li key={group.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-4">
                   {/* Color indicator */}
                   <div
                     className="h-3 w-3 flex-shrink-0 rounded-full"
@@ -230,17 +230,17 @@ export default async function DashboardPage() {
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/dashboard/grupos/${group.id}`}
-                      className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
+                      className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light block truncate"
                     >
                       {group.name}
                     </Link>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
                       {group.startTime && group.endTime && (
                         <>
                           <span className="text-gray-300 dark:text-sb-light/30">•</span>
-                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-sb-light/60">
-                            <Clock className="h-3 w-3" />
+                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-sb-light/60 whitespace-nowrap">
+                            <Clock className="h-3 w-3 flex-shrink-0" />
                             {group.startTime} - {group.endTime}
                           </div>
                         </>
@@ -253,10 +253,10 @@ export default async function DashboardPage() {
                   {/* Attendance button */}
                   <Link
                     href={`/dashboard/asistencia?groupId=${group.id}`}
-                    className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green transition-colors"
+                    className="w-full sm:w-auto flex-shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg bg-sb-accent px-3 py-2 text-xs font-medium text-white hover:bg-sb-green transition-colors"
                   >
                     <Clock className="h-3.5 w-3.5" />
-                    Asistencia
+                    <span className="sm:inline">Asistencia</span>
                   </Link>
                 </li>
               ))}
@@ -351,7 +351,7 @@ export default async function DashboardPage() {
         ) : (
           <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
             {groupsWithClassesToday.map((group) => (
-              <li key={group.id} className="flex items-center gap-4 px-5 py-4">
+              <li key={group.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-4">
                 {/* Color indicator */}
                 <div
                   className="h-3 w-3 flex-shrink-0 rounded-full"
@@ -362,17 +362,17 @@ export default async function DashboardPage() {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/dashboard/grupos/${group.id}`}
-                    className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
+                    className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light block truncate"
                   >
                     {group.name}
                   </Link>
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
                     <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
                     {group.startTime && group.endTime && (
                       <>
                         <span className="text-gray-300 dark:text-sb-light/30">•</span>
-                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-sb-light/60">
-                          <Clock className="h-3 w-3" />
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-sb-light/60 whitespace-nowrap">
+                          <Clock className="h-3 w-3 flex-shrink-0" />
                           {group.startTime} - {group.endTime}
                         </div>
                       </>
@@ -384,7 +384,7 @@ export default async function DashboardPage() {
 
                 {/* Instructor */}
                 {group.instructor && (
-                  <span className="flex-shrink-0 text-xs text-gray-500 dark:text-sb-light/60">
+                  <span className="text-xs text-gray-500 dark:text-sb-light/60 sm:flex-shrink-0">
                     {group.instructor}
                   </span>
                 )}
@@ -392,10 +392,10 @@ export default async function DashboardPage() {
                 {/* Attendance button */}
                 <Link
                   href={`/dashboard/asistencia?groupId=${group.id}`}
-                  className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green transition-colors"
+                  className="w-full sm:w-auto flex-shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg bg-sb-accent px-3 py-2 text-xs font-medium text-white hover:bg-sb-green transition-colors"
                 >
                   <Clock className="h-3.5 w-3.5" />
-                  Asistencia
+                  <span className="sm:inline">Asistencia</span>
                 </Link>
               </li>
             ))}
