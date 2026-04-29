@@ -38,22 +38,23 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
     }
   };
 
-  const StatusButton = ({ 
-      enrId, label, val, color, currentStatus 
-  }: { 
-      enrId: string, label: string, val: AttendanceStatus, color: string, currentStatus?: AttendanceStatus 
+  const StatusButton = ({
+      enrId, label, val, color, currentStatus
+  }: {
+      enrId: string, label: string, val: AttendanceStatus, color: string, currentStatus?: AttendanceStatus
   }) => {
       const isSelected = currentStatus === val;
       return (
         <button
           onClick={() => handleMark(enrId, val)}
           style={{
-            padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 500,
+            padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 500,
             cursor: "pointer", transition: "all 0.2s",
             background: isSelected ? color : "transparent",
             color: isSelected ? "#fff" : "var(--color-text-secondary)",
             border: isSelected ? `1px solid ${color}` : "1px solid var(--color-border-secondary)",
           }}
+          className="sm:px-3 sm:py-1.5 sm:text-xs"
         >
           {label}
         </button>
@@ -69,7 +70,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
         </div>
       </div>
 
-      <div style={{ background: "var(--color-background-primary)", padding: 20, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", gap: 20, alignItems: "center" }}>
+      <div style={{ background: "var(--color-background-primary)", padding: 16, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }} className="sm:flex-row sm:gap-5 sm:p-5 sm:items-center">
          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Fecha</label>
            <input
@@ -80,7 +81,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
            />
          </div>
 
-         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 2 }}>
+         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }} className="sm:flex-2">
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Grupo a calificar</label>
            {loadingGroups ? (
               <div style={{ padding: "8px 12px", fontSize: 14, color: "var(--color-text-secondary)" }}>Cargando grupos...</div>
@@ -113,11 +114,11 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
 
       {groupId && rosterData && (
          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-             <table style={{ width: "100%", minWidth: 600, borderCollapse: "collapse" }}>
+             <table style={{ width: "100%", minWidth: 600, borderCollapse: "collapse" }} className="text-xs sm:text-sm">
                <thead>
                  <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                   <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Alumno</th>
-                   <th style={{ padding: "12px 20px", textAlign: "right", fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Estado para esta clase</th>
+                   <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 text-xs">Alumno</th>
+                   <th style={{ padding: "10px 8px", textAlign: "center", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 sm:text-right text-xs">Estado</th>
                  </tr>
                </thead>
                <tbody>
@@ -126,15 +127,15 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
                   )}
                   {rosterData.enrollments.map((enr) => (
                     <tr key={enr.enrollmentId} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                       <td style={{ padding: "12px 20px" }}>
-                          <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }}>{enr.student.lastName} {enr.student.firstName}</span>
+                       <td style={{ padding: "10px 12px" }} className="sm:px-5 sm:py-3">
+                          <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }} className="text-xs sm:text-sm">{enr.student.lastName} {enr.student.firstName}</span>
                        </td>
-                       <td style={{ padding: "12px 20px", textAlign: "right" }}>
-                           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                              <StatusButton enrId={enr.enrollmentId} label="Presente" val="PRESENT" color="#10b981" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="Ausente" val="ABSENT" color="#ef4444" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="Retardo" val="LATE" color="#f59e0b" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="Justificado" val="JUSTIFIED" color="#64748b" currentStatus={enr.attendance?.status} />
+                       <td style={{ padding: "10px 4px" }} className="sm:px-5 sm:py-3">
+                           <div style={{ display: "flex", gap: 3, justifyContent: "center" }} className="sm:gap-2 sm:justify-end flex-wrap">
+                              <StatusButton enrId={enr.enrollmentId} label="✓" val="PRESENT" color="#10b981" currentStatus={enr.attendance?.status} />
+                              <StatusButton enrId={enr.enrollmentId} label="✗" val="ABSENT" color="#ef4444" currentStatus={enr.attendance?.status} />
+                              <StatusButton enrId={enr.enrollmentId} label="↓" val="LATE" color="#f59e0b" currentStatus={enr.attendance?.status} />
+                              <StatusButton enrId={enr.enrollmentId} label="⊘" val="JUSTIFIED" color="#64748b" currentStatus={enr.attendance?.status} />
                            </div>
                        </td>
                     </tr>

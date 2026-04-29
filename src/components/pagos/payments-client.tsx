@@ -47,11 +47,11 @@ export function PaymentsClient({ payments, students }: Props) {
       </button>
 
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto", marginTop: 16 }}>
-        <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse" }} className="text-xs sm:text-sm">
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Alumno", "Concepto", "Monto", "Método", "Vencimiento", "Estado", ""].map(h => (
-                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>{h}</th>
+                <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }} className="sm:px-3.5 sm:py-2.5 text-xs sm:text-xs">{h}</th>
               ))}
             </tr>
           </thead>
@@ -65,33 +65,33 @@ export function PaymentsClient({ payments, students }: Props) {
             )}
             {payments.map(p => (
               <tr key={p.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                <td style={{ padding: "11px 14px", fontWeight: 500, color: "var(--color-text-primary)" }}>
+                <td style={{ padding: "8px 10px", fontWeight: 500, color: "var(--color-text-primary)" }} className="sm:px-3.5 sm:py-2.5">
                   {fullName(p.student.firstName, p.student.lastName)}
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", maxWidth: 200 }}>
+                <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", maxWidth: 150 }} className="sm:max-w-xs">
                   <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {p.concept}
                   </span>
                 </td>
-                <td style={{ padding: "11px 14px", fontWeight: 500, color: "var(--color-text-primary)", whiteSpace: "nowrap" }}>
+                <td style={{ padding: "8px 10px", fontWeight: 500, color: "var(--color-text-primary)", whiteSpace: "nowrap" }} className="sm:px-3.5 sm:py-2.5">
                   {formatCurrency(p.amount, p.currency)}
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)" }}>
+                <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)" }} className="sm:px-3.5 sm:py-2.5">
                   {METHOD_LABELS[p.method] ?? p.method}
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>
+                <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }} className="sm:px-3.5 sm:py-2.5">
                   {p.paidAt ? formatDate(p.paidAt) : (p.dueDate ? formatDate(p.dueDate) : "—")}
                 </td>
-                <td style={{ padding: "11px 14px" }}>
+                <td style={{ padding: "8px 10px" }} className="sm:px-3.5 sm:py-2.5">
                   <PaymentStatusBadge status={p.status} />
                 </td>
-                <td style={{ padding: "11px 14px", textAlign: "right" }}>
+                <td style={{ padding: "8px 10px", textAlign: "right" }} className="sm:px-3.5 sm:py-2.5">
                   {(p.status === "PENDING" || p.status === "OVERDUE") && (
                     <button
                       onClick={() => setMarkingId(p.id)}
-                      className="inline-flex items-center rounded-full border border-sb-accent/40 dark:border-sb-light/30 bg-sb-light/40 dark:bg-sb-uplift px-2.5 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light hover:bg-sb-light dark:hover:bg-sb-house transition-colors cursor-pointer"
+                      className="inline-flex items-center rounded-full border border-sb-accent/40 dark:border-sb-light/30 bg-sb-light/40 dark:bg-sb-uplift px-2 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light hover:bg-sb-light dark:hover:bg-sb-house transition-colors cursor-pointer whitespace-nowrap"
                     >
-                      Marcar pagado
+                      Pagar
                     </button>
                   )}
                 </td>

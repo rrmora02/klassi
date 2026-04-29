@@ -109,24 +109,24 @@ export default async function PagosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14, marginBottom: 24 }}>
-        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "16px 20px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14, marginBottom: 24 }} className="sm:grid-cols-3">
+        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Cobrado este mes</p>
-          <p style={{ fontSize: 26, fontWeight: 600, color: "#15803d", margin: "4px 0 0" }}>
+          <p style={{ fontSize: 18, fontWeight: 600, color: "#15803d", margin: "4px 0 0" }} className="sm:text-2xl break-words">
             {formatCurrency(paid._sum.amount ?? 0)}
           </p>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{paid._count} pagos</p>
         </div>
-        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "16px 20px" }}>
+        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Por cobrar</p>
-          <p style={{ fontSize: 26, fontWeight: 600, color: "#b45309", margin: "4px 0 0" }}>
+          <p style={{ fontSize: 18, fontWeight: 600, color: "#b45309", margin: "4px 0 0" }} className="sm:text-2xl break-words">
             {formatCurrency(pending._sum.amount ?? 0)}
           </p>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{pending._count} pendientes</p>
         </div>
-        <div style={{ background: overdue._count > 0 ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${overdue._count > 0 ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "16px 20px" }}>
+        <div style={{ background: overdue._count > 0 ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${overdue._count > 0 ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Adeudos vencidos</p>
-          <p style={{ fontSize: 26, fontWeight: 600, color: overdue._count > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0" }}>
+          <p style={{ fontSize: 18, fontWeight: 600, color: overdue._count > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0" }} className="sm:text-2xl break-words">
             {formatCurrency(overdue._sum.amount ?? 0)}
           </p>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{overdue._count} vencidos</p>
@@ -134,18 +134,18 @@ export default async function PagosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabs de estado */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)", overflowX: "auto" }} className="scrollbar-hide">
         {STATUS_TABS.map(tab => {
           const active = tab.value === status || (!tab.value && !status);
           const count  = tab.value ? (countMap[tab.value] ?? 0) : Object.values(countMap).reduce((a: number, b: number) => a + b, 0);
           return (
             <Link key={tab.label} href={buildUrl({ status: tab.value as string | undefined, page: "1" })} style={{
-              padding: "8px 16px", fontSize: 13, textDecoration: "none",
+              padding: "8px 12px", fontSize: 12, textDecoration: "none", whiteSpace: "nowrap",
               color: active ? "#006241" : "var(--color-text-secondary)",
               fontWeight: active ? 500 : 400,
               borderBottom: active ? "2px solid #006241" : "2px solid transparent",
               marginBottom: -1,
-            }}>
+            }} className="sm:px-4 sm:text-sm">
               {tab.label} <span style={{ fontSize: 11 }}>{count}</span>
             </Link>
           );
@@ -154,11 +154,11 @@ export default async function PagosPage({ searchParams }: PageProps) {
 
       {/* Búsqueda */}
       <div style={{ marginBottom: 16 }}>
-        <form style={{ maxWidth: 320 }}>
+        <form className="w-full sm:max-w-sm">
           {status && <input type="hidden" name="status" value={status} />}
           <input
             name="q" defaultValue={search}
-            placeholder="Buscar por nombre de alumno..."
+            placeholder="Buscar por nombre..."
             className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-[rgba(255,255,255,0.08)] text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors"
           />
         </form>
@@ -169,17 +169,17 @@ export default async function PagosPage({ searchParams }: PageProps) {
 
       {/* Paginación */}
       {pages > 1 && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
-          <span>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</span>
-          <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
+          <p style={{ margin: "0 0 12px" }}>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</p>
+          <div style={{ display: "flex", gap: 4, overflowX: "auto" }} className="flex-wrap sm:flex-nowrap">
             {page > 1 && (
-              <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>← Ant</Link>
+              <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>← Ant</Link>
             )}
             {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
-              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#006241" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
+              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#006241" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{p}</Link>
             ))}
             {page < pages && (
-              <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>Sig →</Link>
+              <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>Sig →</Link>
             )}
           </div>
         </div>
