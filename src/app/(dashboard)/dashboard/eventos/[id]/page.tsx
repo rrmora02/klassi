@@ -4,8 +4,9 @@ import { db } from "@/server/db";
 import { redirect, notFound } from "next/navigation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { EventDetailClient } from "@/components/eventos/event-detail-client";
+import { EventDownloadButton } from "@/components/eventos/event-download-button";
 import { generateEventInvitationHTML } from "@/server/services/event-invitation.service";
-import { Calendar, Users, DollarSign, ArrowLeft, Download } from "lucide-react";
+import { Calendar, Users, DollarSign, ArrowLeft } from "lucide-react";
 
 interface PageProps {
   params: { id: string };
@@ -76,25 +77,7 @@ export default async function EventoDetailPage({ params }: PageProps) {
         </div>
 
         <div className="flex gap-2">
-          <button
-            onClick={() => {
-              const element = document.createElement("a");
-              element.setAttribute(
-                "href",
-                "data:text/html;charset=utf-8," +
-                  encodeURIComponent(htmlPreview)
-              );
-              element.setAttribute("download", `${event.name}.html`);
-              element.style.display = "none";
-              document.body.appendChild(element);
-              element.click();
-              document.body.removeChild(element);
-            }}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] px-3 py-2.5 text-sm font-medium text-gray-700 dark:text-sb-light/80 hover:bg-gray-50 dark:hover:bg-sb-house transition-colors"
-          >
-            <Download className="h-4 w-4" />
-            Descargar HTML
-          </button>
+          <EventDownloadButton eventName={event.name} htmlContent={htmlPreview} />
         </div>
       </div>
 
