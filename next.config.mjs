@@ -15,6 +15,19 @@ const nextConfig = {
             ],
         };
     }
+
+    // Handle pdfkit - only use on server side
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'pdfkit': false,
+        'stream': false,
+        'fs': false,
+        'buffer': false,
+        'util': false,
+      };
+    }
+
     return config;
   },
 };
