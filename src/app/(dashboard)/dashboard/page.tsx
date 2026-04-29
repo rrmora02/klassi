@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
 import { StatCard } from "@/components/shared";
+import { ClassAttendanceIndicator } from "@/components/dashboard/class-attendance-indicator";
 import {
   Users,
   BookOpen,
@@ -244,6 +245,8 @@ export default async function DashboardPage() {
                           </div>
                         </>
                       )}
+                      <span className="text-gray-300 dark:text-sb-light/30">•</span>
+                      <ClassAttendanceIndicator groupId={group.id} />
                     </div>
                   </div>
 
@@ -374,6 +377,8 @@ export default async function DashboardPage() {
                         </div>
                       </>
                     )}
+                    <span className="text-gray-300 dark:text-sb-light/30">•</span>
+                    <ClassAttendanceIndicator groupId={group.id} />
                   </div>
                 </div>
 
