@@ -15,6 +15,7 @@ import {
   Bell,
   Tag,
   Building2,
+  Calendar,
 } from "lucide-react";
 
 const ALL_NAV_ITEMS = [
@@ -23,6 +24,7 @@ const ALL_NAV_ITEMS = [
   { label: "Instructores", href: "/dashboard/instructores",             icon: UserCheck,       roles: ["ADMIN"] },
   { label: "Grupos",       href: "/dashboard/grupos",                   icon: BookOpen,        roles: ["ADMIN", "RECEPTIONIST"] },
   { label: "Asistencia",   href: "/dashboard/asistencia",               icon: ClipboardList,   roles: ["ADMIN", "RECEPTIONIST", "INSTRUCTOR"] },
+  { label: "Eventos",      href: "/dashboard/eventos",                  icon: Calendar,        roles: ["ADMIN"] },
   { label: "Pagos",        href: "/dashboard/pagos",                    icon: CreditCard,      roles: ["ADMIN", "RECEPTIONIST"] },
   { label: "Reportes",     href: "/dashboard/reportes",                 icon: BarChart2,       roles: ["ADMIN"] },
   { label: "Comunicados",  href: "/dashboard/comunicados",              icon: Bell,            roles: ["ADMIN", "RECEPTIONIST"] },
