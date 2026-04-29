@@ -140,8 +140,10 @@ export function EventInvitationPreview({
 
       {/* Contenido acordeón */}
       {isOpen && (
-        <div className="p-5 max-w-none overflow-auto">
+        <div className="p-5 max-w-none overflow-auto bg-white">
           <div
+            id="invitation-preview"
+            className="bg-white"
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
         </div>
