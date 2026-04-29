@@ -62,7 +62,16 @@ export default async function EditEventPage({ params }: PageProps) {
       {/* Formulario */}
       <div className="max-w-2xl">
         <div className="rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift p-6">
-          <EditEventForm eventId={event.id} initialData={event} />
+          <EditEventForm
+            eventId={event.id}
+            initialData={{
+              name: event.name,
+              description: event.description || undefined,
+              date: event.date,
+              amount: event.amount,
+              status: event.status,
+            }}
+          />
         </div>
       </div>
 
