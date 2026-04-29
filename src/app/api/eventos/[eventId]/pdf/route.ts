@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
-import { generateEventInvitationPDF } from "@/server/services/event-pdf.service";
+import { generateEventInvitationPDFBuffer } from "@/server/services/event-pdf-lib.service";
 import { NextRequest, NextResponse } from "next/server";
 
 interface RouteParams {
@@ -35,7 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Generar PDF
-    const pdfStream = generateEventInvitationPDF({
+    const pdfBuffer = await generateEventInvitationPDFBuffer({
       eventName: event.name,
       description: event.description || undefined,
       date: event.date,
@@ -46,33 +46,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       dueDate: new Date(), // TODO: guardar dueDate en modelo Event
     });
 
-    // Convertir stream a buffer
-    const chunks: Buffer[] = [];
-
-    return new Promise((resolve) => {
-      pdfStream.on("data", (chunk) => {
-        chunks.push(chunk);
-      });
-
-      pdfStream.on("end", () => {
-        const pdfBuffer = Buffer.concat(chunks);
-        resolve(
-          new NextResponse(pdfBuffer, {
-            headers: {
-              "Content-Type": "application/pdf",
-              "Content-Disposition": `attachment; filename="${event.name}.pdf"`,
-            },
-          })
-        );
-      });
-
-      pdfStream.on("error", (error) => {
-        resolve(
-          new NextResponse("Error generating PDF", {
-            status: 500,
-          })
-        );
-      });
+    return new NextResponse(pdfBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${event.name}.pdf"`,
+      },
     });
   } catch (error) {
     console.error("Error generating event PDF:", error);
