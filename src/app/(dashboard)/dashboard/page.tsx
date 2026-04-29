@@ -560,7 +560,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* Pagos de eventos */}
-      <EventSummaryClient year={now.getFullYear()} month={now.getMonth() + 1} />
+      {(() => {
+        const now = new Date();
+        return <EventSummaryClient year={now.getFullYear()} month={now.getMonth() + 1} />;
+      })()}
 
       {/* Quick actions */}
       <section>
