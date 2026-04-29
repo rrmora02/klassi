@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
 import { StatCard } from "@/components/shared";
 import { ClassAttendanceIndicator } from "@/components/dashboard/class-attendance-indicator";
+import { EventSummaryClient } from "@/components/dashboard/event-summary-client";
 import {
   Users,
   BookOpen,
@@ -30,6 +31,7 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
     totalStudents,
     activeGroups,
     monthRevenue,
+    eventPaymentsRevenue,
     overdueCount,
     overduePayments,
     recentStudents,
@@ -41,6 +43,15 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
 
     db.payment.aggregate({
       where: { tenantId, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } },
+      _sum: { amount: true },
+    }),
+
+    db.eventPayment.aggregate({
+      where: {
+        event: { tenantId },
+        status: "PAID",
+        paidAt: { gte: monthStart, lte: monthEnd },
+      },
       _sum: { amount: true },
     }),
 
@@ -105,6 +116,8 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
       totalStudents,
       activeGroups,
       monthRevenue: monthRevenue._sum.amount ?? 0,
+      eventPaymentsRevenue: eventPaymentsRevenue._sum.amount ?? 0,
+      totalRevenue: (monthRevenue._sum.amount ?? 0) + (eventPaymentsRevenue._sum.amount ?? 0),
       overdueCount,
     },
     overduePayments,
@@ -315,8 +328,8 @@ export default async function DashboardPage() {
         />
         <StatCard
           label="Ingresos del mes"
-          value={formatCurrency(stats.monthRevenue)}
-          hint="Pagos recibidos este mes"
+          value={formatCurrency(stats.totalRevenue)}
+          hint={`${formatCurrency(stats.monthRevenue)} mensualidades + ${formatCurrency(stats.eventPaymentsRevenue)} eventos`}
         />
         <StatCard
           label="Adeudos vencidos"
@@ -545,6 +558,9 @@ export default async function DashboardPage() {
           )}
         </section>
       </div>
+
+      {/* Pagos de eventos */}
+      <EventSummaryClient year={now.getFullYear()} month={now.getMonth() + 1} />
 
       {/* Quick actions */}
       <section>

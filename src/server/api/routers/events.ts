@@ -442,6 +442,59 @@ export const eventsRouter = createTRPCRouter({
       // Eliminar el evento (cascade elimina los pagos)
       return db.event.delete({ where: { id: input.id } });
     }),
+
+  // Obtener estadísticas de pagos de eventos del mes
+  getMonthlyEventStats: tenantProcedure
+    .input(z.object({
+      year: z.number().int(),
+      month: z.number().int().min(1).max(12),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { tenantId, db } = ctx;
+
+      const monthStart = new Date(input.year, input.month - 1, 1);
+      const monthEnd = new Date(input.year, input.month, 0, 23, 59, 59);
+
+      const events = await db.event.findMany({
+        where: { tenantId },
+        include: {
+          eventPayments: {
+            where: {
+              paidAt: { gte: monthStart, lte: monthEnd },
+            },
+          },
+        },
+        orderBy: { date: "desc" },
+      });
+
+      const summary = events.map((event) => {
+        const payments = event.eventPayments;
+        const paidAmount = payments
+          .filter((p) => p.status === "PAID")
+          .reduce((sum, p) => sum + p.amount, 0);
+
+        return {
+          eventId: event.id,
+          eventName: event.name,
+          eventDate: event.date,
+          totalPayments: payments.length,
+          paidPayments: payments.filter((p) => p.status === "PAID").length,
+          pendingPayments: payments.filter((p) => p.status === "PENDING").length,
+          paidAmount,
+          expectedAmount: event.amount * payments.length,
+        };
+      });
+
+      const totalPaidAmount = summary.reduce((sum, s) => sum + s.paidAmount, 0);
+      const totalExpectedAmount = summary.reduce((sum, s) => sum + s.expectedAmount, 0);
+
+      return {
+        events: summary,
+        totalPaidAmount,
+        totalExpectedAmount,
+        eventCount: events.length,
+      };
+    }),
 });
 
 export type EventsRouter = typeof eventsRouter;

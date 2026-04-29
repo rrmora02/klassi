@@ -486,6 +486,7 @@ model EventPayment {
 
   // PENDING, PAID, NOT_ATTENDING, CANCELLED
   status String @default("PENDING")
+  method PaymentMethod @default(CASH)
 
   // Confirmación de asistencia (null = sin confirmar)
   willAttend   Boolean?
@@ -494,6 +495,9 @@ model EventPayment {
 
   dueDate      DateTime
   paidAt       DateTime?
+  receiptUrl   String? // URL en Supabase Storage
+  reference    String?
+  notes        String?
   whatsappSent Boolean   @default(false)
 
   createdAt DateTime @default(now())
