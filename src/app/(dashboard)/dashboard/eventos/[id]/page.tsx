@@ -4,7 +4,7 @@ import { db } from "@/server/db";
 import { redirect, notFound } from "next/navigation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { EventDetailClient } from "@/components/eventos/event-detail-client";
-import { generateEventInvitationHTML } from "@/server/services/event-pdf.service";
+import { generateEventInvitationHTML } from "@/server/services/event-invitation.service";
 import { Calendar, Users, DollarSign, ArrowLeft, Download } from "lucide-react";
 
 interface PageProps {

@@ -70,7 +70,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
         </div>
       </div>
 
-      <div style={{ background: "var(--color-background-primary)", padding: 16, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }} className="sm:flex-row sm:gap-5 sm:p-5 sm:items-center">
+      <div style={{ background: "var(--color-background-primary)", padding: 16, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24 }} className="flex flex-col gap-3 sm:flex-row sm:gap-5 sm:p-5 sm:items-center">
          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Fecha</label>
            <input
@@ -81,7 +81,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
            />
          </div>
 
-         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }} className="sm:flex-2">
+         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }} className="sm:flex-1">
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Grupo a calificar</label>
            {loadingGroups ? (
               <div style={{ padding: "8px 12px", fontSize: 14, color: "var(--color-text-secondary)" }}>Cargando grupos...</div>
