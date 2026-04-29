@@ -14,16 +14,16 @@ export function StatCard({ label, value, hint, alert, className }: StatCardProps
   return (
     <div
       className={cn(
-        "rounded-xl border p-5",
+        "rounded-xl border p-4 sm:p-5",
         alert ? "border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950" : "border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift",
         className
       )}
     >
-      <p className="text-sm text-gray-500 dark:text-sb-light/70">{label}</p>
-      <p className={cn("mt-1 text-3xl font-semibold", alert ? "text-red-700 dark:text-red-400" : "text-gray-900 dark:text-gray-100")}>
+      <p className="text-xs sm:text-sm text-gray-500 dark:text-sb-light/70 truncate">{label}</p>
+      <p className={cn("mt-1 text-xl sm:text-3xl font-semibold break-words", alert ? "text-red-700 dark:text-red-400" : "text-gray-900 dark:text-gray-100")}>
         {value}
       </p>
-      {hint && <p className="mt-1 text-xs text-gray-400 dark:text-sb-light/50">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-gray-400 dark:text-sb-light/50 truncate">{hint}</p>}
     </div>
   );
 }
