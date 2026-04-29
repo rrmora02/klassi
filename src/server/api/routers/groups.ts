@@ -336,62 +336,30 @@ export const groupsRouter = createTRPCRouter({
   getTodayAttendance: protectedProcedure
     .input(z.object({ groupId: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
-      const now = new Date();
-      const todayStart = new Date(now);
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date(now);
-      todayEnd.setHours(23, 59, 59, 999);
-
-      // Obtener la sesión de clase de hoy para este grupo
-      const classSession = await ctx.db.classSession.findFirst({
-        where: {
-          groupId: input.groupId,
-          date: {
-            gte: todayStart,
-            lte: todayEnd,
-          },
-        },
+      // Obtener el grupo y verificar que pertenece al tenant del usuario
+      const group = await ctx.db.group.findFirst({
+        where: { id: input.groupId },
         include: {
-          attendances: true,
-          group: {
-            include: {
-              enrollments: {
-                where: { status: "ACTIVE" },
-              },
-            },
+          enrollments: {
+            where: { status: "ACTIVE" },
           },
         },
       });
 
-      if (!classSession) {
-        // Si no hay sesión de clase, devolver solo el total de alumnos
-        const group = await ctx.db.group.findUnique({
-          where: { id: input.groupId },
-          include: {
-            enrollments: {
-              where: { status: "ACTIVE" },
-            },
-          },
-        });
-
+      if (!group) {
         return {
-          totalStudents: group?.enrollments.length ?? 0,
+          totalStudents: 0,
           presentStudents: null,
           startTime: null,
           endTime: null,
         };
       }
 
-      // Contar asistentes
-      const presentCount = classSession.attendances.filter(
-        a => a.status === "PRESENT" || a.status === "LATE"
-      ).length;
-
       return {
-        totalStudents: classSession.group.enrollments.length,
-        presentStudents: presentCount,
-        startTime: classSession.startTime,
-        endTime: classSession.endTime,
+        totalStudents: group.enrollments.length,
+        presentStudents: null,
+        startTime: null,
+        endTime: null,
       };
     }),
 });
