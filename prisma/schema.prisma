@@ -488,6 +488,9 @@ model EventPayment {
   status String @default("PENDING")
   method PaymentMethod @default(CASH)
 
+  // Token para enlace público de confirmación
+  token String @unique @default(cuid())
+
   // Confirmación de asistencia (null = sin confirmar)
   willAttend   Boolean?
   confirmedAt  DateTime?

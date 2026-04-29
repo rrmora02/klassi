@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc";
 import { formatCurrency, formatDate, fullName } from "@/lib/utils";
-import { Clock, Users, DollarSign, CheckCircle, XCircle } from "lucide-react";
+import { Clock, Users, DollarSign, CheckCircle, XCircle, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface EventDetailClientProps {
@@ -28,6 +28,7 @@ export function EventDetailClient({
   const [filterStatus, setFilterStatus] = useState<
     "PENDING" | "PAID" | "NOT_ATTENDING" | "CANCELLED" | undefined
   >(undefined);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Queries
   const { data: statsData } = api.events.getStats.useQuery({ eventId });
@@ -92,6 +93,19 @@ export function EventDetailClient({
         variant: "destructive",
       });
     }
+  };
+
+  const handleCopyLink = (paymentId: string, token: string) => {
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const link = `${baseUrl}/evento/${eventId}/responder?student=${paymentId}&token=${token}`;
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedId(paymentId);
+      toast({
+        title: "Enlace copiado",
+        description: "Puedes compartir este enlace en WhatsApp",
+      });
+      setTimeout(() => setCopiedId(null), 2000);
+    });
   };
 
   return (
@@ -189,6 +203,9 @@ export function EventDetailClient({
                   <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-sb-light/70 sm:px-5">
                     Asistencia
                   </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-sb-light/70 sm:px-5">
+                    Enlace
+                  </th>
                   <th className="px-4 py-3 text-right font-medium text-gray-600 dark:text-sb-light/70 sm:px-5">
                     Acción
                   </th>
@@ -241,6 +258,25 @@ export function EventDetailClient({
                           </span>
                         )}
                       </div>
+                    </td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <button
+                        onClick={() => handleCopyLink(payment.id, payment.token)}
+                        className="inline-flex items-center gap-1.5 text-xs rounded px-2.5 py-1.5 bg-gray-100 dark:bg-sb-house text-gray-700 dark:text-sb-light/80 hover:bg-gray-200 dark:hover:bg-sb-house/80 transition-colors"
+                        title="Copiar enlace para compartir en WhatsApp"
+                      >
+                        {copiedId === payment.id ? (
+                          <>
+                            <Check className="h-3.5 w-3.5" />
+                            Copiado
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-3.5 w-3.5" />
+                            Copiar
+                          </>
+                        )}
+                      </button>
                     </td>
                     <td className="px-4 py-3 text-right sm:px-5">
                       <div className="flex justify-end gap-2">
