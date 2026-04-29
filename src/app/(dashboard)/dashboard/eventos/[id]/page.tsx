@@ -5,7 +5,6 @@ import { redirect, notFound } from "next/navigation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { EventDetailClient } from "@/components/eventos/event-detail-client";
 import { EventDownloadButton } from "@/components/eventos/event-download-button";
-import { generateEventInvitationHTML } from "@/server/services/event-invitation.service";
 import { Calendar, Users, DollarSign, ArrowLeft } from "lucide-react";
 
 interface PageProps {
@@ -43,18 +42,6 @@ export default async function EventoDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  // Generar preview HTML
-  const htmlPreview = generateEventInvitationHTML({
-    eventName: event.name,
-    description: event.description || undefined,
-    date: event.date,
-    groupNames: event.isSchoolWide
-      ? ["Toda la escuela"]
-      : event.groups.map((g) => g.name),
-    amount: event.amount,
-    dueDate: new Date(), // TODO: guardar dueDate en modelo Event
-  });
-
   return (
     <div className="space-y-6">
       {/* Header con navegación */}
@@ -77,7 +64,7 @@ export default async function EventoDetailPage({ params }: PageProps) {
         </div>
 
         <div className="flex gap-2">
-          <EventDownloadButton eventName={event.name} htmlContent={htmlPreview} />
+          <EventDownloadButton eventId={event.id} eventName={event.name} />
         </div>
       </div>
 
@@ -156,16 +143,6 @@ export default async function EventoDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Preview HTML */}
-          <div className="rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift p-5">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Previsualización de invitación
-            </h2>
-            <div
-              className="bg-gray-50 dark:bg-sb-house/50 rounded-lg p-4 max-h-96 overflow-y-auto"
-              dangerouslySetInnerHTML={{ __html: htmlPreview }}
-            />
-          </div>
         </div>
 
         {/* Estadísticas rápidas */}
