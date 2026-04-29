@@ -119,6 +119,7 @@ model Tenant {
   payments      Payment[]
   announcements Announcement[]
   subscription  Subscription[]
+  events        Event[]
 
   @@index([slug])
 }
@@ -232,7 +233,7 @@ model Instructor {
   id        String   @id @default(cuid())
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userId    String   
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   bio       String?
   phone     String?
@@ -268,14 +269,15 @@ model Group {
   capacity     Int         @default(20)
   room         String?
   schedule     Json
-  monthlyFee   Int?        // Mensualidad en centavos (ej. 50000 = $500.00 MXN)
-  billingDay   Int?        // Día del mes para generar cobros (1-28)
+  monthlyFee   Int? // Mensualidad en centavos (ej. 50000 = $500.00 MXN)
+  billingDay   Int? // Día del mes para generar cobros (1-28)
   isActive     Boolean     @default(true)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
   enrollments Enrollment[]
   sessions    ClassSession[]
+  events      Event[]        @relation("EventToGroup")
 
   @@index([tenantId])
   @@index([disciplineId])
@@ -294,15 +296,16 @@ model Student {
   gender    String?
   phone     String?
   email     String?
-  avatarUrl   String?
-  status      StudentStatus @default(ACTIVE)
-  notes       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  avatarUrl String?
+  status    StudentStatus @default(ACTIVE)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
-  enrollments Enrollment[]
-  parents     ParentStudent[]
-  payments    Payment[]
+  enrollments   Enrollment[]
+  parents       ParentStudent[]
+  payments      Payment[]
+  eventPayments EventPayment[]
 
   @@index([tenantId])
   @@index([tenantId, lastName])
@@ -439,4 +442,65 @@ model Announcement {
   createdAt    DateTime  @default(now())
 
   @@index([tenantId])
+}
+
+// ─── Evento (Día del niño, Convivio, etc) ─────────────────────────
+
+model Event {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name        String // "Día del Niño", "Convivio", etc
+  description String?
+  date        DateTime
+
+  // Múltiples grupos o toda la escuela
+  isSchoolWide Boolean @default(false)
+  groups       Group[] @relation("EventToGroup")
+
+  amount Int // en centavos
+  status String @default("ACTIVE") // ACTIVE, CANCELLED
+
+  eventPayments EventPayment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([date])
+  @@index([tenantId, status])
+}
+
+// ─── Pago de Evento (Aparte de mensualidad) ───────────────────────
+
+model EventPayment {
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  amount Int // en centavos
+
+  // PENDING, PAID, NOT_ATTENDING, CANCELLED
+  status String @default("PENDING")
+
+  // Confirmación de asistencia (null = sin confirmar)
+  willAttend   Boolean?
+  confirmedAt  DateTime?
+  confirmedVia String? // "admin" o "whatsapp_link"
+
+  dueDate      DateTime
+  paidAt       DateTime?
+  whatsappSent Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+  @@index([studentId])
+  @@index([status])
+  @@index([eventId, status])
 }
