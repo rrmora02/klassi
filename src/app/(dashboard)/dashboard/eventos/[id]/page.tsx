@@ -5,6 +5,7 @@ import { redirect, notFound } from "next/navigation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { EventDetailClient } from "@/components/eventos/event-detail-client";
 import { EventDownloadButton } from "@/components/eventos/event-download-button";
+import { EventInvitationPreview } from "@/components/eventos/event-invitation-preview";
 import { Calendar, Users, DollarSign, ArrowLeft } from "lucide-react";
 
 interface PageProps {
@@ -142,6 +143,18 @@ export default async function EventoDetailPage({ params }: PageProps) {
               </div>
             </div>
           </div>
+
+          {/* Vista previa de invitación */}
+          <EventInvitationPreview
+            eventName={event.name}
+            description={event.description || undefined}
+            date={event.date}
+            groupNames={event.isSchoolWide
+              ? ["Toda la escuela"]
+              : event.groups.map((g) => g.name)}
+            amount={event.amount}
+            dueDate={new Date()} // TODO: obtener del modelo Event
+          />
 
         </div>
 
