@@ -1,7 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import html2canvas from "html2canvas";
 
 interface EventDownloadButtonProps {
@@ -20,10 +20,28 @@ export function EventDownloadButton({
   const handleDownload = async () => {
     setIsLoading(true);
     try {
-      // Obtener el elemento del preview
-      const element = document.getElementById(previewElementId);
+      // Buscar el elemento del preview
+      let element = document.getElementById(previewElementId);
+
       if (!element) {
-        throw new Error("Preview element not found");
+        // Si no existe, buscar el contenedor del acordeón y expandirlo
+        const accordionContainer = document.querySelector('[id*="invitation"]');
+        if (accordionContainer) {
+          // Buscar el botón del acordeón y hacer clic si es necesario
+          const accordionButton = accordionContainer.querySelector('button');
+          if (accordionButton) {
+            accordionButton.click();
+            // Esperar a que se expanda
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+        }
+
+        // Intentar nuevamente
+        element = document.getElementById(previewElementId);
+
+        if (!element) {
+          throw new Error("No se puede encontrar el elemento de vista previa. Por favor, expande la sección de vista previa primero.");
+        }
       }
 
       // Capturar el elemento como imagen
@@ -31,6 +49,8 @@ export function EventDownloadButton({
         backgroundColor: "#ffffff",
         scale: 2,
         logging: false,
+        allowTaint: true,
+        useCORS: true,
       });
 
       // Convertir canvas a blob y descargar
@@ -51,7 +71,8 @@ export function EventDownloadButton({
       });
     } catch (error) {
       console.error("Error downloading invitation:", error);
-      alert("No pudimos descargar la invitación. Intenta de nuevo.");
+      const errorMessage = error instanceof Error ? error.message : "Error desconocido";
+      alert(`No pudimos descargar la invitación: ${errorMessage}`);
       setIsLoading(false);
     }
   };

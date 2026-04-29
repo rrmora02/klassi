@@ -143,7 +143,8 @@ export function EventInvitationPreview({
         <div className="p-5 max-w-none overflow-auto bg-white">
           <div
             id="invitation-preview"
-            className="bg-white"
+            className="bg-white rounded-lg"
+            style={{ padding: "24px" }}
             dangerouslySetInnerHTML={{ __html: htmlContent }}
           />
         </div>
