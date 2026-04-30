@@ -453,14 +453,15 @@ export const eventsRouter = createTRPCRouter({
       const { tenantId, db } = ctx;
 
       const monthStart = new Date(input.year, input.month - 1, 1);
-      const monthEnd = new Date(input.year, input.month, 0, 23, 59, 59);
+      const monthEnd = new Date(input.year, input.month, 1);
+      monthEnd.setMilliseconds(monthEnd.getMilliseconds() - 1);
 
       const events = await db.event.findMany({
-        where: { tenantId },
+        where: { tenantId, date: { gte: monthStart, lt: monthEnd } },
         include: {
           eventPayments: {
             where: {
-              paidAt: { gte: monthStart, lte: monthEnd },
+              paidAt: { not: null },
             },
           },
         },
@@ -469,17 +470,15 @@ export const eventsRouter = createTRPCRouter({
 
       const summary = events.map((event) => {
         const payments = event.eventPayments;
-        const paidAmount = payments
-          .filter((p) => p.status === "PAID")
-          .reduce((sum, p) => sum + p.amount, 0);
+        const paidAmount = payments.reduce((sum, p) => sum + p.amount, 0);
 
         return {
           eventId: event.id,
           eventName: event.name,
           eventDate: event.date,
           totalPayments: payments.length,
-          paidPayments: payments.filter((p) => p.status === "PAID").length,
-          pendingPayments: payments.filter((p) => p.status === "PENDING").length,
+          paidPayments: payments.length,
+          pendingPayments: 0,
           paidAmount,
           expectedAmount: event.amount * payments.length,
         };
