@@ -454,7 +454,6 @@ export const eventsRouter = createTRPCRouter({
 
       const monthStart = new Date(input.year, input.month - 1, 1);
       const monthEnd = new Date(input.year, input.month, 1);
-      monthEnd.setMilliseconds(monthEnd.getMilliseconds() - 1);
 
       const events = await db.event.findMany({
         where: { tenantId, date: { gte: monthStart, lt: monthEnd } },
