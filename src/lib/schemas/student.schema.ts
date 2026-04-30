@@ -74,6 +74,6 @@ export const studentFormDefaults: StudentFormValues = {
   tutorName:         "",
   tutorPhone:        "",
   tutorEmail:        "",
-  tutorRelationship: undefined,
+  tutorRelationship: "madre",
   notes:             "",
 };

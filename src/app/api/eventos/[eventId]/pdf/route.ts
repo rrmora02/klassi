@@ -63,7 +63,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return new NextResponse("Generated PDF is empty", { status: 500 });
     }
 
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" }), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${event.name}.pdf"`,

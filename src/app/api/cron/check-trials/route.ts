@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { sendTrialExpiredEmail } from "@/server/services/email.service";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 /**
  * Cron job que verifica trials vencidos.
  * Configurar en vercel.json para correr diario a las 8am.
@@ -33,12 +36,12 @@ export async function GET(req: NextRequest) {
 
   for (const tenant of trialExpiringSoon) {
     // Obtener email del admin
-    const admin = await db.user.findFirst({
+    const adminUser = await db.tenantUser.findFirst({
       where: { tenantId: tenant.id, role: "ADMIN" },
-      select: { email: true, name: true },
+      include: { user: { select: { email: true, name: true } } },
     });
-    if (admin?.email) {
-      await sendTrialExpiredEmail(admin.email, tenant.name, /* expiring soon */ false);
+    if (adminUser?.user?.email) {
+      await sendTrialExpiredEmail(adminUser.user.email, tenant.name, /* expiring soon */ false);
     }
   }
 
@@ -59,12 +62,12 @@ export async function GET(req: NextRequest) {
     });
     suspendedIds.push(tenant.id);
 
-    const admin = await db.user.findFirst({
+    const adminUser = await db.tenantUser.findFirst({
       where: { tenantId: tenant.id, role: "ADMIN" },
-      select: { email: true, name: true },
+      include: { user: { select: { email: true, name: true } } },
     });
-    if (admin?.email) {
-      await sendTrialExpiredEmail(admin.email, tenant.name, /* already expired */ true);
+    if (adminUser?.user?.email) {
+      await sendTrialExpiredEmail(adminUser.user.email, tenant.name, /* already expired */ true);
     }
   }
 

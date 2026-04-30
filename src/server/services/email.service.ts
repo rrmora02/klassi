@@ -77,3 +77,19 @@ export async function sendParentInvitation(opts: {
     </div>`,
   });
 }
+
+export async function sendInstructorInvitation(opts: {
+  to: string; instructorName: string; schoolName: string; inviteUrl: string;
+}) {
+  return send({
+    to: opts.to,
+    subject: `Invitación como instructor en ${opts.schoolName}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+      <h2 style="color:#1D3557;">¡Bienvenido, ${opts.instructorName}!</h2>
+      <p>Has sido invitado como instructor en <strong>${opts.schoolName}</strong> en Klassi.</p>
+      <p>Haz clic en el botón de abajo para crear tu cuenta y acceder al sistema.</p>
+      <a href="${opts.inviteUrl}" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Aceptar invitación y crear cuenta</a>
+      <p style="font-size:12px;color:#999;margin-top:16px;">Este enlace expira en 30 días.</p>
+    </div>`,
+  });
+}

@@ -106,7 +106,7 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
         <>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {events.map((event, idx) => {
-              const stat = eventStats[idx];
+              const stat = eventStats[idx]!;
               const paidPercentage =
                 stat.total > 0
                   ? Math.round((stat.paid / stat.willAttend) * 100)

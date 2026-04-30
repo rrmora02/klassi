@@ -195,14 +195,20 @@ export const teamRouter = createTRPCRouter({
          }
        });
 
-       // If role is INSTRUCTOR, create the instructor record
+       // If role is INSTRUCTOR, create the instructor record (if not already exists)
        if (invitation.role === "INSTRUCTOR") {
-         await ctx.db.instructor.create({
-           data: {
-             tenantId: invitation.tenantId,
-             userId: user.id
-           }
+         const existingInstructor = await ctx.db.instructor.findFirst({
+           where: { tenantId: invitation.tenantId, userId: user.id }
          });
+
+         if (!existingInstructor) {
+           await ctx.db.instructor.create({
+             data: {
+               tenantId: invitation.tenantId,
+               userId: user.id
+             }
+           });
+         }
        }
 
        // Set this tenant as the user's active tenant

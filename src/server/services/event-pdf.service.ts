@@ -1,3 +1,4 @@
+// @ts-ignore - pdfkit has no types, but this service is deprecated
 import PDFDocument from "pdfkit";
 import { type Readable } from "stream";
 

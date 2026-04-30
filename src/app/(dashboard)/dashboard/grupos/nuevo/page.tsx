@@ -16,6 +16,7 @@ export default function NuevoGrupoPage() {
   async function handleSubmit(data: GroupFormValues) {
     await create.mutateAsync({
       ...data,
+      schedule: data.schedule as any,
       instructorId: data.instructorId || undefined,
       room:         data.room         || undefined,
     });

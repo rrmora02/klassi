@@ -3,13 +3,10 @@ import { db } from "@/server/db";
 import { z } from "zod";
 
 const statusTranslations: { [key: string]: string } = {
-  // Student Status
+  // Student/Enrollment Status
   "ACTIVE": "Activo",
   "INACTIVE": "Inactivo",
   "SUSPENDED": "Suspendido",
-  // Enrollment Status
-  "ACTIVE": "Activo",
-  "INACTIVE": "Inactivo",
   // Payment Status
   "PENDING": "Pendiente",
   "PAID": "Pagado",

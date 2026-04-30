@@ -2,6 +2,8 @@ import { z } from "zod";
 import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { instructorFormSchema } from "@/lib/schemas/instructor.schema";
+import { sendInstructorInvitation } from "@/server/services/email.service";
+import { randomBytes } from "crypto";
 
 export const instructorsUpdateSchema = instructorFormSchema.partial().extend({
   id: z.string().cuid("ID inválido"),
@@ -129,6 +131,38 @@ export const instructorsRouter = createTRPCRouter({
         },
         include: { user: true },
       });
+
+      // Crear invitación y enviar email
+      try {
+        const token = randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 días
+
+        await db.teamInvitation.create({
+          data: {
+            tenantId,
+            email: input.email,
+            role: "INSTRUCTOR",
+            status: "PENDING",
+            token,
+            invitedBy: ctx.dbUser?.id,
+            expiresAt,
+          },
+        });
+
+        const tenant = await db.tenant.findUnique({ where: { id: tenantId } });
+        const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/aceptar-invitacion?token=${token}`;
+
+        await sendInstructorInvitation({
+          to: input.email,
+          instructorName: input.name,
+          schoolName: tenant?.name || "tu escuela",
+          inviteUrl,
+        });
+      } catch (emailError) {
+        console.error("Error creating invitation or sending email:", emailError);
+        // No lanzamos error aquí - el instructor se creó exitosamente
+        // pero no se pudo enviar la invitación. El admin puede intentar reinvitar después.
+      }
 
       return instructor;
     }),

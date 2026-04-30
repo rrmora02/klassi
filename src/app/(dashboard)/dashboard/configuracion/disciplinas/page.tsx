@@ -25,7 +25,7 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
 
   const activeFilter = searchParams.active === "false" ? false : searchParams.active === "true" ? true : undefined;
 
-  const where: Parameters<typeof db.discipline.findMany>[0]["where"] = {
+  const where: any = {
     tenantId: tenant.id,
     ...(activeFilter !== undefined && { isActive: activeFilter }),
   };

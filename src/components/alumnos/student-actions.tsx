@@ -43,9 +43,9 @@ export function StudentActions({ studentId, studentName, status }: Props) {
   });
 
   const statusOptions: { label: string; value: StudentStatus; }[] = [
-    { label: "Activar",    value: "ACTIVE"    },
-    { label: "Desactivar", value: "INACTIVE"  },
-    { label: "Suspender",  value: "SUSPENDED" },
+    { label: "Activar",    value: "ACTIVE" as const    },
+    { label: "Desactivar", value: "INACTIVE" as const  },
+    { label: "Suspender",  value: "SUSPENDED" as const },
   ].filter(o => o.value !== status);
 
   return (

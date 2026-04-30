@@ -273,7 +273,7 @@ export function GroupForm({
                   
                   // Copiar horario del último día agregado (si existe) para acelerar data-entry
                   if (field.value.length > 0) {
-                     const lastSlot = field.value[field.value.length - 1];
+                     const lastSlot = field.value[field.value.length - 1]!;
                      newSlot.startTime = lastSlot.startTime;
                      newSlot.endTime = lastSlot.endTime;
                   }

@@ -40,6 +40,7 @@ export function GroupEditClient({ group, disciplines, instructors }: Props) {
     await update.mutateAsync({
       id: group.id,
       ...data,
+      schedule: data.schedule as any,
       instructorId: data.instructorId || undefined,
       room:         data.room         || undefined,
     });
