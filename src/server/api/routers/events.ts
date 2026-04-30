@@ -443,6 +443,80 @@ export const eventsRouter = createTRPCRouter({
       return db.event.delete({ where: { id: input.id } });
     }),
 
+  // Generar pagos faltantes para nuevos alumnos
+  generateMissingPayments: tenantProcedure
+    .input(z.object({ eventId: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { tenantId, db } = ctx;
+
+      // Obtener el evento
+      const event = await db.event.findFirst({
+        where: { id: input.eventId, tenantId },
+        include: { groups: { select: { id: true } } },
+      });
+
+      if (!event) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Evento no encontrado",
+        });
+      }
+
+      // Obtener alumnos que deberían tener pago
+      let studentIds: string[] = [];
+
+      if (event.isSchoolWide) {
+        // Todos los alumnos activos de la escuela
+        const students = await db.student.findMany({
+          where: { tenantId, status: "ACTIVE" },
+          select: { id: true },
+        });
+        studentIds = students.map((s) => s.id);
+      } else {
+        // Alumnos de los grupos del evento
+        const enrollments = await db.enrollment.findMany({
+          where: {
+            group: {
+              id: { in: event.groups.map(g => g.id) },
+            },
+            status: "ACTIVE",
+          },
+          distinct: ["studentId"],
+          select: { studentId: true },
+        });
+        studentIds = enrollments.map((e) => e.studentId);
+      }
+
+      // Obtener alumnos que ya tienen pago
+      const existingPayments = await db.eventPayment.findMany({
+        where: { eventId: input.eventId },
+        select: { studentId: true },
+      });
+      const existingStudentIds = new Set(existingPayments.map((p) => p.studentId));
+
+      // Encontrar alumnos sin pago
+      const missingStudentIds = studentIds.filter(
+        (id) => !existingStudentIds.has(id)
+      );
+
+      if (missingStudentIds.length === 0) {
+        return { created: 0, message: "No hay alumnos nuevos sin pago" };
+      }
+
+      // Crear pagos faltantes
+      await db.eventPayment.createMany({
+        data: missingStudentIds.map((studentId) => ({
+          eventId: input.eventId,
+          studentId,
+          amount: event.amount,
+          status: "PENDING",
+          dueDate: event.dueDate || new Date(),
+        })),
+      });
+
+      return { created: missingStudentIds.length, message: `Se crearon ${missingStudentIds.length} pago(s) para nuevo(s) alumno(s)` };
+    }),
+
   // Obtener estadísticas de pagos de eventos del mes
   getMonthlyEventStats: tenantProcedure
     .input(z.object({

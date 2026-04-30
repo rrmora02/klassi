@@ -42,6 +42,7 @@ export function EventDetailClient({
   // Mutations
   const markAttendanceMutation = api.events.markAttendance.useMutation();
   const markAsPaidMutation = api.events.markAsPaid.useMutation();
+  const generateMissingMutation = api.events.generateMissingPayments.useMutation();
 
   const stats = statsData || {
     total: 0,
@@ -108,6 +109,23 @@ export function EventDetailClient({
     });
   };
 
+  const handleGenerateMissingPayments = async () => {
+    try {
+      const result = await generateMissingMutation.mutateAsync({ eventId });
+      refetch();
+      toast({
+        title: "Pagos generados",
+        description: result.message,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No pudimos generar los pagos",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
@@ -152,12 +170,22 @@ export function EventDetailClient({
       {/* Tabla de pagos */}
       <div className="rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift">
         <div className="border-b border-gray-100 dark:border-[rgba(255,255,255,0.07)] px-5 py-4">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-            Registros de pago
-          </h2>
+          <div className="flex items-center justify-between gap-3 flex-wrap mb-3">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              Registros de pago
+            </h2>
+            <button
+              onClick={handleGenerateMissingPayments}
+              disabled={generateMissingMutation.isPending}
+              className="rounded px-3 py-1.5 text-xs font-medium bg-sb-accent text-white hover:bg-sb-green transition-colors disabled:opacity-50"
+              title="Generar pagos para alumnos nuevos que se inscribieron después de crear el evento"
+            >
+              {generateMissingMutation.isPending ? "Generando..." : "+ Agregar nuevos alumnos"}
+            </button>
+          </div>
 
           {/* Filtros */}
-          <div className="mt-3 flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap">
             {[
               { label: "Todos", value: undefined },
               { label: "Pendientes", value: "PENDING" as const },
