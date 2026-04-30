@@ -92,8 +92,23 @@ export const teamRouter = createTRPCRouter({
          throw new TRPCError({ code: "FORBIDDEN", message: "No puedes eliminarte a ti mismo de tu propio Tenant." });
        }
 
-       // If removing an INSTRUCTOR, also delete their instructor record
+       // If removing an INSTRUCTOR, check if they have groups assigned
        if (member.role === "INSTRUCTOR") {
+         const instructor = await ctx.db.instructor.findFirst({
+           where: { tenantId: ctx.tenantId, userId: member.userId },
+           include: {
+             _count: { select: { groups: true } }
+           }
+         });
+
+         if (instructor && instructor._count.groups > 0) {
+           throw new TRPCError({
+             code: "PRECONDITION_FAILED",
+             message: "No se puede revocar porque el instructor tiene grupos asignados. Desasígnalos antes de revocar el acceso."
+           });
+         }
+
+         // Delete instructor record
          await ctx.db.instructor.deleteMany({
            where: { tenantId: ctx.tenantId, userId: member.userId }
          });
