@@ -164,18 +164,33 @@ export const teamRouter = createTRPCRouter({
        }
 
        // Get or create user
+       // First, try to find by clerkId (already registered)
        let user = await ctx.db.user.findUnique({
          where: { clerkId: input.clerkId }
        });
 
        if (!user) {
-         user = await ctx.db.user.create({
-           data: {
-             clerkId: input.clerkId,
-             email: input.email,
-             name: input.name
-           }
+         // If not found by clerkId, search by email (might be pending instructor)
+         const userByEmail = await ctx.db.user.findFirst({
+           where: { email: input.email }
          });
+
+         if (userByEmail) {
+           // Update existing pending user with real clerkId
+           user = await ctx.db.user.update({
+             where: { id: userByEmail.id },
+             data: { clerkId: input.clerkId, name: input.name }
+           });
+         } else {
+           // Create new user
+           user = await ctx.db.user.create({
+             data: {
+               clerkId: input.clerkId,
+               email: input.email,
+               name: input.name
+             }
+           });
+         }
        }
 
        // Add user to tenant
