@@ -89,6 +89,34 @@ export default async function ReportesPage() {
   const attTotal = attPresent + attAbsent + attJustified + attLate;
   const attRate  = attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : 0;
 
+  // Eventos del mes
+  const events = await db.event.findMany({
+    where: { tenantId: tenant.id },
+    include: {
+      eventPayments: {
+        select: {
+          id: true,
+          amount: true,
+          status: true,
+          paidAt: true,
+        },
+      },
+    },
+  });
+
+  const monthEvents = events.filter(e => e.date >= monthStart && e.date < monthEnd);
+  const eventsPaid = monthEvents.reduce((sum, e) => {
+    const paid = e.eventPayments.filter(p => p.status === "PAID" && p.paidAt !== null).reduce((s, p) => s + p.amount, 0);
+    return sum + paid;
+  }, 0);
+  const eventsExpected = monthEvents.reduce((sum, e) => {
+    const total = e.eventPayments.filter(p => p.willAttend === true).length * e.amount;
+    return sum + total;
+  }, 0);
+  const eventCount = monthEvents.length;
+  const eventPaymentsPaid = monthEvents.reduce((sum, e) => sum + e.eventPayments.filter(p => p.status === "PAID").length, 0);
+  const eventPaymentsPending = monthEvents.reduce((sum, e) => sum + e.eventPayments.filter(p => p.status === "PENDING").length, 0);
+
   return (
     <div className="w-full space-y-6">
       {/* Header */}
@@ -103,12 +131,13 @@ export default async function ReportesPage() {
       <DataExportsClient />
 
       {/* KPI cards superiores */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5 sm:gap-4">
         {[
           { label: "Ingresos del mes",   value: formatCurrency(paidMonth._sum.amount ?? 0), sub: `${paidMonth._count} cobros`, color: "#15803d" },
           { label: "Ingresos del año",   value: formatCurrency(yearTotal), sub: `Año ${year}`, color: "#006241" },
           { label: "Tasa de cobranza",   value: `${collectionRate}%`, sub: `${collectionPaid}/${collectionTotal} pagos`, color: collectionRate >= 80 ? "#15803d" : collectionRate >= 50 ? "#b45309" : "#b91c1c" },
           { label: "Asistencia del mes", value: `${attRate}%`, sub: `${attPresent}/${attTotal} registros`, color: attRate >= 80 ? "#15803d" : attRate >= 50 ? "#b45309" : "#b91c1c" },
+          { label: "Eventos (ingresos)",  value: formatCurrency(eventsPaid), sub: `${eventPaymentsPaid}/${eventPaymentsPaid + eventPaymentsPending} pagos`, color: "#0891b2" },
         ].map(card => (
           <div key={card.label} style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
             <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{card.label}</p>
@@ -240,6 +269,40 @@ export default async function ReportesPage() {
               <span style={{ fontSize: 13, fontWeight: 600, color: row.color }} className="sm:text-base whitespace-nowrap">{formatCurrency(row.amount)}</span>
             </div>
           ))}
+        </div>
+
+        {/* Resumen de Eventos */}
+        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "16px 12px" }} className="sm:p-6">
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 12px" }} className="sm:mb-4">
+            Eventos — {MONTHS[month]} {year}
+          </h2>
+          {eventCount === 0 ? (
+            <p style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>Sin eventos este mes</p>
+          ) : (
+            <>
+              {[
+                { label: "Ingresos eventos",    amount: eventsPaid,      count: eventPaymentsPaid,      color: "#0891b2" },
+                { label: "Pagos pendientes",    amount: eventsExpected - eventsPaid, count: eventPaymentsPending, color: "#f59e0b" },
+                { label: "Total esperado",      amount: eventsExpected,  count: eventPaymentsPaid + eventPaymentsPending, color: "#06b6d4" },
+              ].map(row => (
+                <div key={row.label} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", padding: "8px 0", borderBottom: "0.5px solid var(--color-border-tertiary)", gap: 8 }} className="sm:p-2.5 sm:gap-4">
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }} className="sm:text-sm sm:font-medium truncate">{row.label}</p>
+                    <p style={{ fontSize: 10, color: "var(--color-text-tertiary)", margin: "2px 0 0" }} className="sm:text-xs">{row.count} {row.count === 1 ? "pago" : "pagos"}</p>
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: row.color }} className="sm:text-base whitespace-nowrap">{formatCurrency(row.amount)}</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 12, padding: "10px 12px", background: "rgba(8,145,178,0.10)", borderRadius: 8 }} className="sm:mt-4 sm:p-4">
+                <p style={{ fontSize: 12, fontWeight: 600, color: "#0891b2", margin: 0 }} className="sm:text-sm">
+                  Total de eventos: {eventCount}
+                </p>
+                <p style={{ fontSize: 10, color: "var(--color-text-tertiary)", margin: "2px 0 0" }} className="sm:text-xs">
+                  {eventPaymentsPaid} de {eventPaymentsPaid + eventPaymentsPending} pagos completados
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Tabla resumen mensual */}
