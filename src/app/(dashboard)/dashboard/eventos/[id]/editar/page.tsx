@@ -40,56 +40,42 @@ export default async function EditEventPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link
-          href={`/dashboard/eventos/${event.id}`}
-          className="inline-flex items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-sb-house p-2"
-        >
-          <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-sb-light/70" />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-            Editar evento
-          </h1>
-          <p className="mt-0.5 text-sm text-gray-500 dark:text-sb-light/70">
-            Modifica los detalles de {event.name}
-          </p>
-        </div>
+    <div style={{ maxWidth: 720, margin: "0 auto" }}>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+        <Link href="/dashboard/eventos" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>Eventos</Link>
+        <span>/</span>
+        <Link href={`/dashboard/eventos/${event.id}`} style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>{event.name}</Link>
+        <span>/</span>
+        <span style={{ color: "var(--color-text-primary)" }}>Editar</span>
       </div>
 
-      {/* Formulario */}
-      <div className="max-w-2xl">
-        <div className="rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift p-6">
-          <EditEventForm
-            eventId={event.id}
-            initialData={{
-              name: event.name,
-              description: event.description || undefined,
-              date: event.date,
-              amount: event.amount,
-              status: event.status,
-            }}
-          />
-        </div>
+      <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", marginBottom: 24 }}>
+        Editar — {event.name}
+      </h1>
+
+      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 28, marginBottom: 20 }}>
+        <EditEventForm
+          eventId={event.id}
+          initialData={{
+            name: event.name,
+            description: event.description || undefined,
+            date: event.date,
+            amount: event.amount,
+            status: event.status,
+          }}
+        />
       </div>
 
       {/* Info helpful */}
-      <div className="max-w-2xl rounded-lg border border-blue-200 dark:border-blue-900/50 bg-blue-50 dark:bg-blue-950/20 p-4">
-        <h3 className="font-semibold text-blue-900 dark:text-blue-300 text-sm">
+      <div style={{ background: "rgba(59,130,246,0.08)", border: "0.5px solid rgba(59,130,246,0.25)", borderRadius: 12, padding: 16 }}>
+        <h3 style={{ fontWeight: 600, color: "#1e40af", fontSize: 13, margin: 0, marginBottom: 8 }}>
           💡 Nota
         </h3>
-        <ul className="mt-2 space-y-1 text-xs text-blue-800 dark:text-blue-200">
-          <li>
-            • Los cambios se aplicarán inmediatamente para los alumnos
-          </li>
-          <li>
-            • Los pagos ya registrados no se modificarán automáticamente
-          </li>
-          <li>
-            • Si necesitas cambiar los grupos, considera crear un nuevo evento
-          </li>
+        <ul style={{ margin: 0, paddingLeft: 20, fontSize: 12, color: "#1e3a8a", lineHeight: 1.6 }}>
+          <li>Los cambios se aplicarán inmediatamente para los alumnos</li>
+          <li>Los pagos ya registrados no se modificarán automáticamente</li>
+          <li>Si necesitas cambiar los grupos, considera crear un nuevo evento</li>
         </ul>
       </div>
     </div>
