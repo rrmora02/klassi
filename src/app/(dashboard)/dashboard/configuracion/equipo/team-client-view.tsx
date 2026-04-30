@@ -149,12 +149,16 @@ export function TeamClientView() {
                   {formatDate(m.createdAt)}
                 </td>
                 <td style={{ ...tdStyle, textAlign: "right" }}>
-                  <button 
-                    onClick={() => handleRemove(m.id, m.user.name ?? "Usuario")}
-                    style={{ background: "transparent", border: "none", color: "#e53e3e", cursor: "pointer", fontSize: 13, textDecoration: "underline" }}
-                  >
-                    Revocar
-                  </button>
+                  {m.role !== "ADMIN" ? (
+                    <button
+                      onClick={() => handleRemove(m.id, m.user.name ?? "Usuario")}
+                      style={{ background: "transparent", border: "none", color: "#e53e3e", cursor: "pointer", fontSize: 13, textDecoration: "underline" }}
+                    >
+                      Revocar
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>—</span>
+                  )}
                 </td>
               </tr>
             ))}

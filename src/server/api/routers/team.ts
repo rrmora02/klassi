@@ -92,6 +92,13 @@ export const teamRouter = createTRPCRouter({
          throw new TRPCError({ code: "FORBIDDEN", message: "No puedes eliminarte a ti mismo de tu propio Tenant." });
        }
 
+       // If removing an INSTRUCTOR, also delete their instructor record
+       if (member.role === "INSTRUCTOR") {
+         await ctx.db.instructor.deleteMany({
+           where: { tenantId: ctx.tenantId, userId: member.userId }
+         });
+       }
+
        return ctx.db.tenantUser.delete({
          where: { id: input.id }
        });

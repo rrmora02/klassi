@@ -263,6 +263,7 @@ export const instructorsRouter = createTRPCRouter({
       const instructor = await ctx.db.instructor.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
         include: {
+          user: true,
           _count: { select: { groups: true } },
         },
       });
@@ -277,6 +278,11 @@ export const instructorsRouter = createTRPCRouter({
           message: "No se puede eliminar porque tiene grupos asignados. Desactívalo o reasigna sus grupos primero.",
         });
       }
+
+      // Delete instructor and also remove their tenant membership
+      await ctx.db.tenantUser.deleteMany({
+        where: { tenantId: ctx.tenantId, userId: instructor.userId },
+      });
 
       return ctx.db.instructor.delete({ where: { id: input.id } });
     }),
