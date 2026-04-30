@@ -1,10 +1,18 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const FROM   = process.env.RESEND_FROM_EMAIL ?? "noreply@klassi.io";
 const APP    = process.env.NEXT_PUBLIC_APP_URL ?? "https://klassi.io";
 
 async function send(opts: { to: string | string[]; subject: string; html: string }) {
+  if (!resend) {
+    // Development mode - log email instead of sending
+    console.log(`[EMAIL-DEV] To: ${Array.isArray(opts.to) ? opts.to.join(", ") : opts.to}`);
+    console.log(`[EMAIL-DEV] Subject: ${opts.subject}`);
+    console.log(`[EMAIL-DEV] Body: ${opts.html.substring(0, 200)}...`);
+    return { id: "dev-" + Math.random().toString(36).substring(7) };
+  }
+
   return resend.emails.send({ from: FROM, ...opts });
 }
 
