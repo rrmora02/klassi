@@ -137,10 +137,18 @@ export const instructorsRouter = createTRPCRouter({
         const token = randomBytes(32).toString("hex");
         const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 días
 
-        await db.teamInvitation.create({
-          data: {
+        await db.teamInvitation.upsert({
+          where: { tenantId_email: { tenantId, email: input.email } },
+          create: {
             tenantId,
             email: input.email,
+            role: "INSTRUCTOR",
+            status: "PENDING",
+            token,
+            invitedBy: ctx.dbUser?.id,
+            expiresAt,
+          },
+          update: {
             role: "INSTRUCTOR",
             status: "PENDING",
             token,
