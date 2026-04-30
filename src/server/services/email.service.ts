@@ -1,6 +1,16 @@
 import { Resend } from "resend";
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+let resend: Resend | null = null;
+
+try {
+  if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+} catch (error) {
+  console.warn("[EMAIL] Failed to initialize Resend:", error);
+  resend = null;
+}
+
 const FROM   = process.env.RESEND_FROM_EMAIL ?? "noreply@klassi.io";
 const APP    = process.env.NEXT_PUBLIC_APP_URL ?? "https://klassi.io";
 
