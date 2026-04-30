@@ -458,28 +458,24 @@ export const eventsRouter = createTRPCRouter({
       const events = await db.event.findMany({
         where: { tenantId, date: { gte: monthStart, lt: monthEnd } },
         include: {
-          eventPayments: {
-            where: {
-              paidAt: { not: null },
-            },
-          },
+          eventPayments: true,
         },
         orderBy: { date: "desc" },
       });
 
       const summary = events.map((event) => {
-        const payments = event.eventPayments;
-        const paidAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+        const paidPayments = event.eventPayments.filter((p) => p.status === "PAID" && p.paidAt !== null);
+        const paidAmount = paidPayments.reduce((sum, p) => sum + p.amount, 0);
 
         return {
           eventId: event.id,
           eventName: event.name,
           eventDate: event.date,
-          totalPayments: payments.length,
-          paidPayments: payments.length,
-          pendingPayments: 0,
+          totalPayments: event.eventPayments.length,
+          paidPayments: paidPayments.length,
+          pendingPayments: event.eventPayments.filter((p) => p.status === "PENDING").length,
           paidAmount,
-          expectedAmount: event.amount * payments.length,
+          expectedAmount: event.amount * event.eventPayments.length,
         };
       });
 
