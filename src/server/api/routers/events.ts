@@ -450,44 +450,67 @@ export const eventsRouter = createTRPCRouter({
       month: z.number().int().min(1).max(12),
     }))
     .query(async ({ ctx, input }) => {
-      const { tenantId, db } = ctx;
+      try {
+        const { tenantId, db } = ctx;
 
-      const monthStart = new Date(input.year, input.month - 1, 1);
-      const monthEnd = new Date(input.year, input.month, 1);
+        const monthStart = new Date(input.year, input.month - 1, 1);
+        const monthEnd = new Date(input.year, input.month, 1);
 
-      const events = await db.event.findMany({
-        where: { tenantId, date: { gte: monthStart, lt: monthEnd } },
-        include: {
-          eventPayments: true,
-        },
-        orderBy: { date: "desc" },
-      });
+        // Simple query without date filtering first
+        const events = await db.event.findMany({
+          where: { tenantId },
+          include: {
+            eventPayments: {
+              select: {
+                id: true,
+                amount: true,
+                status: true,
+                paidAt: true,
+              },
+            },
+          },
+        });
 
-      const summary = events.map((event) => {
-        const paidPayments = event.eventPayments.filter((p) => p.status === "PAID" && p.paidAt !== null);
-        const paidAmount = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+        // Filter in memory by date
+        const filteredEvents = events.filter(
+          (e) => e.date >= monthStart && e.date < monthEnd
+        );
+
+        const summary = filteredEvents.map((event) => {
+          const paidPayments = event.eventPayments.filter(
+            (p) => p.status === "PAID" && p.paidAt !== null
+          );
+          const paidAmount = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+
+          return {
+            eventId: event.id,
+            eventName: event.name,
+            eventDate: event.date,
+            totalPayments: event.eventPayments.length,
+            paidPayments: paidPayments.length,
+            pendingPayments: event.eventPayments.filter((p) => p.status === "PENDING")
+              .length,
+            paidAmount,
+            expectedAmount: event.amount * event.eventPayments.length,
+          };
+        });
+
+        const totalPaidAmount = summary.reduce((sum, s) => sum + s.paidAmount, 0);
+        const totalExpectedAmount = summary.reduce(
+          (sum, s) => sum + s.expectedAmount,
+          0
+        );
 
         return {
-          eventId: event.id,
-          eventName: event.name,
-          eventDate: event.date,
-          totalPayments: event.eventPayments.length,
-          paidPayments: paidPayments.length,
-          pendingPayments: event.eventPayments.filter((p) => p.status === "PENDING").length,
-          paidAmount,
-          expectedAmount: event.amount * event.eventPayments.length,
+          events: summary,
+          totalPaidAmount,
+          totalExpectedAmount,
+          eventCount: filteredEvents.length,
         };
-      });
-
-      const totalPaidAmount = summary.reduce((sum, s) => sum + s.paidAmount, 0);
-      const totalExpectedAmount = summary.reduce((sum, s) => sum + s.expectedAmount, 0);
-
-      return {
-        events: summary,
-        totalPaidAmount,
-        totalExpectedAmount,
-        eventCount: events.length,
-      };
+      } catch (error) {
+        console.error("[getMonthlyEventStats] Error:", error);
+        throw error;
+      }
     }),
 });
 
