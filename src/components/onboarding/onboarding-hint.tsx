@@ -46,7 +46,7 @@ export function OnboardingHint({
   }
 
   const getFixedPosition = () => {
-    const gap = 12;
+    const gap = 8;
 
     switch (position) {
       case "right":
@@ -78,12 +78,12 @@ export function OnboardingHint({
   };
 
   const arrowClasses = {
-    top: "bottom-0 left-1/2 -translate-x-1/2 translate-y-full border-t-8 border-l-4 border-r-4 border-l-transparent border-r-transparent border-t-purple-600",
+    top: "bottom-0 left-1/2 -translate-x-1/2 translate-y-full border-t-6 border-l-3 border-r-3 border-l-transparent border-r-transparent border-t-sb-green",
     bottom:
-      "top-0 left-1/2 -translate-x-1/2 -translate-y-full border-b-8 border-l-4 border-r-4 border-l-transparent border-r-transparent border-b-purple-600",
-    left: "right-0 top-1/2 -translate-y-1/2 translate-x-full border-l-8 border-t-4 border-b-4 border-t-transparent border-b-transparent border-l-purple-600",
+      "top-0 left-1/2 -translate-x-1/2 -translate-y-full border-b-6 border-l-3 border-r-3 border-l-transparent border-r-transparent border-b-sb-green",
+    left: "right-0 top-1/2 -translate-y-1/2 translate-x-full border-l-6 border-t-3 border-b-3 border-t-transparent border-b-transparent border-l-sb-green",
     right:
-      "left-0 top-1/2 -translate-y-1/2 -translate-x-full border-r-8 border-t-4 border-b-4 border-t-transparent border-b-transparent border-r-purple-600",
+      "left-0 top-1/2 -translate-y-1/2 -translate-x-full border-r-6 border-t-3 border-b-3 border-t-transparent border-b-transparent border-r-sb-green",
   };
 
   return (
@@ -93,33 +93,33 @@ export function OnboardingHint({
       </div>
 
       <div
-        className="fixed z-50 w-72 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 p-4 text-white shadow-2xl pointer-events-auto"
+        className="fixed z-50 w-48 rounded-lg bg-gradient-to-br from-sb-green to-emerald-600 p-2 text-white shadow-lg pointer-events-auto"
         style={getFixedPosition() as React.CSSProperties}
       >
         {/* Arrow */}
         <div className={`absolute ${arrowClasses[position]} h-0 w-0`} />
 
         {/* Content */}
-        <div className="relative pr-6">
+        <div className="relative pr-4">
           {badge && (
-            <span className="mb-2 inline-flex rounded-full bg-white/30 px-2 py-1 text-xs font-semibold uppercase tracking-wider">
-              ✨ {badge}
+            <span className="mb-1 inline-flex rounded-full bg-white/25 px-1.5 py-0.5 text-xs font-semibold">
+              {badge}
             </span>
           )}
-          <p className="text-sm font-medium leading-relaxed">{message}</p>
+          <p className="text-xs font-medium leading-snug">{message}</p>
 
           {/* Dismiss button */}
           <button
             onClick={handleDismiss}
-            className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 hover:bg-white/40 transition-colors"
+            className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 hover:bg-white/40 transition-colors"
             aria-label="Cerrar"
           >
-            <X className="h-3 w-3" />
+            <X className="h-2.5 w-2.5" />
           </button>
         </div>
 
         {/* Pulse dot */}
-        <div className="absolute -top-2 -right-2 h-3 w-3 rounded-full bg-white animate-pulse" />
+        <div className="absolute -top-1.5 -right-1.5 h-2 w-2 rounded-full bg-white animate-pulse" />
       </div>
     </>
   );
