@@ -4,10 +4,8 @@ import { HelpCircle } from "lucide-react";
 
 export function TourButton() {
   const handleRestartTour = () => {
-    console.log("[TourButton] Help button clicked, dispatching restart-tour event");
     localStorage.removeItem("onboarding-completed");
     window.dispatchEvent(new CustomEvent("restart-tour"));
-    console.log("[TourButton] restart-tour event dispatched");
   };
 
   return (
