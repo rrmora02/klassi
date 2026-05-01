@@ -285,7 +285,8 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
+    <>
+      <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
 
         {/* Header */}
       <div style={{ marginBottom: 24 }}>
@@ -602,6 +603,6 @@ export default async function DashboardPage() {
       </section>
 
       </div>
-    </div>
+    </>
   );
 }
