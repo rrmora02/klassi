@@ -141,7 +141,7 @@ export default async function ReportesPage() {
         ].map(card => (
           <div key={card.label} style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
             <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{card.label}</p>
-            <p style={{ fontSize: 18, fontWeight: 600, color: card.color, margin: "4px 0 0" }} className="sm:text-2xl break-words">{card.value}</p>
+            <p style={{ fontSize: 16, fontWeight: 600, color: card.color, margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">{card.value}</p>
             <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{card.sub}</p>
           </div>
         ))}
@@ -266,7 +266,7 @@ export default async function ReportesPage() {
                 <p style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }} className="sm:text-sm sm:font-medium truncate">{row.label}</p>
                 <p style={{ fontSize: 10, color: "var(--color-text-tertiary)", margin: "2px 0 0" }} className="sm:text-xs">{row.count} {row.count === 1 ? "pago" : "pagos"}</p>
               </div>
-              <span style={{ fontSize: 13, fontWeight: 600, color: row.color }} className="sm:text-base whitespace-nowrap">{formatCurrency(row.amount)}</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: row.color, wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-base">{formatCurrency(row.amount)}</span>
             </div>
           ))}
         </div>
@@ -290,7 +290,7 @@ export default async function ReportesPage() {
                     <p style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }} className="sm:text-sm sm:font-medium truncate">{row.label}</p>
                     <p style={{ fontSize: 10, color: "var(--color-text-tertiary)", margin: "2px 0 0" }} className="sm:text-xs">{row.count} {row.count === 1 ? "pago" : "pagos"}</p>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: row.color }} className="sm:text-base whitespace-nowrap">{formatCurrency(row.amount)}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: row.color, wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-base">{formatCurrency(row.amount)}</span>
                 </div>
               ))}
               <div style={{ marginTop: 12, padding: "10px 12px", background: "rgba(8,145,178,0.10)", borderRadius: 8 }} className="sm:mt-4 sm:p-4">

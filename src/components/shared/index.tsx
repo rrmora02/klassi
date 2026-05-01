@@ -20,7 +20,7 @@ export function StatCard({ label, value, hint, alert, className }: StatCardProps
       )}
     >
       <p className="text-xs sm:text-sm text-gray-500 dark:text-sb-light/70 truncate">{label}</p>
-      <p className={cn("mt-1 text-xl sm:text-3xl font-semibold break-words", alert ? "text-red-700 dark:text-red-400" : "text-gray-900 dark:text-gray-100")}>
+      <p className={cn("mt-1 text-lg sm:text-3xl font-semibold break-words", alert ? "text-red-700 dark:text-red-400" : "text-gray-900 dark:text-gray-100")} style={{ wordBreak: "break-word", overflowWrap: "break-word" }}>
         {value}
       </p>
       {hint && <p className="mt-1 text-xs text-gray-400 dark:text-sb-light/50 truncate">{hint}</p>}

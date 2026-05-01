@@ -109,21 +109,21 @@ export default async function PagosPage({ searchParams }: PageProps) {
       <div style={{ display: "grid", gap: 14, marginBottom: 24 }} className="grid-cols-1 sm:grid-cols-3">
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Cobrado este mes</p>
-          <p style={{ fontSize: 18, fontWeight: 600, color: "#15803d", margin: "4px 0 0" }} className="sm:text-2xl break-words">
+          <p style={{ fontSize: 16, fontWeight: 600, color: "#15803d", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
             {formatCurrency(paid._sum.amount ?? 0)}
           </p>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{paid._count} pagos</p>
         </div>
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Por cobrar</p>
-          <p style={{ fontSize: 18, fontWeight: 600, color: "#b45309", margin: "4px 0 0" }} className="sm:text-2xl break-words">
+          <p style={{ fontSize: 16, fontWeight: 600, color: "#b45309", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
             {formatCurrency(pending._sum.amount ?? 0)}
           </p>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{pending._count} pendientes</p>
         </div>
         <div style={{ background: overdue._count > 0 ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${overdue._count > 0 ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Adeudos vencidos</p>
-          <p style={{ fontSize: 18, fontWeight: 600, color: overdue._count > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0" }} className="sm:text-2xl break-words">
+          <p style={{ fontSize: 16, fontWeight: 600, color: overdue._count > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
             {formatCurrency(overdue._sum.amount ?? 0)}
           </p>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{overdue._count} vencidos</p>
