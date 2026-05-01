@@ -132,7 +132,7 @@ export function StudentForm({
 
       {/* ── Datos personales ─────────────────────────── */}
       <SectionTitle>Datos personales</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }} className="sm:grid-cols-2">
         <Field label="Nombre" required error={errors.firstName?.message}>
           <Input
             {...register("firstName")}
@@ -150,7 +150,7 @@ export function StudentForm({
         </Field>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-3">
         <Field label="Fecha de nacimiento" error={errors.birthDate?.message}>
           <Input
             {...register("birthDate")}
@@ -193,7 +193,7 @@ export function StudentForm({
 
       {/* ── Tutor / Responsable ──────────────────────── */}
       <SectionTitle>Tutor / Responsable</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }} className="sm:grid-cols-2">
         <Field label="Nombre del tutor" required error={errors.tutorName?.message}>
           <Input
             {...register("tutorName")}
@@ -213,7 +213,7 @@ export function StudentForm({
         </Field>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
         <Field label="Teléfono del tutor" required error={errors.tutorPhone?.message}>
           <Input
             {...register("tutorPhone", { onChange: sanitizePhone })}

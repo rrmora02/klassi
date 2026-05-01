@@ -35,7 +35,7 @@ export function InstructorForm({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }} className="sm:grid-cols-2">
 
         {/* Nombre */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

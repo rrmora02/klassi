@@ -149,8 +149,8 @@ export function GroupForm({
 
       {/* ── Datos generales ──────────────────────────── */}
       <SectionTitle>Datos generales</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
+        <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr", gap: 16 }} className="sm:grid-cols-2">
           <Field label="Nombre del grupo" required error={errors.name?.message}>
             <Input
               {...register("name")}
@@ -216,7 +216,7 @@ export function GroupForm({
 
       {/* ── Asignación ───────────────────────────────── */}
       <SectionTitle>Asignación</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
         <Field label="Disciplina" required error={errors.disciplineId?.message}>
           <Select {...register("disciplineId")} error={!!errors.disciplineId}>
             <option value="">Selecciona una disciplina</option>
@@ -237,7 +237,7 @@ export function GroupForm({
 
       {/* ── Capacidad y aula ─────────────────────────── */}
       <SectionTitle>Capacidad y aula</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
         <Field label="Capacidad máxima" required error={errors.capacity?.message}>
           <Input
             {...register("capacity", { valueAsNumber: true })}
@@ -349,7 +349,7 @@ export function GroupForm({
 
       {/* ── Cobro mensual ────────────────────────────── */}
       <SectionTitle>Cobro mensual (opcional)</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
         <Field label="Mensualidad (MXN)" error={errors.monthlyFee?.message}>
           <Input
             {...register("monthlyFee", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
