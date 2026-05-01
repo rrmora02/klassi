@@ -179,7 +179,7 @@ export default async function DashboardPage() {
   // For INSTRUCTOR role, show simplified dashboard
   if (userRole === "INSTRUCTOR") {
     return (
-      <div className="space-y-6">
+      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Inicio</h1>
@@ -285,12 +285,12 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Inicio</h1>
-        <p className="mt-0.5 text-sm text-gray-500 dark:text-sb-light/70">{tenant.name}</p>
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Inicio</h1>
+        <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>{tenant.name}</p>
       </div>
 
       {/* Trial banner */}
