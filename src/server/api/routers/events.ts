@@ -341,7 +341,6 @@ export const eventsRouter = createTRPCRouter({
         data: {
           status: "PAID",
           paidAt: new Date(),
-          ...(input.method && { method: input.method }),
         },
       });
     }),

@@ -28,8 +28,7 @@ export function EnrollToGroupModal({ studentId }: Props) {
 
     try {
       await enroll.mutateAsync({ studentId, groupId, discount: 0 });
-      router.refresh();
-      handleClose();
+      router.push(`/dashboard/alumnos/${studentId}`);
     } catch (err: any) {
       alert(err.message || "Error al inscribir al alumno.");
     }
