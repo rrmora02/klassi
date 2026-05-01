@@ -130,7 +130,7 @@ export default async function EventoDetailPage({ params }: PageProps) {
               ? ["Toda la escuela"]
               : event.groups.map((g) => g.name)}
             amount={event.amount}
-            dueDate={new Date()}
+            dueDate={event.paymentDueDate || event.date}
           />
         </div>
 
