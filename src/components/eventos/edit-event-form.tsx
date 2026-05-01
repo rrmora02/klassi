@@ -72,7 +72,7 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
         return;
       }
 
-      if (formData.paymentDueDate && new Date(formData.paymentDueDate) > new Date(formData.date)) {
+      if (formData.paymentDueDate && new Date(formData.paymentDueDate + "T00:00:00") > new Date(formData.date + "T00:00:00")) {
         toast({
           title: "Error",
           description: "La fecha de pago no puede ser posterior a la fecha del evento",
@@ -86,8 +86,8 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
         id: eventId,
         name: formData.name,
         description: formData.description || undefined,
-        date: new Date(formData.date),
-        paymentDueDate: formData.paymentDueDate ? new Date(formData.paymentDueDate) : undefined,
+        date: new Date(formData.date + "T00:00:00"),
+        paymentDueDate: formData.paymentDueDate ? new Date(formData.paymentDueDate + "T00:00:00") : undefined,
         amount: Math.round(parseFloat(formData.amount) * 100),
       });
 
