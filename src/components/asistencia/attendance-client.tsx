@@ -63,14 +63,21 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+        <span>Asistencia</span>
+      </div>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Pase de lista</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>Registra la asistencia en tiempo real.</p>
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>Registra la asistencia en tiempo real.</p>
         </div>
       </div>
 
-      <div style={{ background: "var(--color-background-primary)", padding: 16, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24 }} className="flex flex-col gap-3 sm:flex-row sm:gap-5 sm:p-5 sm:items-center">
+      {/* Filtros */}
+      <div style={{ background: "var(--color-background-primary)", padding: 16, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }} className="sm:flex-row sm:gap-5 sm:p-5 sm:items-center">
          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Fecha</label>
            <input
@@ -81,7 +88,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
            />
          </div>
 
-         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }} className="sm:flex-1">
+         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Grupo a calificar</label>
            {loadingGroups ? (
               <div style={{ padding: "8px 12px", fontSize: 14, color: "var(--color-text-secondary)" }}>Cargando grupos...</div>
@@ -114,7 +121,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
 
       {groupId && rosterData && (
          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-             <table style={{ width: "100%", minWidth: 600, borderCollapse: "collapse" }} className="text-xs sm:text-sm">
+             <table style={{ width: "100%", borderCollapse: "collapse" }} className="text-xs sm:text-sm">
                <thead>
                  <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                    <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 text-xs">Alumno</th>

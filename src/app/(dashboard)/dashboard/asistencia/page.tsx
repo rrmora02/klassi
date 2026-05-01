@@ -18,7 +18,7 @@ export default async function AsistenciaPage({ searchParams }: AsistenciaPagePro
   const preselectedGroupId = params.groupId;
 
   return (
-    <div>
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
        <AttendanceClient initialGroupId={preselectedGroupId} />
     </div>
   );
