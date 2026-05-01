@@ -29,6 +29,8 @@ export function EventDetailClient({
     "PENDING" | "PAID" | "NOT_ATTENDING" | "CANCELLED" | undefined
   >(undefined);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [paymentMethodModal, setPaymentMethodModal] = useState<{ paymentId: string } | null>(null);
+  const [selectedMethod, setSelectedMethod] = useState<"CASH" | "TRANSFER" | "CARD" | "OXXO" | "SPEI">("CASH");
 
   // Queries
   const { data: statsData } = api.events.getStats.useQuery({ eventId });
@@ -80,13 +82,23 @@ export function EventDetailClient({
   };
 
   const handleMarkAsPaid = async (paymentId: string) => {
+    setPaymentMethodModal({ paymentId });
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!paymentMethodModal) return;
     try {
-      await markAsPaidMutation.mutateAsync({ paymentId });
+      await markAsPaidMutation.mutateAsync({
+        paymentId: paymentMethodModal.paymentId,
+        method: selectedMethod,
+      });
       refetch();
       toast({
         title: "Pagado",
         description: "Se marcó el pago como realizado",
       });
+      setPaymentMethodModal(null);
+      setSelectedMethod("CASH");
     } catch (error) {
       toast({
         title: "Error",
@@ -229,6 +241,9 @@ export function EventDetailClient({
                     Estado
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-sb-light/70 sm:px-5">
+                    Método
+                  </th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-sb-light/70 sm:px-5">
                     Asistencia
                   </th>
                   <th className="px-4 py-3 text-left font-medium text-gray-600 dark:text-sb-light/70 sm:px-5">
@@ -266,6 +281,21 @@ export function EventDetailClient({
                           : payment.status === "PENDING"
                             ? "Pendiente"
                             : "No asistirá"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 sm:px-5">
+                      <span className="text-xs text-gray-600 dark:text-sb-light/70">
+                        {payment.status === "PAID" ? (
+                          <>
+                            {payment.method === "CASH" && "💵 Efectivo"}
+                            {payment.method === "CARD" && "💳 Tarjeta"}
+                            {payment.method === "TRANSFER" && "🏦 Transferencia"}
+                            {payment.method === "OXXO" && "🏪 OXXO"}
+                            {payment.method === "SPEI" && "📱 SPEI"}
+                          </>
+                        ) : (
+                          "—"
+                        )}
                       </span>
                     </td>
                     <td className="px-4 py-3 sm:px-5">
@@ -364,6 +394,74 @@ export function EventDetailClient({
           </div>
         )}
       </div>
+
+      {/* Modal de método de pago */}
+      {paymentMethodModal && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999,
+        }}>
+          <div style={{ background: "var(--color-background-primary)", width: 400, borderRadius: 12, padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 20px" }}>
+              Método de pago
+            </h2>
+            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 20 }}>
+              Selecciona cómo se realizó el pago
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+              {[
+                { value: "CASH", label: "💵 Efectivo" },
+                { value: "CARD", label: "💳 Tarjeta" },
+                { value: "TRANSFER", label: "🏦 Transferencia" },
+                { value: "OXXO", label: "🏪 OXXO" },
+                { value: "SPEI", label: "📱 SPEI" },
+              ].map((method) => (
+                <label key={method.value} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 8,
+                  border: selectedMethod === method.value ? "1.5px solid #006241" : "1px solid var(--color-border-tertiary)",
+                  background: selectedMethod === method.value ? "rgba(0,98,65,0.05)" : "transparent",
+                  cursor: "pointer", transition: "all 0.2s"
+                }}>
+                  <input
+                    type="radio"
+                    value={method.value}
+                    checked={selectedMethod === method.value}
+                    onChange={(e) => setSelectedMethod(e.target.value as any)}
+                    style={{ cursor: "pointer", width: 16, height: 16 }}
+                  />
+                  <span style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
+                    {method.label}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setPaymentMethodModal(null)}
+                disabled={markAsPaidMutation.isPending}
+                style={{
+                  padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
+                  background: "transparent", fontSize: 13, cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmPayment}
+                disabled={markAsPaidMutation.isPending}
+                style={{
+                  padding: "8px 18px", borderRadius: 8, border: "none",
+                  background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
+                  cursor: markAsPaidMutation.isPending ? "not-allowed" : "pointer",
+                  opacity: markAsPaidMutation.isPending ? 0.6 : 1,
+                }}
+              >
+                {markAsPaidMutation.isPending ? "Guardando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

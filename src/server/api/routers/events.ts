@@ -315,7 +315,10 @@ export const eventsRouter = createTRPCRouter({
 
   // Marcar como pagado
   markAsPaid: tenantProcedure
-    .input(z.object({ paymentId: z.string().cuid() }))
+    .input(z.object({
+      paymentId: z.string().cuid(),
+      method: z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"]).optional(),
+    }))
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
 
@@ -338,6 +341,7 @@ export const eventsRouter = createTRPCRouter({
         data: {
           status: "PAID",
           paidAt: new Date(),
+          ...(input.method && { method: input.method }),
         },
       });
     }),
