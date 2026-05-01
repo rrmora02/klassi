@@ -76,39 +76,5 @@ export const tenantsRouter = createTRPCRouter({
           address:      input.address || null,
         }
       });
-    }),
-
-  update: protectedProcedure
-    .input(z.object({
-      id:           z.string(),
-      name:         z.string().min(2).optional(),
-      primaryColor: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i).optional(),
-      phone:        z.string().optional(),
-      email:        z.string().email().optional(),
-      address:      z.string().optional(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
-      return ctx.db.tenant.update({
-        where: { id },
-        data: {
-          ...(data.name && { name: data.name }),
-          ...(data.primaryColor && { primaryColor: data.primaryColor }),
-          ...(data.phone && { phone: data.phone }),
-          ...(data.email && { email: data.email }),
-          ...(data.address && { address: data.address }),
-        }
-      });
-    }),
-
-  completeSetup: protectedProcedure
-    .input(z.object({
-      tenantId: z.string(),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      return ctx.db.tenant.update({
-        where: { id: input.tenantId },
-        data: { setupCompleted: true }
-      });
     })
 });

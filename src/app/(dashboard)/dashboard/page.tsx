@@ -5,7 +5,6 @@ import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
 import { StatCard } from "@/components/shared";
 import { ClassAttendanceIndicator } from "@/components/dashboard/class-attendance-indicator";
 import { EventSummaryClient } from "@/components/dashboard/event-summary-client";
-import { SetupWizardWrapper } from "@/components/onboarding/setup-wizard-wrapper";
 import {
   Users,
   BookOpen,
@@ -286,15 +285,13 @@ export default async function DashboardPage() {
   }
 
   return (
-    <>
-      <SetupWizardWrapper tenant={tenant} isAdmin={userRole === "ADMIN"} />
-      <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
+    <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
 
-        {/* Header */}
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Inicio</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>{tenant.name}</p>
-        </div>
+      {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Inicio</h1>
+        <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>{tenant.name}</p>
+      </div>
 
       {/* Trial banner */}
       {showTrialBanner && (
@@ -604,7 +601,6 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      </div>
-    </>
+    </div>
   );
 }
