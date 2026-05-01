@@ -2,7 +2,6 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { fullName, formatDate, calcAge, formatCurrency, translatePaymentStatus } from "@/lib/utils";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 import { StudentActions } from "@/components/alumnos/student-actions";
@@ -98,7 +97,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }} className="sm:grid-cols-4">
         {[
           { label: "Disciplinas activas", value: String(activeEnrollments.length) },
           { label: "Asistencia", value: attendanceRate !== null ? `${attendanceRate}%` : "—", alert: attendanceRate !== null && attendanceRate < 70 },
@@ -107,12 +106,14 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
         ].map(k => (
           <div key={k.label} style={{ background: k.alert ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${k.alert ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 10, padding: "12px 14px" }}>
             <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{k.label}</p>
-            <p style={{ fontSize: 22, fontWeight: 500, color: k.alert ? "#b91c1c" : "var(--color-text-primary)", margin: "4px 0 0" }}>{k.value}</p>
+            <p style={{ fontSize: 18, fontWeight: 500, color: k.alert ? "#b91c1c" : "var(--color-text-primary)", margin: "4px 0 0" }} className="sm:text-2xl">
+              {k.value}
+            </p>
           </div>
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }} className="sm:grid-cols-2">
 
         {/* Datos personales */}
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
@@ -186,8 +187,8 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
             <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Últimos pagos</h2>
-            <Link href={`/dashboard/pagos?student=${student.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
-              Ver todos <ArrowRight className="h-3 w-3" />
+            <Link href={`/dashboard/pagos?student=${student.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer" }}>
+              Ver todos →
             </Link>
           </div>
           {student.payments.length === 0 && (
