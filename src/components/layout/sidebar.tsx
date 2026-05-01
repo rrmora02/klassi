@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@prisma/client";
-import { OnboardingHint } from "@/components/onboarding/onboarding-hint";
 import {
   LayoutDashboard,
   Users,
@@ -59,16 +58,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
           const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
-
-          const navHintMessages: Record<string, { message: string; badge: string }> = {
-            "/dashboard/grupos": {
-              message: "👥 Crea tus grupos/clases aquí y asigna instructores.",
-              badge: "Paso 4"
-            }
-          };
-
-          const hint = navHintMessages[href];
-          const link = (
+          return (
             <Link
               key={href}
               href={href}
@@ -83,22 +73,6 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
               {label}
             </Link>
           );
-
-          if (hint) {
-            return (
-              <OnboardingHint
-                key={href}
-                id={`hint-${href}`}
-                message={hint.message}
-                badge={hint.badge}
-                position="right"
-              >
-                {link}
-              </OnboardingHint>
-            );
-          }
-
-          return link;
         })}
 
         {/* Configuración */}
@@ -108,27 +82,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
           </p>
           {CONFIG_ITEMS.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
-
-            const hintMessages: Record<string, { message: string; badge: string; position: "top" | "bottom" | "left" | "right" }> = {
-              "/dashboard/configuracion/disciplinas": {
-                message: "📚 Comienza creando las disciplinas o cursos.",
-                badge: "Paso 1",
-                position: "right"
-              },
-              "/dashboard/configuracion/equipo": {
-                message: "👨‍🏫 Invita a tus instructores.",
-                badge: "Paso 2",
-                position: "right"
-              },
-              "/dashboard/configuracion/escuela": {
-                message: "🏫 Configura detalles de tu escuela.",
-                badge: "Paso 3",
-                position: "right"
-              }
-            };
-
-            const hint = hintMessages[href];
-            const link = (
+            return (
               <Link
                 key={href}
                 href={href}
@@ -143,22 +97,6 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
                 {label}
               </Link>
             );
-
-            if (hint) {
-              return (
-                <OnboardingHint
-                  key={href}
-                  id={`hint-${href}`}
-                  message={hint.message}
-                  badge={hint.badge}
-                  position={hint.position}
-                >
-                  {link}
-                </OnboardingHint>
-              );
-            }
-
-            return link;
           })}
         </div>
       </nav>
