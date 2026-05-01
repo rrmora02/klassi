@@ -19,15 +19,18 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [elemRect, setElemRect] = useState<DOMRect | null>(null);
+  const [sessionCompleted, setSessionCompleted] = useState<string[]>([]);
 
   const step = steps[currentStep];
-  const completedSteps = JSON.parse(localStorage.getItem("onboarding-completed") || "[]");
-  const isCompleted = completedSteps.includes(step?.id);
+  const isCompleted = sessionCompleted.includes(step?.id);
 
   useEffect(() => {
     const handleRestartTour = () => {
+      // Limpiar pasos completados al reiniciar
+      localStorage.removeItem("onboarding-completed");
       setCurrentStep(0);
       setIsVisible(true);
+      setElemRect(null);
     };
 
     window.addEventListener("restart-tour", handleRestartTour);
@@ -54,8 +57,9 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   };
 
   const handleNext = () => {
-    const updated = [...completedSteps, step?.id];
-    localStorage.setItem("onboarding-completed", JSON.stringify(updated));
+    if (step?.id) {
+      setSessionCompleted([...sessionCompleted, step.id]);
+    }
 
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
