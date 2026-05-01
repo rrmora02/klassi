@@ -124,12 +124,22 @@ export const enrollmentsRouter = createTRPCRouter({
        const prevEnrollment = await ctx.db.enrollment.findFirst({
          where: { id: input.currentEnrollmentId, studentId: input.studentId, group: { tenantId: ctx.tenantId } }
        });
-       
-       const newGroup = await ctx.db.group.findFirst({ 
-         where: { id: input.newGroupId, tenantId: ctx.tenantId } 
+
+       const newGroup = await ctx.db.group.findFirst({
+         where: { id: input.newGroupId, tenantId: ctx.tenantId }
        });
 
        if (!prevEnrollment || !newGroup) throw new TRPCError({ code: "NOT_FOUND" });
+
+       // Idempotence: If transfer already completed, return the new enrollment
+       if (prevEnrollment.status === "COMPLETED") {
+         const completedTransfer = await ctx.db.enrollment.findFirst({
+           where: { studentId: input.studentId, groupId: input.newGroupId }
+         });
+         if (completedTransfer) {
+           return completedTransfer;
+         }
+       }
 
        // Verify if already enrolled in new group active
        const existingNew = await ctx.db.enrollment.findFirst({

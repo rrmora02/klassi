@@ -190,6 +190,35 @@ export const studentsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
 
+      // Idempotence: Check if student already exists by email
+      if (input.email) {
+        const existing = await db.student.findFirst({
+          where: { tenantId, email: input.email, status: { not: "INACTIVE" } },
+        });
+        if (existing) {
+          throw new TRPCError({
+            code:    "CONFLICT",
+            message: `Ya existe un alumno activo con el correo ${input.email}`,
+          });
+        }
+      }
+
+      // Idempotence: Check if student exists by firstName + lastName + birthDate
+      if (input.birthDate) {
+        const existing = await db.student.findFirst({
+          where: {
+            tenantId,
+            firstName: input.firstName,
+            lastName: input.lastName,
+            birthDate: input.birthDate,
+            status: { not: "INACTIVE" },
+          },
+        });
+        if (existing) {
+          return existing;
+        }
+      }
+
       // Verificar límite del plan
       const allowed = await canAddStudent(tenantId);
       if (!allowed) {
@@ -197,19 +226,6 @@ export const studentsRouter = createTRPCRouter({
           code:    "FORBIDDEN",
           message: "Has alcanzado el límite de alumnos de tu plan. Actualiza tu suscripción para agregar más.",
         });
-      }
-
-      // Verificar email duplicado dentro del tenant
-      if (input.email) {
-        const dup = await db.student.findFirst({
-          where: { tenantId, email: input.email, status: { not: "INACTIVE" } },
-        });
-        if (dup) {
-          throw new TRPCError({
-            code:    "CONFLICT",
-            message: `Ya existe un alumno activo con el correo ${input.email}`,
-          });
-        }
       }
 
       const { tutorName, tutorPhone, tutorEmail, tutorRelationship, ...studentData } = input;
@@ -241,14 +257,24 @@ export const studentsRouter = createTRPCRouter({
           });
         }
 
-        await db.parentStudent.create({
-          data: {
+        // Idempotence: Check if parentStudent already exists
+        const existingParent = await db.parentStudent.findFirst({
+          where: {
             userId: parentUser.id,
             studentId: student.id,
-            relationship: tutorRelationship,
-            isPrimary: true,
-          }
+          },
         });
+
+        if (!existingParent) {
+          await db.parentStudent.create({
+            data: {
+              userId: parentUser.id,
+              studentId: student.id,
+              relationship: tutorRelationship,
+              isPrimary: true,
+            }
+          });
+        }
       }
 
       // Crear primera mensualidad automáticamente si tiene grupo

@@ -41,6 +41,22 @@ export const eventsRouter = createTRPCRouter({
         }
       }
 
+      // Idempotence: Check if event with same name and date already exists
+      const existingEvent = await db.event.findFirst({
+        where: {
+          tenantId,
+          name: input.name,
+          date: input.date,
+        },
+        include: {
+          groups: { select: { id: true, name: true } },
+        },
+      });
+
+      if (existingEvent) {
+        return existingEvent;
+      }
+
       // Crear evento
       const event = await db.event.create({
         data: {

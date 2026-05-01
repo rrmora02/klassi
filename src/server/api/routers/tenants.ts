@@ -9,11 +9,32 @@ export const tenantsRouter = createTRPCRouter({
       name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
     }))
     .mutation(async ({ ctx, input }) => {
+      const slug = input.name.toLowerCase().replace(/\s+/g, "-");
+
+      // Idempotence: Check if user already has a tenant with this slug
+      const existingTenant = await ctx.db.tenant.findUnique({
+        where: { slug }
+      });
+
+      if (existingTenant) {
+        // Verify user is already admin of this tenant
+        const existingMembership = await ctx.db.tenantUser.findFirst({
+          where: {
+            tenantId: existingTenant.id,
+            userId: ctx.dbUser!.id
+          }
+        });
+
+        if (existingMembership) {
+          return existingTenant;
+        }
+      }
+
       // Create new tenant
       const tenant = await ctx.db.tenant.create({
         data: {
           name: input.name,
-          slug: input.name.toLowerCase().replace(/\s+/g, "-"),
+          slug,
           primaryColor: "#00754A",
         }
       });

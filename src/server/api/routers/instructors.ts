@@ -93,6 +93,18 @@ export const instructorsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
 
+      // Idempotence: Check if instructor already exists by email in this tenant
+      const existingInstructorByEmail = await db.instructor.findFirst({
+        where: {
+          tenantId,
+          user: { email: input.email }
+        },
+        include: { user: true }
+      });
+      if (existingInstructorByEmail) {
+        return existingInstructorByEmail;
+      }
+
       // Buscar si el correo ya existe en sistema
       let user = await db.user.findFirst({
         where: { email: input.email }
@@ -108,7 +120,7 @@ export const instructorsRouter = createTRPCRouter({
           }
         });
       } else {
-        // Comprobar si ya existe como instructor en este tenant
+        // Comprobar si ya existe como instructor en este tenant (double-check)
         const existingInstructor = await db.instructor.findFirst({
           where: { tenantId, userId: user.id }
         });

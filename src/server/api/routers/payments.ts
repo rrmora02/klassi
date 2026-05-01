@@ -68,6 +68,23 @@ export const paymentsRouter = createTRPCRouter({
         where: { id: input.studentId, tenantId: ctx.tenantId },
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Idempotence: Check if payment already exists with same concept, amount, and dueDate
+      const existingPayment = await ctx.db.payment.findFirst({
+        where: {
+          studentId: input.studentId,
+          tenantId: ctx.tenantId,
+          concept: input.concept,
+          amount: input.amount,
+          dueDate: input.dueDate,
+          status: { not: "PAID" }
+        },
+      });
+
+      if (existingPayment) {
+        return existingPayment;
+      }
+
       return ctx.db.payment.create({
         data: { ...input, tenantId: ctx.tenantId, status: "PENDING" },
       });
