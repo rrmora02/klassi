@@ -2,7 +2,6 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 import type { ScheduleSlot } from "@/lib/schemas/group.schema";
 import type { GroupLevel } from "@prisma/client";
@@ -105,11 +104,17 @@ export default async function GruposPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+    <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+        <span>Grupos</span>
+      </div>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Grupos</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>
             {total} {total === 1 ? "grupo" : "grupos"}
           </p>
         </div>
@@ -117,7 +122,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
           href="/dashboard/grupos/nuevo"
           style={{
             background: "#00754A", color: "#fff", borderRadius: 8,
-            padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none",
+            padding: "8px 20px", fontSize: 13, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap",
           }}
         >
           + Nuevo grupo
@@ -125,7 +130,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
       </div>
 
       {/* Tabs activos / inactivos */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)", overflowX: "auto" }} className="scrollbar-hide">
         {[
           { label: "Todos",     value: undefined,  count: totalAll },
           { label: "Activos",   value: "true",     count: countMap["true"]  ?? 0 },
@@ -140,12 +145,13 @@ export default async function GruposPage({ searchParams }: PageProps) {
               key={tab.label}
               href={buildUrl({ active: tab.value, page: "1" })}
               style={{
-                padding: "8px 16px", fontSize: 13, textDecoration: "none",
+                padding: "8px 12px", fontSize: 12, textDecoration: "none", whiteSpace: "nowrap",
                 color:       active ? "#006241" : "var(--color-text-secondary)",
                 fontWeight:  active ? 500 : 400,
                 borderBottom: active ? "2px solid #006241" : "2px solid transparent",
                 marginBottom: -1,
               }}
+              className="sm:px-4 sm:text-sm"
             >
               {tab.label} <span style={{ fontSize: 11 }}>{tab.count}</span>
             </Link>
@@ -155,7 +161,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
 
       {/* Filtros */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <form style={{ flex: 1, minWidth: 200, maxWidth: 300 }}>
+        <form style={{ flex: 1, minWidth: 200 }} className="sm:max-w-sm">
           <input
             name="q"
             defaultValue={search}
@@ -171,7 +177,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
               key={d.id ?? "all"}
               href={buildUrl({ disc: d.id, page: "1" })}
               style={{
-                padding: "6px 14px", borderRadius: 20, fontSize: 12,
+                padding: "6px 12px", borderRadius: 20, fontSize: 12,
                 textDecoration: "none", border: "0.5px solid var(--color-border-secondary)",
                 background: discId === d.id || (!discId && !d.id) ? "#006241" : "var(--color-background-primary)",
                 color:      discId === d.id || (!discId && !d.id) ? "#fff"     : "var(--color-text-secondary)",
@@ -185,7 +191,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
 
       {/* Tabla */}
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-        <table style={{ width: "100%", minWidth: 800, borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Grupo", "Disciplina", "Instructor", "Nivel", "Horario", "Día de Cobro", "Alumnos", "Estado", ""].map((h) => (
@@ -260,8 +266,8 @@ export default async function GruposPage({ searchParams }: PageProps) {
                     </span>
                   </td>
                   <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                    <Link href={`/dashboard/grupos/${g.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
-                      Ver <ArrowRight className="h-3 w-3" />
+                    <Link href={`/dashboard/grupos/${g.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer" }}>
+                      Ver →
                     </Link>
                   </td>
                 </tr>
@@ -273,11 +279,11 @@ export default async function GruposPage({ searchParams }: PageProps) {
 
       {/* Paginación */}
       {pages > 1 && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
-          <span>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</span>
-          <div style={{ display: "flex", gap: 4 }}>
+        <div style={{ marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
+          <p style={{ margin: "0 0 12px" }}>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</p>
+          <div style={{ display: "flex", gap: 4, overflowX: "auto" }} className="flex-wrap sm:flex-nowrap">
             {page > 1 && (
-              <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>
+              <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>
                 ← Ant
               </Link>
             )}
@@ -292,13 +298,14 @@ export default async function GruposPage({ searchParams }: PageProps) {
                     border: "0.5px solid var(--color-border-secondary)",
                     background: p === page ? "#006241" : "transparent",
                     color:      p === page ? "#fff"     : "var(--color-text-secondary)",
+                    whiteSpace: "nowrap",
                   }}
                 >
                   {p}
                 </Link>
               ))}
             {page < pages && (
-              <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>
+              <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>
                 Sig →
               </Link>
             )}
