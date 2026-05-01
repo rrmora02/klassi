@@ -27,10 +27,10 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   useEffect(() => {
     const handleRestartTour = () => {
       console.log("[Tour] Restart event received, resetting tour state");
-      setCurrentStep(0);
-      setIsVisible(true);
-      setElemRect(null);
-      setSessionCompleted([]);
+      setSessionCompleted([]);  // Limpiar completed PRIMERO
+      setCurrentStep(0);         // Cambiar step (disparará el useEffect para buscar elemento)
+      setIsVisible(true);        // Mostrar el tour
+      // NO establecer setElemRect(null) - dejar que el useEffect lo busque
     };
 
     console.log("[Tour] Adding restart-tour listener");
@@ -95,7 +95,13 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   };
 
   // Mantener el componente montado para que el listener siempre esté activo
-  // Solo ocultar visualmente si no hay contenido para mostrar
+  // Primero checar si está visible - si no, retornar div invisible pero montado
+  if (!isVisible) {
+    console.log("[Tour] isVisible is false, returning hidden div");
+    return <div className="hidden" />;
+  }
+
+  // Si está visible pero no hay step o elemRect, retornar null (datos no listos)
   if (!step) {
     console.log("[Tour] No step available, returning null");
     return null;
@@ -104,12 +110,6 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   if (!elemRect) {
     console.log("[Tour] No elemRect found for step", step.id, "returning null");
     return null;
-  }
-
-  // Si no está visible, retornar un contenedor invisible pero montado
-  if (!isVisible) {
-    console.log("[Tour] isVisible is false, returning hidden div");
-    return <div className="hidden" />;
   }
 
   console.log("[Tour] Rendering tour for step", step.id);
