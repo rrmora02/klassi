@@ -105,6 +105,7 @@ model Tenant {
   stripeSubId      String?          @unique // Stripe subscription ID
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
+  setupCompleted   Boolean          @default(false) // onboarding wizard completado
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
