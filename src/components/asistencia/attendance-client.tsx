@@ -77,7 +77,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
       </div>
 
       {/* Filtros */}
-      <div style={{ background: "var(--color-background-primary)", padding: 16, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", flexDirection: "column", gap: 12 }} className="lg:flex-row lg:gap-5 lg:p-5 lg:items-center">
+      <div style={{ background: "var(--color-background-primary)", borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", gap: 12 }} className="flex-col lg:flex-row p-4 sm:p-5 lg:items-center lg:gap-5">
          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Fecha</label>
            <input
