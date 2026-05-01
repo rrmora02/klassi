@@ -45,10 +45,21 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
       return;
     }
 
-    const element = document.querySelector(step.element);
-    if (element) {
-      setElemRect(element.getBoundingClientRect());
-    }
+    // Intentar encontrar el elemento - con reintentos
+    const findElement = () => {
+      const element = document.querySelector(step.element);
+      if (element) {
+        const rect = element.getBoundingClientRect();
+        setElemRect(rect);
+      } else {
+        // Reintentar en 500ms si no lo encuentra
+        setTimeout(findElement, 500);
+      }
+    };
+
+    // Esperar un poco para que el DOM esté listo
+    const timer = setTimeout(findElement, 100);
+    return () => clearTimeout(timer);
   }, [step, currentStep, steps, isCompleted]);
 
   const handleDismiss = () => {
