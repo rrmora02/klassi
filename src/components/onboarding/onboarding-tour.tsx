@@ -17,7 +17,10 @@ export interface OnboardingTourProps {
 
 export function OnboardingTour({ steps }: OnboardingTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return sessionStorage.getItem("tour-dismissed") !== "true";
+  });
   const [elemRect, setElemRect] = useState<DOMRect | null>(null);
   const [sessionCompleted, setSessionCompleted] = useState<string[]>([]);
 
@@ -26,11 +29,11 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
 
   useEffect(() => {
     const handleRestartTour = () => {
-      // Limpiar pasos completados al reiniciar
-      localStorage.removeItem("onboarding-completed");
+      sessionStorage.removeItem("tour-dismissed");
       setCurrentStep(0);
       setIsVisible(true);
       setElemRect(null);
+      setSessionCompleted([]);
     };
 
     window.addEventListener("restart-tour", handleRestartTour);
@@ -64,7 +67,7 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    // No guardamos "dismissed" - el tour siempre está disponible para admins
+    sessionStorage.setItem("tour-dismissed", "true");
   };
 
   const handleNext = () => {
