@@ -51,10 +51,10 @@ export function StudentShareButton({ studentId }: Props) {
       {open && (
         <div style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999,
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16,
         }}>
           <div style={{
-            background: "var(--color-background-primary)", width: 480, borderRadius: 14,
+            background: "var(--color-background-primary)", width: "100%", maxWidth: 480, borderRadius: 14,
             padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
           }}>
             {/* Header */}

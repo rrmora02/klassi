@@ -48,10 +48,10 @@ export function EnrollStudentModal({ groupId }: Props) {
       {isOpen && (
         <div style={{
           position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-          background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+          background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16
         }}>
           <div style={{
-            background: "var(--color-background-primary)", width: 440, borderRadius: 12, 
+            background: "var(--color-background-primary)", width: "100%", maxWidth: 440, borderRadius: 12,
             padding: 24, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
           }}>
             <h2 style={{ fontSize: 18, fontWeight: 500, margin: "0 0 16px" }}>Añadir Alumno al Grupo</h2>

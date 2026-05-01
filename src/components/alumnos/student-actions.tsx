@@ -90,8 +90,8 @@ export function StudentActions({ studentId, studentName, status }: Props) {
 
       {/* Overlay de confirmación de borrado */}
       {showDelete && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 14, padding: 28, width: 420, maxWidth: "90vw" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }}>
+          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 14, padding: 28, width: "100%", maxWidth: 420 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
               <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#ef4444", flexShrink: 0 }}>!</div>
               <div>
