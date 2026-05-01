@@ -135,7 +135,7 @@ export default async function EventoDetailPage({ params }: PageProps) {
         </div>
 
         {/* Estadísticas rápidas - Solo visible en pantallas grandes */}
-        <div style={{ display: "none" }} className="lg:block">
+        <div className="hidden lg:block">
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20, position: "sticky", top: 20 }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 16px" }}>Resumen rápido</h2>
 

@@ -3,6 +3,7 @@
 import { Download } from "lucide-react";
 import { useState } from "react";
 import html2canvas from "html2canvas";
+import { useToast } from "@/hooks/use-toast";
 
 interface EventDownloadButtonProps {
   eventId: string;
@@ -16,6 +17,7 @@ export function EventDownloadButton({
   previewElementId = "invitation-preview"
 }: EventDownloadButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleDownload = async () => {
     setIsLoading(true);
@@ -72,7 +74,11 @@ export function EventDownloadButton({
     } catch (error) {
       console.error("Error downloading invitation:", error);
       const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-      alert(`No pudimos descargar la invitación: ${errorMessage}`);
+      toast({
+        title: "Error al descargar",
+        description: `No pudimos descargar la invitación: ${errorMessage}`,
+        variant: "destructive",
+      });
       setIsLoading(false);
     }
   };
