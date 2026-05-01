@@ -17,10 +17,7 @@ export interface OnboardingTourProps {
 
 export function OnboardingTour({ steps }: OnboardingTourProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [isVisible, setIsVisible] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return sessionStorage.getItem("tour-dismissed") !== "true";
-  });
+  const [isVisible, setIsVisible] = useState(true);
   const [elemRect, setElemRect] = useState<DOMRect | null>(null);
   const [sessionCompleted, setSessionCompleted] = useState<string[]>([]);
 
@@ -29,7 +26,6 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
 
   useEffect(() => {
     const handleRestartTour = () => {
-      sessionStorage.removeItem("tour-dismissed");
       setCurrentStep(0);
       setIsVisible(true);
       setElemRect(null);
@@ -67,7 +63,6 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    sessionStorage.setItem("tour-dismissed", "true");
   };
 
   const handleNext = () => {
