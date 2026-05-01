@@ -50,7 +50,7 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
 
   const handleDismiss = () => {
     setIsVisible(false);
-    localStorage.setItem("onboarding-tour-dismissed", "true");
+    // No guardamos "dismissed" - el tour siempre está disponible para admins
   };
 
   const handleNext = () => {
@@ -60,7 +60,8 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      handleDismiss();
+      // Al completar todos los pasos, simplemente ocultamos
+      setIsVisible(false);
     }
   };
 
