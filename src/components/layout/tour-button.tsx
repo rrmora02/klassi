@@ -4,11 +4,10 @@ import { HelpCircle } from "lucide-react";
 
 export function TourButton() {
   const handleRestartTour = () => {
-    // Limpiar solo los pasos completados, no el dismissed
+    console.log("[TourButton] Help button clicked, dispatching restart-tour event");
     localStorage.removeItem("onboarding-completed");
-
-    // Disparar evento personalizado para reiniciar el tour
     window.dispatchEvent(new CustomEvent("restart-tour"));
+    console.log("[TourButton] restart-tour event dispatched");
   };
 
   return (

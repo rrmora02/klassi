@@ -26,31 +26,40 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
 
   useEffect(() => {
     const handleRestartTour = () => {
+      console.log("[Tour] Restart event received, resetting tour state");
       setCurrentStep(0);
       setIsVisible(true);
       setElemRect(null);
       setSessionCompleted([]);
     };
 
+    console.log("[Tour] Adding restart-tour listener");
     window.addEventListener("restart-tour", handleRestartTour);
-    return () => window.removeEventListener("restart-tour", handleRestartTour);
+    return () => {
+      console.log("[Tour] Removing restart-tour listener");
+      window.removeEventListener("restart-tour", handleRestartTour);
+    };
   }, []);
 
   useEffect(() => {
     if (!step || isCompleted) {
+      console.log("[Tour] Step is missing or completed, auto-advancing");
       if (currentStep < steps.length - 1) {
         setCurrentStep(currentStep + 1);
       }
       return;
     }
 
+    console.log("[Tour] Looking for element:", step.element);
     // Intentar encontrar el elemento - con reintentos
     const findElement = () => {
       const element = document.querySelector(step.element);
       if (element) {
         const rect = element.getBoundingClientRect();
+        console.log("[Tour] Element found, setting rect:", rect);
         setElemRect(rect);
       } else {
+        console.log("[Tour] Element not found, retrying in 500ms");
         // Reintentar en 500ms si no lo encuentra
         setTimeout(findElement, 500);
       }
@@ -62,6 +71,7 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   }, [step, currentStep, steps, isCompleted]);
 
   const handleDismiss = () => {
+    console.log("[Tour] Dismiss clicked, hiding tour");
     setIsVisible(false);
   };
 
@@ -86,14 +96,23 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
 
   // Mantener el componente montado para que el listener siempre esté activo
   // Solo ocultar visualmente si no hay contenido para mostrar
-  if (!step || !elemRect) {
+  if (!step) {
+    console.log("[Tour] No step available, returning null");
+    return null;
+  }
+
+  if (!elemRect) {
+    console.log("[Tour] No elemRect found for step", step.id, "returning null");
     return null;
   }
 
   // Si no está visible, retornar un contenedor invisible pero montado
   if (!isVisible) {
+    console.log("[Tour] isVisible is false, returning hidden div");
     return <div className="hidden" />;
   }
+
+  console.log("[Tour] Rendering tour for step", step.id);
 
   const gap = 12;
   const position = step.position || "right";
