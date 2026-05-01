@@ -129,7 +129,7 @@ export function EventDetailClient({
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <div className="rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-uplift p-4 sm:p-5">
           <p className="text-xs sm:text-sm text-gray-600 dark:text-sb-light/70">
             Total alumnos
