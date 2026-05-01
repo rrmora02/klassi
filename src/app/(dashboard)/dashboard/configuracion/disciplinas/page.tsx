@@ -2,7 +2,6 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
 
 interface PageProps {
   searchParams: { active?: string };
@@ -51,19 +50,25 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+        <span>Configuración / Disciplinas</span>
+      </div>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Disciplinas</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>Administra las categorías de clases de tu escuela.</p>
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>Administra las categorías de clases de tu escuela.</p>
         </div>
-        <Link href="/dashboard/configuracion/disciplinas/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+        <Link href="/dashboard/configuracion/disciplinas/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap" }}>
           + Nueva disciplina
         </Link>
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)", overflowX: "auto" }} className="scrollbar-hide">
         {[
           { label: "Todas", value: undefined, count: totalAll },
           { label: "Activas", value: "true", count: countMap["true"] ?? 0 },
@@ -72,12 +77,12 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
           const active = tab.value === undefined ? activeFilter === undefined : String(activeFilter) === tab.value;
           return (
             <Link key={tab.label} href={buildUrl({ active: tab.value })} style={{
-              padding: "8px 16px", fontSize: 13, textDecoration: "none",
+              padding: "8px 12px", fontSize: 12, textDecoration: "none", whiteSpace: "nowrap",
               color: active ? "#006241" : "var(--color-text-secondary)",
               fontWeight: active ? 500 : 400,
               borderBottom: active ? "2px solid #006241" : "2px solid transparent",
               marginBottom: -1,
-            }}>
+            }} className="sm:px-4 sm:text-sm">
               {tab.label} <span style={{ fontSize: 11 }}>{tab.count}</span>
             </Link>
           );
@@ -86,7 +91,7 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
 
       {/* Tabla */}
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-        <table style={{ width: "100%", minWidth: 480, borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Disciplina", "Descripción", "Grupos", "Estado", ""].map(h => (
@@ -125,8 +130,8 @@ export default async function DisciplinasPage({ searchParams }: PageProps) {
                 </td>
 
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/configuracion/disciplinas/${disc.id}/editar`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
-                    Editar <ArrowRight className="h-3 w-3" />
+                  <Link href={`/dashboard/configuracion/disciplinas/${disc.id}/editar`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer" }}>
+                    Editar →
                   </Link>
                 </td>
               </tr>
