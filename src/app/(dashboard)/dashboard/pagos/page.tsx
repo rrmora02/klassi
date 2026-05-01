@@ -96,16 +96,13 @@ export default async function PagosPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 1400, margin: "0 auto" }}>
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20 }}>
-        <div>
-          <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Pagos</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>
-            {total} {total === 1 ? "registro" : "registros"}
-          </p>
-        </div>
-        {/* Button rendered by client component */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Pagos</h1>
+        <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>
+          {total} {total === 1 ? "registro" : "registros"}
+        </p>
       </div>
 
       {/* Summary cards */}
@@ -154,12 +151,12 @@ export default async function PagosPage({ searchParams }: PageProps) {
 
       {/* Búsqueda */}
       <div style={{ marginBottom: 16 }}>
-        <form className="w-full sm:max-w-sm">
+        <form className="w-full">
           {status && <input type="hidden" name="status" value={status} />}
           <input
             name="q" defaultValue={search}
             placeholder="Buscar por nombre..."
-            className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-[rgba(255,255,255,0.08)] text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors"
+            className="w-full sm:max-w-sm rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-[rgba(255,255,255,0.08)] text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors"
           />
         </form>
       </div>
