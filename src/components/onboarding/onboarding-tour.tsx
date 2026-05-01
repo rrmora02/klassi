@@ -84,8 +84,15 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
     }
   };
 
-  if (!isVisible || !step || !elemRect) {
+  // Mantener el componente montado para que el listener siempre esté activo
+  // Solo ocultar visualmente si no hay contenido para mostrar
+  if (!step || !elemRect) {
     return null;
+  }
+
+  // Si no está visible, retornar un contenedor invisible pero montado
+  if (!isVisible) {
+    return <div className="hidden" />;
   }
 
   const gap = 12;
