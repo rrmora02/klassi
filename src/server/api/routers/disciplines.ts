@@ -40,10 +40,14 @@ export const disciplinesRouter = createTRPCRouter({
       extraFieldsDef: z.array(extraFieldDefSchema).default([]),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Idempotence: Check if discipline with same name already exists
       const exists = await ctx.db.discipline.findFirst({
         where: { tenantId: ctx.tenantId, name: input.name },
       });
-      if (exists) throw new TRPCError({ code: "CONFLICT", message: "Ya existe una disciplina con ese nombre" });
+      if (exists) {
+        return exists;
+      }
+
       return ctx.db.discipline.create({
         data: { ...input, tenantId: ctx.tenantId },
       });
