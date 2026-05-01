@@ -118,7 +118,7 @@ export default async function ReportesPage() {
   const eventPaymentsPending = monthEvents.reduce((sum, e) => sum + e.eventPayments.filter(p => p.status === "PENDING").length, 0);
 
   return (
-    <div className="w-full space-y-6">
+    <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
       {/* Header */}
       <div>
         <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Reportes</h1>

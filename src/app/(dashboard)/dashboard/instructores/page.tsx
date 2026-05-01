@@ -69,7 +69,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
       <AdminInstructorBanner
         isAdmin={tenantUser.role === "ADMIN"}
         isAlreadyInstructor={!!currentUserInstructor}

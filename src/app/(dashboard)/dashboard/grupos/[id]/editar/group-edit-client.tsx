@@ -49,7 +49,7 @@ export function GroupEditClient({ group, disciplines, instructors }: Props) {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
       {/* Breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
         <Link href="/dashboard/grupos" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>Grupos</Link>

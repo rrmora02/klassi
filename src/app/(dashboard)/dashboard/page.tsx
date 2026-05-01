@@ -179,7 +179,7 @@ export default async function DashboardPage() {
   // For INSTRUCTOR role, show simplified dashboard
   if (userRole === "INSTRUCTOR") {
     return (
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Inicio</h1>
@@ -285,7 +285,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+    <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>

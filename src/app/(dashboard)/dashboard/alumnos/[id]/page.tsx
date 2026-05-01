@@ -55,7 +55,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
   const overduePayments = student.payments.filter(p => p.status === "OVERDUE");
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto" }}>
+    <div style={{ maxWidth: 860, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
 
       {/* Breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>

@@ -71,7 +71,7 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
   const pages = Math.ceil(totalEvents / pageSize);
 
   return (
-    <div className="space-y-6">
+    <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

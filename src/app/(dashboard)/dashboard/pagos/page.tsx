@@ -96,7 +96,7 @@ export default async function PagosPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div style={{ maxWidth: 1400, margin: "0 auto" }}>
+    <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Pagos</h1>

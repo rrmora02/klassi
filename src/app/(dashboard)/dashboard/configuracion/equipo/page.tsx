@@ -23,7 +23,7 @@ export default async function EquipoPage() {
   }
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", paddingBottom: 40 }}>
+    <div style={{ maxWidth: 960, margin: "0 auto", paddingLeft: 16, paddingRight: 16, paddingBottom: 40 }} className="lg:px-0">
       {/* Header */}
       <div style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
