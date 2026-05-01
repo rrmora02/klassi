@@ -33,8 +33,8 @@ export function EventDetailClient({
   const [selectedMethod, setSelectedMethod] = useState<"CASH" | "TRANSFER" | "CARD" | "OXXO" | "SPEI">("CASH");
 
   // Queries
-  const { data: statsData } = api.events.getStats.useQuery({ eventId });
-  const { data: paymentsData, refetch } = api.events.getPayments.useQuery({
+  const { data: statsData, refetch: refetchStats } = api.events.getStats.useQuery({ eventId });
+  const { data: paymentsData, refetch: refetchPayments } = api.events.getPayments.useQuery({
     eventId,
     page,
     pageSize: 20,
@@ -65,7 +65,8 @@ export function EventDetailClient({
         paymentId,
         willAttend,
       });
-      refetch();
+      refetchPayments();
+      refetchStats();
       toast({
         title: "Actualizado",
         description: willAttend
@@ -92,7 +93,8 @@ export function EventDetailClient({
         paymentId: paymentMethodModal.paymentId,
         method: selectedMethod,
       });
-      refetch();
+      refetchPayments();
+      refetchStats();
       toast({
         title: "Pagado",
         description: "Se marcó el pago como realizado",
@@ -124,7 +126,8 @@ export function EventDetailClient({
   const handleGenerateMissingPayments = async () => {
     try {
       const result = await generateMissingMutation.mutateAsync({ eventId });
-      refetch();
+      refetchPayments();
+      refetchStats();
       toast({
         title: "Pagos generados",
         description: result.message,
