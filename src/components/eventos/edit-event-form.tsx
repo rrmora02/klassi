@@ -138,8 +138,8 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
     }
   };
 
-  const previewEventDate = formData.date ? new Date(formData.date) : initialData.date;
-  const previewPaymentDueDate = formData.paymentDueDate ? new Date(formData.paymentDueDate) : initialData.paymentDueDate;
+  const previewEventDate = formData.date ? new Date(formData.date + "T00:00:00") : initialData.date;
+  const previewPaymentDueDate = formData.paymentDueDate ? new Date(formData.paymentDueDate + "T00:00:00") : initialData.paymentDueDate;
   const previewAmount = formData.amount ? Math.round(parseFloat(formData.amount) * 100) : initialData.amount;
 
   return (
