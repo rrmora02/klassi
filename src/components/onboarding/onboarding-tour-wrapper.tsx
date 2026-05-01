@@ -14,7 +14,7 @@ const TOUR_STEPS: TourStep[] = [
     id: "step-2-team",
     element: "a[href='/dashboard/configuracion/equipo']",
     title: "Paso 2: Tu Equipo",
-    message: "Invita a tus instructores para que accedan al sistema.",
+    message: "Invita a tus instructores. Si lo prefieres, tú también puedes ser instructor además de administrador.",
     position: "right",
   },
   {
