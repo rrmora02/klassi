@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { TenantSwitcher } from "./tenant-switcher";
 import { ThemeToggle } from "./theme-toggle";
+import { TourButton } from "./tour-button";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
@@ -54,7 +55,8 @@ export async function TopBar() {
       <div className="flex items-center gap-3">
         {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} userRole={userRole} />}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <TourButton />
         <div className="flex flex-col items-center justify-center">
           <ThemeToggle />
           <p className="text-xs text-gray-500 dark:text-sb-light/60 mt-1">{roleLabels[userRole]}</p>
