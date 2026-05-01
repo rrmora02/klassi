@@ -25,6 +25,16 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   const isCompleted = completedSteps.includes(step?.id);
 
   useEffect(() => {
+    const handleRestartTour = () => {
+      setCurrentStep(0);
+      setIsVisible(true);
+    };
+
+    window.addEventListener("restart-tour", handleRestartTour);
+    return () => window.removeEventListener("restart-tour", handleRestartTour);
+  }, []);
+
+  useEffect(() => {
     if (!step || isCompleted) {
       if (currentStep < steps.length - 1) {
         setCurrentStep(currentStep + 1);

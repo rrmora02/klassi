@@ -8,8 +8,8 @@ export function TourButton() {
     localStorage.removeItem("onboarding-completed");
     localStorage.removeItem("onboarding-tour-dismissed");
 
-    // Recargar la página para reiniciar el tour
-    window.location.reload();
+    // Disparar evento personalizado para reiniciar el tour
+    window.dispatchEvent(new CustomEvent("restart-tour"));
   };
 
   return (
@@ -23,3 +23,4 @@ export function TourButton() {
     </button>
   );
 }
+
