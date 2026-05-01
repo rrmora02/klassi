@@ -31,6 +31,13 @@ const TOUR_STEPS: TourStep[] = [
     message: "Crea tus grupos/clases y asigna instructores.",
     position: "right",
   },
+  {
+    id: "step-5-students",
+    element: "a[href='/dashboard/alumnos']",
+    title: "Paso 5: Alumnos",
+    message: "Agrega estudiantes a tu escuela e inscríbelos en los grupos.",
+    position: "right",
+  },
 ];
 
 export function OnboardingTourWrapper() {
