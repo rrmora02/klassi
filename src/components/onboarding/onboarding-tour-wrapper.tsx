@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { OnboardingTour, type TourStep } from "./onboarding-tour";
 
 const TOUR_STEPS: TourStep[] = [
@@ -40,6 +41,40 @@ const TOUR_STEPS: TourStep[] = [
   },
 ];
 
-export function OnboardingTourWrapper() {
+interface OnboardingTourWrapperProps {
+  hasStudents: boolean;
+}
+
+export function OnboardingTourWrapper({ hasStudents }: OnboardingTourWrapperProps) {
+  const [shouldShowTour, setShouldShowTour] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    const onboardingCompleted = localStorage.getItem("onboarding-completed");
+    // Show tour only if there are no students AND onboarding hasn't been marked complete
+    // OR if the user explicitly requested to see the tour again
+    const shouldShow = !hasStudents && !onboardingCompleted;
+    setShouldShowTour(shouldShow);
+  }, [hasStudents]);
+
+  // Handle restart-tour event (when user clicks the ? button)
+  useEffect(() => {
+    const handleRestartTour = () => {
+      setShouldShowTour(true);
+    };
+
+    window.addEventListener("restart-tour", handleRestartTour);
+    return () => window.removeEventListener("restart-tour", handleRestartTour);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
+  if (!shouldShowTour) {
+    return null;
+  }
+
   return <OnboardingTour steps={TOUR_STEPS} />;
 }

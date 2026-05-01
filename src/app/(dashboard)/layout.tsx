@@ -29,9 +29,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const userRole = tenantUser?.role || "RECEPTIONIST";
 
+  // Verificar si hay alumnos en el tenant
+  const studentCount = await db.student.count({
+    where: { tenantId: user.activeTenantId }
+  });
+
   return (
     <>
-      <OnboardingTourWrapper />
+      <OnboardingTourWrapper hasStudents={studentCount > 0} />
       <DashboardShell sidebar={<Sidebar userRole={userRole} />} topbar={<TopBar />}>
         {children}
       </DashboardShell>
