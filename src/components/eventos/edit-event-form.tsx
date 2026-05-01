@@ -14,6 +14,7 @@ interface EditEventFormProps {
     name: string;
     description?: string;
     date: Date;
+    paymentDueDate?: Date;
     amount: number;
     status: string;
   };
@@ -29,6 +30,7 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
     name: initialData.name,
     description: initialData.description || "",
     date: initialData.date.toISOString().split("T")[0],
+    paymentDueDate: initialData.paymentDueDate?.toISOString().split("T")[0] || "",
     amount: (initialData.amount / 100).toString(),
   });
 
@@ -70,11 +72,22 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
         return;
       }
 
+      if (formData.paymentDueDate && new Date(formData.paymentDueDate) > new Date(formData.date)) {
+        toast({
+          title: "Error",
+          description: "La fecha de pago no puede ser posterior a la fecha del evento",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       await updateMutation.mutateAsync({
         id: eventId,
         name: formData.name,
         description: formData.description || undefined,
         date: new Date(formData.date),
+        paymentDueDate: formData.paymentDueDate ? new Date(formData.paymentDueDate) : undefined,
         amount: Math.round(parseFloat(formData.amount) * 100),
       });
 
@@ -125,7 +138,8 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
     }
   };
 
-  const previewDate = formData.date ? new Date(formData.date) : initialData.date;
+  const previewEventDate = formData.date ? new Date(formData.date) : initialData.date;
+  const previewPaymentDueDate = formData.paymentDueDate ? new Date(formData.paymentDueDate) : initialData.paymentDueDate;
   const previewAmount = formData.amount ? Math.round(parseFloat(formData.amount) * 100) : initialData.amount;
 
   return (
@@ -174,6 +188,22 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
           value={formData.date}
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, date: e.target.value }))
+          }
+          className="mt-2 w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-house px-4 py-2.5 text-gray-900 dark:text-gray-100 outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors"
+        />
+      </div>
+
+      {/* Fecha de vencimiento de pago */}
+      <div>
+        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+          Fecha de vencimiento de pago (opcional)
+        </label>
+        <input
+          type="date"
+          value={formData.paymentDueDate}
+          max={formData.date}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, paymentDueDate: e.target.value }))
           }
           className="mt-2 w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-house px-4 py-2.5 text-gray-900 dark:text-gray-100 outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors"
         />
@@ -287,10 +317,10 @@ export function EditEventForm({ eventId, initialData }: EditEventFormProps) {
         <EventInvitationPreview
           eventName={formData.name || "Nombre del evento"}
           description={formData.description || undefined}
-          date={previewDate}
+          date={previewEventDate}
           groupNames={["Toda la escuela"]}
           amount={previewAmount}
-          dueDate={initialData.date}
+          dueDate={previewPaymentDueDate || previewEventDate}
         />
       </div>
     </div>

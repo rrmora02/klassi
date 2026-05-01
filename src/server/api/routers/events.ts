@@ -394,6 +394,7 @@ export const eventsRouter = createTRPCRouter({
         description: z.string().max(500).optional(),
         date: z.date().optional(),
         amount: z.number().int().min(1).optional(),
+        paymentDueDate: z.date().optional().nullable(),
         dueDate: z.date().optional(),
         status: z.enum(["ACTIVE", "CANCELLED"]).optional(),
       })
@@ -420,6 +421,7 @@ export const eventsRouter = createTRPCRouter({
           description: data.description,
           date: data.date,
           amount: data.amount,
+          paymentDueDate: data.paymentDueDate !== undefined ? data.paymentDueDate : undefined,
           status: data.status,
         },
       });

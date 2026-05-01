@@ -451,9 +451,10 @@ model Event {
   tenantId String
   tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  name        String // "Día del Niño", "Convivio", etc
-  description String?
-  date        DateTime
+  name             String // "Día del Niño", "Convivio", etc
+  description      String?
+  date             DateTime
+  paymentDueDate   DateTime?
 
   // Múltiples grupos o toda la escuela
   isSchoolWide Boolean @default(false)

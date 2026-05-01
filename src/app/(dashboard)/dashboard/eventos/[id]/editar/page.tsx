@@ -61,6 +61,7 @@ export default async function EditEventPage({ params }: PageProps) {
             name: event.name,
             description: event.description || undefined,
             date: event.date,
+            paymentDueDate: event.paymentDueDate || undefined,
             amount: event.amount,
             status: event.status,
           }}
