@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/topbar";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
+import { OnboardingTourWrapper } from "@/components/onboarding/onboarding-tour-wrapper";
 import { db } from "@/server/db";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -29,8 +30,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const userRole = tenantUser?.role || "RECEPTIONIST";
 
   return (
-    <DashboardShell sidebar={<Sidebar userRole={userRole} />} topbar={<TopBar />}>
-      {children}
-    </DashboardShell>
+    <>
+      <OnboardingTourWrapper />
+      <DashboardShell sidebar={<Sidebar userRole={userRole} />} topbar={<TopBar />}>
+        {children}
+      </DashboardShell>
+    </>
   );
 }

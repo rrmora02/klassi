@@ -5,7 +5,6 @@ import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
 import { StatCard } from "@/components/shared";
 import { ClassAttendanceIndicator } from "@/components/dashboard/class-attendance-indicator";
 import { EventSummaryClient } from "@/components/dashboard/event-summary-client";
-import { OnboardingTourWrapper } from "@/components/onboarding/onboarding-tour-wrapper";
 import {
   Users,
   BookOpen,
@@ -286,9 +285,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <>
-      <OnboardingTourWrapper />
-      <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
+    <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
 
         {/* Header */}
       <div style={{ marginBottom: 24 }}>
@@ -605,6 +602,6 @@ export default async function DashboardPage() {
       </section>
 
       </div>
-    </>
+    </div>
   );
 }
