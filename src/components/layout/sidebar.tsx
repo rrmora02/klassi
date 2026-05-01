@@ -109,18 +109,21 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
           {CONFIG_ITEMS.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
 
-            const hintMessages: Record<string, { message: string; badge: string }> = {
+            const hintMessages: Record<string, { message: string; badge: string; position: "top" | "bottom" | "left" | "right" }> = {
               "/dashboard/configuracion/disciplinas": {
-                message: "📚 Comienza creando las disciplinas o cursos que ofrecerás en tu escuela.",
-                badge: "Paso 1"
+                message: "📚 Comienza creando las disciplinas o cursos.",
+                badge: "Paso 1",
+                position: "right"
               },
               "/dashboard/configuracion/equipo": {
-                message: "👨‍🏫 Aquí puedes invitar y gestionar a tus instructores y equipo.",
-                badge: "Paso 2"
+                message: "👨‍🏫 Invita a tus instructores.",
+                badge: "Paso 2",
+                position: "right"
               },
               "/dashboard/configuracion/escuela": {
-                message: "🏫 Configura los detalles de tu escuela (nombre, logo, contacto).",
-                badge: "Paso 3"
+                message: "🏫 Configura detalles de tu escuela.",
+                badge: "Paso 3",
+                position: "right"
               }
             };
 
@@ -148,7 +151,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
                   id={`hint-${href}`}
                   message={hint.message}
                   badge={hint.badge}
-                  position="right"
+                  position={hint.position}
                 >
                   {link}
                 </OnboardingHint>
