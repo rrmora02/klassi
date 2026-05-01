@@ -18,14 +18,12 @@ export function OnboardingHint({
   badge,
   children,
 }: OnboardingHintProps) {
-  const [isVisible, setIsVisible] = useState(true);
-  const [isDismissed, setIsDismissed] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const dismissed = localStorage.getItem(`hint-dismissed-${id}`);
-    if (dismissed) {
-      setIsDismissed(true);
-      setIsVisible(false);
+    if (!dismissed) {
+      setIsVisible(true);
     }
   }, [id]);
 
@@ -34,15 +32,11 @@ export function OnboardingHint({
     setIsVisible(false);
   };
 
-  if (isDismissed || !isVisible) {
-    return <>{children}</>;
-  }
-
   const positionClasses = {
-    top: "-top-16 left-1/2 -translate-x-1/2",
+    top: "-top-20 left-1/2 -translate-x-1/2",
     bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
     left: "top-1/2 -translate-y-1/2 -left-80",
-    right: "top-1/2 -translate-y-1/2 left-full ml-3",
+    right: "top-1/2 -translate-y-1/2 right-0 mr-0 translate-x-full ml-2",
   };
 
   const arrowClasses = {
@@ -55,21 +49,21 @@ export function OnboardingHint({
   };
 
   return (
-    <div className="relative">
+    <div className="group relative inline-block">
       {children}
 
       {isVisible && (
         <div
-          className={`absolute ${positionClasses[position]} z-50 w-72 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 p-3 text-white shadow-xl animate-in fade-in slide-in-from-bottom-2 duration-300`}
+          className={`absolute ${positionClasses[position]} z-50 w-64 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 p-4 text-white shadow-2xl`}
         >
           {/* Arrow */}
           <div className={`absolute ${arrowClasses[position]} h-0 w-0`} />
 
           {/* Content */}
-          <div className="relative">
+          <div className="relative pr-6">
             {badge && (
-              <span className="mb-2 inline-block rounded-full bg-white/30 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider">
-                {badge}
+              <span className="mb-2 inline-flex rounded-full bg-white/30 px-2 py-1 text-xs font-semibold uppercase tracking-wider">
+                ✨ {badge}
               </span>
             )}
             <p className="text-sm font-medium leading-relaxed">{message}</p>
@@ -77,15 +71,15 @@ export function OnboardingHint({
             {/* Dismiss button */}
             <button
               onClick={handleDismiss}
-              className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+              className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 hover:bg-white/40 transition-colors"
               aria-label="Cerrar"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3 w-3" />
             </button>
           </div>
 
           {/* Pulse dot */}
-          <div className="absolute -top-1.5 -right-1.5 h-3 w-3 rounded-full bg-white animate-pulse" />
+          <div className="absolute -top-2 -right-2 h-3 w-3 rounded-full bg-white animate-pulse" />
         </div>
       )}
     </div>
