@@ -109,7 +109,7 @@ export default async function PagosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 14, marginBottom: 24 }} className="sm:grid-cols-3">
+      <div style={{ display: "grid", gap: 14, marginBottom: 24 }} className="grid-cols-1 sm:grid-cols-3">
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Cobrado este mes</p>
           <p style={{ fontSize: 18, fontWeight: 600, color: "#15803d", margin: "4px 0 0" }} className="sm:text-2xl break-words">
