@@ -40,7 +40,17 @@ export const teamRouter = createTRPCRouter({
          }
        }
 
-       // Upsert invitation (token is generated uniquely)
+       // Idempotence: Check if invitation already exists
+       const existingInvitation = await ctx.db.teamInvitation.findFirst({
+         where: { tenantId: ctx.tenantId, email: input.email }
+       });
+
+       // If invitation exists and not expired, return it (idempotent)
+       if (existingInvitation && existingInvitation.expiresAt > new Date()) {
+         return existingInvitation;
+       }
+
+       // Generate new token only for new invitations or expired ones
        const crypto = require("crypto");
        const token = crypto.randomBytes(32).toString("hex");
 

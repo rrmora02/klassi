@@ -314,16 +314,14 @@ export const instructorsRouter = createTRPCRouter({
         });
       }
 
-      // Check if already registered as instructor
+      // Idempotence: Check if already registered as instructor
       const existingInstructor = await ctx.db.instructor.findFirst({
-        where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id }
+        where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id },
+        include: { user: true }
       });
 
       if (existingInstructor) {
-        throw new TRPCError({
-          code: "CONFLICT",
-          message: "Ya estás registrado como instructor"
-        });
+        return existingInstructor;
       }
 
       // Create instructor record
