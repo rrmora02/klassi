@@ -220,8 +220,11 @@ export const eventsRouter = createTRPCRouter({
           (p) => p.status === "NOT_ATTENDING"
         ).length,
 
-        totalExpected:
-          payments.filter((p) => p.willAttend === true).length * event.amount,
+        // totalExpected: Sum of amounts for payments from students attending (not the current event price)
+        totalExpected: payments
+          .filter((p) => p.willAttend === true)
+          .reduce((sum, p) => sum + p.amount, 0),
+        // totalCollected: Sum of actual amounts paid
         totalCollected: payments
           .filter((p) => p.status === "PAID")
           .reduce((sum, p) => sum + p.amount, 0),
@@ -428,6 +431,35 @@ export const eventsRouter = createTRPCRouter({
           code: "NOT_FOUND",
           message: "Evento no encontrado",
         });
+      }
+
+      // If amount is being increased, generate additional charges for students who already paid
+      if (data.amount && data.amount > event.amount) {
+        const priceDifference = data.amount - event.amount;
+
+        // Find all students who have already paid
+        const paidPayments = await db.eventPayment.findMany({
+          where: {
+            eventId: id,
+            status: "PAID",
+          },
+          select: { studentId: true, willAttend: true },
+        });
+
+        // Create additional charge for each student who paid
+        if (paidPayments.length > 0) {
+          await db.eventPayment.createMany({
+            data: paidPayments.map((payment) => ({
+              eventId: id,
+              studentId: payment.studentId,
+              amount: priceDifference,
+              status: "PENDING",
+              dueDate: data.paymentDueDate || data.date || event.date,
+              willAttend: payment.willAttend, // Inherit attendance status
+            })),
+            skipDuplicates: true, // Avoid duplicates if run multiple times
+          });
+        }
       }
 
       return db.event.update({
