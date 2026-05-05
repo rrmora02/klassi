@@ -409,6 +409,7 @@ model Payment {
   student    Student       @relation(fields: [studentId], references: [id])
   concept    String // "Mensualidad Enero 2026"
   amount     Int // en centavos para evitar flotantes
+  discountAmount Int @default(0) // descuento en centavos
   currency   String        @default("MXN")
   method     PaymentMethod @default(CASH)
   status     PaymentStatus @default(PENDING)
@@ -484,6 +485,7 @@ model EventPayment {
   student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   amount Int // en centavos
+  discountAmount Int @default(0) // descuento en centavos
 
   // PENDING, PAID, NOT_ATTENDING, CANCELLED
   status String @default("PENDING")

@@ -96,17 +96,27 @@ export const paymentsRouter = createTRPCRouter({
       method:    z.nativeEnum(PaymentMethod),
       reference: z.string().optional(),
       paidAt:    z.date().default(() => new Date()),
+      discountAmount: z.number().int().min(0).default(0), // descuento en centavos
     }))
     .mutation(async ({ ctx, input }) => {
-      const { id, ...data } = input;
+      const { id, discountAmount, ...data } = input;
       const payment = await ctx.db.payment.findFirst({
         where: { id, tenantId: ctx.tenantId },
-        select: { id: true },
+        select: { id: true, amount: true },
       });
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Validar que el descuento no sea mayor al monto del pago
+      if (discountAmount > payment.amount) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "El descuento no puede ser mayor al monto del pago",
+        });
+      }
+
       return ctx.db.payment.update({
         where: { id },
-        data:  { ...data, status: "PAID" },
+        data:  { ...data, status: "PAID", discountAmount },
       });
     }),
 

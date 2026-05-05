@@ -337,6 +337,7 @@ export const eventsRouter = createTRPCRouter({
     .input(z.object({
       paymentId: z.string().cuid(),
       method: z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"]).optional(),
+      discountAmount: z.number().int().min(0).default(0), // descuento en centavos
     }))
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
@@ -355,11 +356,20 @@ export const eventsRouter = createTRPCRouter({
         });
       }
 
+      // Validar que el descuento no sea mayor al monto del pago
+      if (input.discountAmount > payment.amount) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "El descuento no puede ser mayor al monto del pago",
+        });
+      }
+
       return db.eventPayment.update({
         where: { id: input.paymentId },
         data: {
           status: "PAID",
           paidAt: new Date(),
+          discountAmount: input.discountAmount,
         },
       });
     }),
