@@ -29,8 +29,9 @@ export function EventDetailClient({
     "PENDING" | "PAID" | "NOT_ATTENDING" | "CANCELLED" | undefined
   >(undefined);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [paymentMethodModal, setPaymentMethodModal] = useState<{ paymentId: string } | null>(null);
+  const [paymentMethodModal, setPaymentMethodModal] = useState<{ paymentId: string; amount: number } | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<"CASH" | "TRANSFER" | "CARD" | "OXXO" | "SPEI">("CASH");
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   // Queries
   const { data: statsData, refetch: refetchStats } = api.events.getStats.useQuery({ eventId });
@@ -82,8 +83,9 @@ export function EventDetailClient({
     }
   };
 
-  const handleMarkAsPaid = async (paymentId: string) => {
-    setPaymentMethodModal({ paymentId });
+  const handleMarkAsPaid = async (paymentId: string, amount: number) => {
+    setPaymentMethodModal({ paymentId, amount });
+    setDiscountAmount(0); // Reset discount
   };
 
   const handleConfirmPayment = async () => {
@@ -92,6 +94,7 @@ export function EventDetailClient({
       await markAsPaidMutation.mutateAsync({
         paymentId: paymentMethodModal.paymentId,
         method: selectedMethod,
+        discountAmount: discountAmount,
       });
       refetchPayments();
       refetchStats();
@@ -100,6 +103,7 @@ export function EventDetailClient({
         description: "Se marcó el pago como realizado",
       });
       setPaymentMethodModal(null);
+      setDiscountAmount(0);
       setSelectedMethod("CASH");
     } catch (error) {
       toast({
@@ -344,7 +348,7 @@ export function EventDetailClient({
                         {payment.status === "PENDING" &&
                           payment.willAttend === true && (
                             <button
-                              onClick={() => handleMarkAsPaid(payment.id)}
+                              onClick={() => handleMarkAsPaid(payment.id, payment.amount)}
                               className="rounded px-2.5 py-1 text-xs bg-sb-accent text-white hover:bg-sb-green transition-colors"
                             >
                               Pagar
@@ -404,59 +408,112 @@ export function EventDetailClient({
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)",
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999,
         }}>
-          <div style={{ background: "var(--color-background-primary)", width: 400, borderRadius: 12, padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 20px" }}>
-              Método de pago
+          <div style={{ background: "var(--color-background-primary)", width: 420, borderRadius: 12, padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 24px" }}>
+              Registrar pago
             </h2>
-            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 20 }}>
-              Selecciona cómo se realizó el pago
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-              {[
-                { value: "CASH", label: "💵 Efectivo" },
-                { value: "CARD", label: "💳 Tarjeta" },
-                { value: "TRANSFER", label: "🏦 Transferencia" },
-                { value: "OXXO", label: "🏪 OXXO" },
-                { value: "SPEI", label: "📱 SPEI" },
-              ].map((method) => (
-                <label key={method.value} style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 8,
-                  border: selectedMethod === method.value ? "1.5px solid #006241" : "1px solid var(--color-border-tertiary)",
-                  background: selectedMethod === method.value ? "rgba(0,98,65,0.05)" : "transparent",
-                  cursor: "pointer", transition: "all 0.2s"
-                }}>
-                  <input
-                    type="radio"
-                    value={method.value}
-                    checked={selectedMethod === method.value}
-                    onChange={(e) => setSelectedMethod(e.target.value as any)}
-                    style={{ cursor: "pointer", width: 16, height: 16 }}
-                  />
-                  <span style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
-                    {method.label}
+
+            {/* Resumen de monto */}
+            <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 16, marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, fontSize: 13 }}>
+                <span style={{ color: "var(--color-text-secondary)" }}>Monto original:</span>
+                <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>${(paymentMethodModal.amount / 100).toFixed(2)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, fontSize: 13 }}>
+                <span style={{ color: "var(--color-text-secondary)" }}>Descuento:</span>
+                <span style={{ fontWeight: 600, color: "#dc2626" }}>-${(discountAmount / 100).toFixed(2)}</span>
+              </div>
+              {discountAmount > 0 && (
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12, fontSize: 12 }}>
+                  <span style={{ color: "var(--color-text-secondary)" }}>Porcentaje:</span>
+                  <span style={{ fontWeight: 600, color: "#2563eb" }}>
+                    {((discountAmount / paymentMethodModal.amount) * 100).toFixed(1)}%
                   </span>
-                </label>
-              ))}
+                </div>
+              )}
+              <div style={{ borderTop: "1px solid var(--color-border-tertiary)", paddingTop: 12, display: "flex", justifyContent: "space-between", fontSize: 14 }}>
+                <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>A pagar:</span>
+                <span style={{ fontWeight: 700, color: "#15803d", fontSize: 16 }}>${((paymentMethodModal.amount - discountAmount) / 100).toFixed(2)}</span>
+              </div>
             </div>
+
+            {/* Input de descuento */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", marginBottom: 8 }}>
+                Descuento (en cantidad)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max={paymentMethodModal.amount}
+                value={discountAmount / 100}
+                onChange={(e) => setDiscountAmount(Math.round(parseFloat(e.target.value || "0") * 100))}
+                step="0.01"
+                style={{
+                  width: "100%", padding: "10px 12px", borderRadius: 8,
+                  border: "1px solid var(--color-border-secondary)",
+                  background: "var(--color-background-secondary)",
+                  fontSize: 13, color: "var(--color-text-primary)",
+                  boxSizing: "border-box"
+                }}
+                placeholder="0.00"
+              />
+            </div>
+
+            {/* Método de pago */}
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text-primary)", margin: "0 0 12px" }}>
+                Método de pago
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { value: "CASH", label: "💵 Efectivo" },
+                  { value: "CARD", label: "💳 Tarjeta" },
+                  { value: "TRANSFER", label: "🏦 Transferencia" },
+                  { value: "OXXO", label: "🏪 OXXO" },
+                  { value: "SPEI", label: "📱 SPEI" },
+                ].map((method) => (
+                  <label key={method.value} style={{
+                    display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 8,
+                    border: selectedMethod === method.value ? "1.5px solid #006241" : "1px solid var(--color-border-tertiary)",
+                    background: selectedMethod === method.value ? "rgba(0,98,65,0.05)" : "transparent",
+                    cursor: "pointer", transition: "all 0.2s"
+                  }}>
+                    <input
+                      type="radio"
+                      value={method.value}
+                      checked={selectedMethod === method.value}
+                      onChange={(e) => setSelectedMethod(e.target.value as any)}
+                      style={{ cursor: "pointer", width: 16, height: 16 }}
+                    />
+                    <span style={{ fontSize: 13, color: "var(--color-text-primary)" }}>
+                      {method.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Botones */}
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button
                 onClick={() => setPaymentMethodModal(null)}
                 disabled={markAsPaidMutation.isPending}
                 style={{
-                  padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
-                  background: "transparent", fontSize: 13, cursor: "pointer",
+                  padding: "10px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
+                  background: "transparent", fontSize: 13, fontWeight: 500, cursor: "pointer",
                 }}
               >
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmPayment}
-                disabled={markAsPaidMutation.isPending}
+                disabled={markAsPaidMutation.isPending || discountAmount > paymentMethodModal.amount}
                 style={{
-                  padding: "8px 18px", borderRadius: 8, border: "none",
+                  padding: "10px 18px", borderRadius: 8, border: "none",
                   background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
-                  cursor: markAsPaidMutation.isPending ? "not-allowed" : "pointer",
-                  opacity: markAsPaidMutation.isPending ? 0.6 : 1,
+                  cursor: markAsPaidMutation.isPending || discountAmount > paymentMethodModal.amount ? "not-allowed" : "pointer",
+                  opacity: markAsPaidMutation.isPending || discountAmount > paymentMethodModal.amount ? 0.6 : 1,
                 }}
               >
                 {markAsPaidMutation.isPending ? "Guardando..." : "Confirmar"}
