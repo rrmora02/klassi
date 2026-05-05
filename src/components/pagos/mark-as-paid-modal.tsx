@@ -12,6 +12,7 @@ const schema = z.object({
   method:    z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"] as [PaymentMethod, ...PaymentMethod[]]),
   reference: z.string().max(100, "Máximo 100 caracteres").optional(),
   paidAt:    z.string().refine(v => !v || !isNaN(Date.parse(v)), "Fecha inválida").optional(),
+  discountAmount: z.coerce.number().min(0).default(0),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -38,11 +39,16 @@ const dateCls = `${inputCls} [color-scheme:light] dark:[color-scheme:dark]`;
 export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) {
   const router  = useRouter();
   const markPaid = api.payments.markAsPaid.useMutation();
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { method: "CASH", reference: "", paidAt: new Date().toISOString().slice(0, 10) },
+    defaultValues: { method: "CASH", reference: "", paidAt: new Date().toISOString().slice(0, 10), discountAmount: 0 },
   });
+
+  const amountInCents = parseInt(amount) || 0;
+  const discountPercentage = amountInCents > 0 ? ((discountAmount / amountInCents) * 100).toFixed(1) : "0";
+  const totalToPay = amountInCents - discountAmount;
 
   const onSubmit = async (data: FormValues) => {
     await markPaid.mutateAsync({
@@ -50,6 +56,7 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
       method:    data.method,
       reference: data.reference || undefined,
       paidAt:    data.paidAt ? new Date(data.paidAt) : new Date(),
+      discountAmount: discountAmount,
     });
     router.refresh();
     onClose();
@@ -69,6 +76,39 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-secondary)" }}>
+              <span>Monto original:</span>
+              <strong>${(amountInCents / 100).toFixed(2)}</strong>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
+                  Descuento
+                </label>
+                <input
+                  type="number"
+                  value={discountAmount}
+                  onChange={(e) => setDiscountAmount(Math.max(0, Math.min(amountInCents, parseInt(e.target.value) || 0)))}
+                  min="0"
+                  max={amountInCents}
+                  step="1"
+                  className={inputCls}
+                  placeholder="0"
+                />
+              </div>
+              <div style={{ textAlign: "right", marginBottom: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>
+                  {discountPercentage}%
+                </span>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
+              <span>Total a pagar:</span>
+              <strong>${(totalToPay / 100).toFixed(2)}</strong>
+            </div>
+          </div>
+
           <div>
             <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
               Método de pago
