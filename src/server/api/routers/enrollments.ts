@@ -91,11 +91,11 @@ export const enrollmentsRouter = createTRPCRouter({
        });
 
        if (existing?.status === "ACTIVE") {
-         throw new TRPCError({ code: "CONFLICT", message: "El alumno ya está inscrito en este grupo." });
+         return { ...existing, _isIdempotent: true };
        }
 
        // Upsert (to handle CANCELLED turning into ACTIVE again)
-       return ctx.db.enrollment.upsert({
+       const enrollment = await ctx.db.enrollment.upsert({
           where: { studentId_groupId: { studentId: input.studentId, groupId: input.groupId } },
           create: {
              studentId: input.studentId,
@@ -111,6 +111,7 @@ export const enrollmentsRouter = createTRPCRouter({
              endDate: null,
           }
        });
+       return { ...enrollment, _isIdempotent: false };
     }),
 
   transfer: tenantProcedure

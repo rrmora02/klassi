@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 
 interface Props {
@@ -11,6 +12,7 @@ interface Props {
 
 export function EnrollToGroupModal({ studentId }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [groupId, setGroupId] = useState("");
 
@@ -27,10 +29,27 @@ export function EnrollToGroupModal({ studentId }: Props) {
     if (!groupId) return;
 
     try {
-      await enroll.mutateAsync({ studentId, groupId, discount: 0 });
+      const result = await enroll.mutateAsync({ studentId, groupId, discount: 0 });
+
+      if (result._isIdempotent) {
+        toast({
+          title: "Ya inscrito",
+          description: "El alumno ya está inscrito en este grupo.",
+        });
+      } else {
+        toast({
+          title: "Inscripción exitosa",
+          description: "El alumno ha sido inscrito al grupo correctamente.",
+        });
+      }
+
       router.push(`/dashboard/alumnos/${studentId}`);
     } catch (err: any) {
-      alert(err.message || "Error al inscribir al alumno.");
+      toast({
+        title: "Error",
+        description: err.message || "No pudimos inscribir al alumno.",
+        variant: "destructive",
+      });
     }
   };
 
