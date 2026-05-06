@@ -224,10 +224,10 @@ export const eventsRouter = createTRPCRouter({
         totalExpected: payments
           .filter((p) => p.willAttend === true)
           .reduce((sum, p) => sum + p.amount, 0),
-        // totalCollected: Sum of actual amounts paid
+        // totalCollected: Sum of actual amounts paid minus discounts
         totalCollected: payments
           .filter((p) => p.status === "PAID")
-          .reduce((sum, p) => sum + p.amount, 0),
+          .reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0),
       };
 
       return stats;

@@ -130,15 +130,15 @@ export const paymentsRouter = createTRPCRouter({
       const to   = new Date(input.year, input.month, 0, 23, 59, 59);
 
       const [paid, pending, overdue] = await Promise.all([
-        ctx.db.payment.aggregate({ where: { tenantId: ctx.tenantId, status: "PAID",    paidAt: { gte: from, lte: to } }, _sum: { amount: true }, _count: true }),
-        ctx.db.payment.aggregate({ where: { tenantId: ctx.tenantId, status: "PENDING", dueDate: { gte: from, lte: to } }, _sum: { amount: true }, _count: true }),
-        ctx.db.payment.aggregate({ where: { tenantId: ctx.tenantId, status: "OVERDUE"                                 }, _sum: { amount: true }, _count: true }),
+        ctx.db.payment.findMany({ where: { tenantId: ctx.tenantId, status: "PAID",    paidAt: { gte: from, lte: to } }, select: { amount: true, discountAmount: true } }),
+        ctx.db.payment.findMany({ where: { tenantId: ctx.tenantId, status: "PENDING", dueDate: { gte: from, lte: to } }, select: { amount: true } }),
+        ctx.db.payment.findMany({ where: { tenantId: ctx.tenantId, status: "OVERDUE"                                 }, select: { amount: true } }),
       ]);
 
       return {
-        paid:    { total: paid._sum.amount    ?? 0, count: paid._count },
-        pending: { total: pending._sum.amount ?? 0, count: pending._count },
-        overdue: { total: overdue._sum.amount ?? 0, count: overdue._count },
+        paid:    { total: paid.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0), count: paid.length },
+        pending: { total: pending.reduce((sum, p) => sum + p.amount, 0), count: pending.length },
+        overdue: { total: overdue.reduce((sum, p) => sum + p.amount, 0), count: overdue.length },
       };
     }),
 });
