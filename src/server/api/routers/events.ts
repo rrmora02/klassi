@@ -220,10 +220,15 @@ export const eventsRouter = createTRPCRouter({
           (p) => p.status === "NOT_ATTENDING"
         ).length,
 
-        // totalExpected: Sum of amounts for payments from students attending (not the current event price)
+        // totalExpected: Sum considering discounts already applied on paid payments
         totalExpected: payments
           .filter((p) => p.willAttend === true)
-          .reduce((sum, p) => sum + p.amount, 0),
+          .reduce((sum, p) => {
+            if (p.status === "PAID") {
+              return sum + (p.amount - (p.discountAmount || 0));
+            }
+            return sum + p.amount;
+          }, 0),
         // totalCollected: Sum of actual amounts paid minus discounts
         totalCollected: payments
           .filter((p) => p.status === "PAID")
