@@ -449,15 +449,15 @@ export function EventDetailClient({
                 type="number"
                 min="0"
                 max={paymentMethodModal.amount / 100}
-                value={discountAmount / 100}
+                value={discountAmount === 0 ? "" : (discountAmount / 100)}
                 onChange={(e) => {
-                  const inputValue = e.target.value;
-                  if (inputValue === "" || inputValue === "-") {
+                  const val = e.target.value.trim();
+                  if (val === "") {
                     setDiscountAmount(0);
                   } else {
-                    const numValue = parseFloat(inputValue);
-                    if (!isNaN(numValue) && numValue >= 0) {
-                      setDiscountAmount(Math.round(Math.min(numValue * 100, paymentMethodModal.amount)));
+                    const num = parseFloat(val);
+                    if (!isNaN(num) && num >= 0) {
+                      setDiscountAmount(Math.round(Math.min(num * 100, paymentMethodModal.amount)));
                     }
                   }
                 }}
