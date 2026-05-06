@@ -94,13 +94,16 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
                 </label>
                 <input
                   type="number"
-                  value={discountAmount > 0 ? discountAmount : ""}
+                  value={discountAmount}
                   onChange={(e) => {
-                    const val = e.target.value;
-                    if (val === "") {
+                    const inputValue = e.target.value;
+                    if (inputValue === "" || inputValue === "-") {
                       setDiscountAmount(0);
                     } else {
-                      setDiscountAmount(Math.max(0, Math.min(amountInCents, parseInt(val) || 0)));
+                      const numValue = parseInt(inputValue, 10);
+                      if (!isNaN(numValue) && numValue >= 0) {
+                        setDiscountAmount(Math.min(amountInCents, numValue));
+                      }
                     }
                   }}
                   min="0"
