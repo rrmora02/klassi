@@ -102,7 +102,7 @@ export const instructorsRouter = createTRPCRouter({
         include: { user: true }
       });
       if (existingInstructorByEmail) {
-        return existingInstructorByEmail;
+        return { ...existingInstructorByEmail, _isIdempotent: true };
       }
 
       // Buscar si el correo ya existe en sistema
@@ -184,7 +184,7 @@ export const instructorsRouter = createTRPCRouter({
         // pero no se pudo enviar la invitación. El admin puede intentar reinvitar después.
       }
 
-      return instructor;
+      return { ...instructor, _isIdempotent: false };
     }),
 
   // ── Actualizar Instructor ────────────────────────────────────────

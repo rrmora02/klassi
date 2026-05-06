@@ -132,10 +132,18 @@ export function EventDetailClient({
       const result = await generateMissingMutation.mutateAsync({ eventId });
       refetchPayments();
       refetchStats();
-      toast({
-        title: "Pagos generados",
-        description: result.message,
-      });
+
+      if (result.created === 0) {
+        toast({
+          title: "Sin cambios",
+          description: "No hay alumnos nuevos para agregar",
+        });
+      } else {
+        toast({
+          title: "Pagos generados",
+          description: `Se crearon ${result.created} pago(s) para nuevo(s) alumno(s)`,
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",

@@ -215,7 +215,7 @@ export const studentsRouter = createTRPCRouter({
           },
         });
         if (existing) {
-          return existing;
+          return { ...existing, _isIdempotent: true };
         }
       }
 
@@ -277,10 +277,7 @@ export const studentsRouter = createTRPCRouter({
         }
       }
 
-      // Crear primera mensualidad automáticamente si tiene grupo
-      // (se hace desde el módulo de inscripciones, no aquí)
-
-      return student;
+      return { ...student, _isIdempotent: false };
     }),
 
   // ── Actualizar alumno ─────────────────────────────────────────

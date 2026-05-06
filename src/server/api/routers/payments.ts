@@ -82,12 +82,13 @@ export const paymentsRouter = createTRPCRouter({
       });
 
       if (existingPayment) {
-        return existingPayment;
+        return { ...existingPayment, _isIdempotent: true };
       }
 
-      return ctx.db.payment.create({
+      const newPayment = await ctx.db.payment.create({
         data: { ...input, tenantId: ctx.tenantId, status: "PENDING" },
       });
+      return { ...newPayment, _isIdempotent: false };
     }),
 
   markAsPaid: tenantProcedure

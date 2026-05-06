@@ -54,7 +54,7 @@ export const eventsRouter = createTRPCRouter({
       });
 
       if (existingEvent) {
-        return existingEvent;
+        return { ...existingEvent, _isIdempotent: true };
       }
 
       // Crear evento
@@ -117,7 +117,7 @@ export const eventsRouter = createTRPCRouter({
         });
       }
 
-      return event;
+      return { ...event, _isIdempotent: false };
     }),
 
   // Obtener evento con detalles
