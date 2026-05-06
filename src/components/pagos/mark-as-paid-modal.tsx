@@ -18,10 +18,11 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 interface Props {
-  paymentId:  string;
-  concept:    string;
-  amount:     string;
-  onClose:    () => void;
+  paymentId:    string;
+  concept:      string;
+  amount:       string;
+  studentName?: string;
+  onClose:      () => void;
 }
 
 const METHOD_LABELS: Record<string, string> = {
@@ -36,7 +37,7 @@ const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255
 const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
 const dateCls = `${inputCls} [color-scheme:light] dark:[color-scheme:dark]`;
 
-export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) {
+export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClose }: Props) {
   const router  = useRouter();
   const markPaid = api.payments.markAsPaid.useMutation();
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -71,6 +72,11 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
         <h2 style={{ fontSize: 17, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
           Registrar pago recibido
         </h2>
+        {studentName && (
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 4px" }}>
+            {studentName}
+          </p>
+        )}
         <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 20px" }}>
           {concept} — <strong>{amount}</strong>
         </p>
@@ -88,8 +94,15 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
                 </label>
                 <input
                   type="number"
-                  value={discountAmount}
-                  onChange={(e) => setDiscountAmount(Math.max(0, Math.min(amountInCents, parseInt(e.target.value) || 0)))}
+                  value={discountAmount > 0 ? discountAmount : ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val === "") {
+                      setDiscountAmount(0);
+                    } else {
+                      setDiscountAmount(Math.max(0, Math.min(amountInCents, parseInt(val) || 0)));
+                    }
+                  }}
                   min="0"
                   max={amountInCents}
                   step="1"

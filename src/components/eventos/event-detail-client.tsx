@@ -29,7 +29,7 @@ export function EventDetailClient({
     "PENDING" | "PAID" | "NOT_ATTENDING" | "CANCELLED" | undefined
   >(undefined);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [paymentMethodModal, setPaymentMethodModal] = useState<{ paymentId: string; amount: number } | null>(null);
+  const [paymentMethodModal, setPaymentMethodModal] = useState<{ paymentId: string; amount: number; studentName: string } | null>(null);
   const [selectedMethod, setSelectedMethod] = useState<"CASH" | "TRANSFER" | "CARD" | "OXXO" | "SPEI">("CASH");
   const [discountAmount, setDiscountAmount] = useState(0);
 
@@ -83,8 +83,8 @@ export function EventDetailClient({
     }
   };
 
-  const handleMarkAsPaid = async (paymentId: string, amount: number) => {
-    setPaymentMethodModal({ paymentId, amount });
+  const handleMarkAsPaid = async (paymentId: string, amount: number, studentName: string) => {
+    setPaymentMethodModal({ paymentId, amount, studentName });
     setDiscountAmount(0); // Reset discount
   };
 
@@ -348,7 +348,7 @@ export function EventDetailClient({
                         {payment.status === "PENDING" &&
                           payment.willAttend === true && (
                             <button
-                              onClick={() => handleMarkAsPaid(payment.id, payment.amount)}
+                              onClick={() => handleMarkAsPaid(payment.id, payment.amount, fullName(payment.student.firstName, payment.student.lastName))}
                               className="rounded px-2.5 py-1 text-xs bg-sb-accent text-white hover:bg-sb-green transition-colors"
                             >
                               Pagar
@@ -409,9 +409,12 @@ export function EventDetailClient({
           display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999,
         }}>
           <div style={{ background: "var(--color-background-primary)", width: 420, borderRadius: 12, padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}>
-            <h2 style={{ fontSize: 17, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 24px" }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
               Registrar pago
             </h2>
+            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 24px" }}>
+              {paymentMethodModal?.studentName}
+            </p>
 
             {/* Resumen de monto */}
             <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 16, marginBottom: 20 }}>
@@ -445,9 +448,16 @@ export function EventDetailClient({
               <input
                 type="number"
                 min="0"
-                max={paymentMethodModal.amount}
-                value={discountAmount / 100}
-                onChange={(e) => setDiscountAmount(Math.round(parseFloat(e.target.value || "0") * 100))}
+                max={paymentMethodModal.amount / 100}
+                value={discountAmount > 0 ? (discountAmount / 100).toFixed(2) : ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "") {
+                    setDiscountAmount(0);
+                  } else {
+                    setDiscountAmount(Math.round(Math.min(parseFloat(val) * 100, paymentMethodModal.amount)));
+                  }
+                }}
                 step="0.01"
                 style={{
                   width: "100%", padding: "10px 12px", borderRadius: 8,
