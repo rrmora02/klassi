@@ -94,11 +94,11 @@ export function CreateEventForm({ groups }: CreateEventFormProps) {
       const result = await createMutation.mutateAsync({
         name: formData.name,
         description: formData.description || undefined,
-        date: new Date(formData.date),
+        date: new Date(formData.date + "T00:00:00"),
         isSchoolWide: formData.isSchoolWide,
         groupIds: formData.isSchoolWide ? [""] : formData.groupIds, // dummy si es school-wide
         amount: Math.round(parseFloat(formData.amount) * 100), // convertir a centavos
-        dueDate: new Date(formData.dueDate),
+        dueDate: new Date(formData.dueDate + "T00:00:00"),
       });
 
       toast({
@@ -134,8 +134,8 @@ export function CreateEventForm({ groups }: CreateEventFormProps) {
         .filter((g) => formData.groupIds.includes(g.id))
         .map((g) => g.name);
 
-  const previewDate = formData.date ? new Date(formData.date) : new Date();
-  const previewDueDate = formData.dueDate ? new Date(formData.dueDate) : new Date();
+  const previewDate = formData.date ? new Date(formData.date + "T00:00:00") : new Date();
+  const previewDueDate = formData.dueDate ? new Date(formData.dueDate + "T00:00:00") : new Date();
   const previewAmount = formData.amount ? Math.round(parseFloat(formData.amount) * 100) : 0;
 
   return (
