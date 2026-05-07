@@ -105,7 +105,7 @@ export function PaymentsClient({ payments, students }: Props) {
         <MarkAsPaidModal
           paymentId={markingPayment.id}
           concept={markingPayment.concept}
-          amount={formatCurrency(markingPayment.amount, markingPayment.currency)}
+          amount={String(markingPayment.amount)}
           studentName={fullName(markingPayment.student.firstName, markingPayment.student.lastName)}
           onClose={() => setMarkingId(null)}
         />
