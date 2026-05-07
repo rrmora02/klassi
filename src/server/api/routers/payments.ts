@@ -142,4 +142,30 @@ export const paymentsRouter = createTRPCRouter({
         overdue: { total: overdue.reduce((sum, p) => sum + p.amount, 0), count: overdue.length },
       };
     }),
+
+  checkMonthlyPaymentExists: tenantProcedure
+    .input(z.object({
+      studentId: z.string(),
+      month: z.number().min(1).max(12),
+      year: z.number(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const from = new Date(input.year, input.month - 1, 1);
+      const to = new Date(input.year, input.month, 0, 23, 59, 59);
+
+      const existingPayment = await ctx.db.payment.findFirst({
+        where: {
+          studentId: input.studentId,
+          tenantId: ctx.tenantId,
+          concept: { contains: "mensualidad", mode: "insensitive" },
+          OR: [
+            { paidAt: { gte: from, lte: to } },
+            { createdAt: { gte: from, lte: to } },
+          ],
+        },
+        select: { id: true, concept: true, amount: true, status: true, paidAt: true, createdAt: true },
+      });
+
+      return { exists: !!existingPayment, payment: existingPayment };
+    }),
 });

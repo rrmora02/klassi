@@ -38,11 +38,15 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const router  = useRouter();
   const create  = api.payments.create.useMutation();
   const markPaid = api.payments.markAsPaid.useMutation();
+  const checkMonthly = api.payments.checkMonthlyPaymentExists.useMutation();
 
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
   const [studentError,    setStudentError]    = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
   const [discountInputValue, setDiscountInputValue] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [existingMonthlyPayment, setExistingMonthlyPayment] = useState<any>(null);
+  const [pendingPaymentData, setPendingPaymentData] = useState<any>(null);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -96,22 +100,15 @@ export function NewPaymentModal({ students, onClose }: Props) {
 
   const discountExceedsAmount = amountInCents > 0 && calculatedDiscountAmount > amountInCents;
 
-  const onSubmit = async (data: FormValues) => {
-    if (!selectedStudent) {
-      setStudentError("Selecciona un alumno");
-      return;
-    }
-    setStudentError("");
-
+  const createPayment = async (data: FormValues) => {
     const payment = await create.mutateAsync({
-      studentId: selectedStudent.id,
+      studentId: selectedStudent!.id,
       concept:   data.concept,
       amount:    Math.round(data.amount * 100),
       method:    data.method,
       dueDate:   data.dueDate ? new Date(data.dueDate) : undefined,
     });
 
-    // Si se marca como pagado inmediatamente
     if (data.markAsPaid && paidAt) {
       await markPaid.mutateAsync({
         id: payment.id,
@@ -123,6 +120,37 @@ export function NewPaymentModal({ students, onClose }: Props) {
 
     router.refresh();
     onClose();
+  };
+
+  const onSubmit = async (data: FormValues) => {
+    if (!selectedStudent) {
+      setStudentError("Selecciona un alumno");
+      return;
+    }
+    setStudentError("");
+
+    const isMonthly = data.concept.toLowerCase().includes("mensualidad");
+
+    if (isMonthly) {
+      try {
+        const now = new Date();
+        const result = await checkMonthly.mutateAsync({
+          studentId: selectedStudent.id,
+          month: now.getMonth() + 1,
+          year: now.getFullYear(),
+        });
+
+        if (result.exists && result.payment) {
+          setShowConfirmation(true);
+          setPendingPaymentData(data);
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking monthly payment:", error);
+      }
+    }
+
+    await createPayment(data);
   };
 
   return (
@@ -275,6 +303,68 @@ export function NewPaymentModal({ students, onClose }: Props) {
           </div>
         </form>
       </div>
+
+      {showConfirmation && existingMonthlyPayment && pendingPaymentData && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000,
+        }}>
+          <div style={{ background: "var(--color-background-primary)", width: 420, borderRadius: 12, padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
+              ⚠️ Pago de mensualidad duplicado
+            </h2>
+            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 16px" }}>
+              Este estudiante ya tiene un pago de mensualidad registrado en el mes actual.
+            </p>
+
+            <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 8px" }}>
+                <strong>Pago existente:</strong>
+              </p>
+              <p style={{ fontSize: 13, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
+                {existingMonthlyPayment.concept}
+              </p>
+              <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>
+                Monto: ${(existingMonthlyPayment.amount / 100).toFixed(2)} · Estado: <strong>{existingMonthlyPayment.status}</strong>
+              </p>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfirmation(false);
+                  setPendingPaymentData(null);
+                }}
+                disabled={checkMonthly.isLoading || create.isLoading}
+                style={{
+                  padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
+                  background: "transparent", fontSize: 13, cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  setShowConfirmation(false);
+                  await createPayment(pendingPaymentData);
+                  setPendingPaymentData(null);
+                }}
+                disabled={checkMonthly.isLoading || create.isLoading}
+                style={{
+                  padding: "8px 18px", borderRadius: 8, border: "none",
+                  background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
+                  cursor: (checkMonthly.isLoading || create.isLoading) ? "not-allowed" : "pointer",
+                  opacity: (checkMonthly.isLoading || create.isLoading) ? 0.6 : 1,
+                }}
+              >
+                {checkMonthly.isLoading ? "Verificando..." : create.isLoading ? "Creando..." : "Continuar de todas formas"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
