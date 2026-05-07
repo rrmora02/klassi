@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/trpc";
 import { formatCurrency, formatDate, fullName } from "@/lib/utils";
 import { Clock, Users, DollarSign, CheckCircle, XCircle, Copy, Check } from "lucide-react";
@@ -23,6 +24,7 @@ export function EventDetailClient({
   isSchoolWide,
   groups,
 }: EventDetailClientProps) {
+  const router = useRouter();
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [filterStatus, setFilterStatus] = useState<
@@ -98,6 +100,7 @@ export function EventDetailClient({
       });
       refetchPayments();
       refetchStats();
+      router.refresh();
       toast({
         title: "Pagado",
         description: "Se marcó el pago como realizado",
