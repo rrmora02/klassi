@@ -8,9 +8,10 @@ import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 
 interface Props {
   studentId: string;
+  onEnrollSuccess?: () => void;
 }
 
-export function EnrollToGroupModal({ studentId }: Props) {
+export function EnrollToGroupModal({ studentId, onEnrollSuccess }: Props) {
   const router = useRouter();
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
@@ -44,8 +45,14 @@ export function EnrollToGroupModal({ studentId }: Props) {
       }
 
       handleClose();
-      router.refresh();
-      router.push(`/dashboard/alumnos/${studentId}`);
+
+      // Notify parent component to refresh data
+      if (onEnrollSuccess) {
+        onEnrollSuccess();
+      } else {
+        // Fallback: refresh and navigate if no callback provided
+        router.refresh();
+      }
     } catch (err: any) {
       toast({
         title: "Error",
