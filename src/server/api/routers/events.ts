@@ -620,6 +620,7 @@ export const eventsRouter = createTRPCRouter({
               select: {
                 id: true,
                 amount: true,
+                discountAmount: true,
                 status: true,
                 paidAt: true,
               },
@@ -638,16 +639,18 @@ export const eventsRouter = createTRPCRouter({
           );
           const paidAmount = paidPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
 
+          const pendingPayments = event.eventPayments.filter((p) => p.status === "PENDING");
+          const pendingAmount = pendingPayments.reduce((sum, p) => sum + p.amount, 0);
+
           return {
             eventId: event.id,
             eventName: event.name,
             eventDate: event.date,
             totalPayments: event.eventPayments.length,
             paidPayments: paidPayments.length,
-            pendingPayments: event.eventPayments.filter((p) => p.status === "PENDING")
-              .length,
+            pendingPayments: pendingPayments.length,
             paidAmount,
-            expectedAmount: event.amount * event.eventPayments.length,
+            expectedAmount: paidAmount + pendingAmount,
           };
         });
 

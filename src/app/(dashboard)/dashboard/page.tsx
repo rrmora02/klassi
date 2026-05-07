@@ -30,8 +30,8 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
   const [
     totalStudents,
     activeGroups,
-    monthRevenue,
-    eventPaymentsRevenue,
+    monthPayments,
+    monthEventPayments,
     overdueCount,
     overduePayments,
     recentStudents,
@@ -41,18 +41,18 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
 
     db.group.count({ where: { tenantId, isActive: true } }),
 
-    db.payment.aggregate({
+    db.payment.findMany({
       where: { tenantId, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } },
-      _sum: { amount: true },
+      select: { amount: true, discountAmount: true },
     }),
 
-    db.eventPayment.aggregate({
+    db.eventPayment.findMany({
       where: {
         event: { tenantId },
         status: "PAID",
         paidAt: { gte: monthStart, lte: monthEnd },
       },
-      _sum: { amount: true },
+      select: { amount: true, discountAmount: true },
     }),
 
     db.payment.count({ where: { tenantId, status: "OVERDUE" } }),
@@ -111,13 +111,16 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
       };
     });
 
+  const monthlyPaymentRevenue = monthPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
+  const eventPaymentRevenue = monthEventPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
+
   return {
     stats: {
       totalStudents,
       activeGroups,
-      monthRevenue: monthRevenue._sum.amount ?? 0,
-      eventPaymentsRevenue: eventPaymentsRevenue._sum.amount ?? 0,
-      totalRevenue: (monthRevenue._sum.amount ?? 0) + (eventPaymentsRevenue._sum.amount ?? 0),
+      monthRevenue: monthlyPaymentRevenue,
+      eventPaymentsRevenue: eventPaymentRevenue,
+      totalRevenue: monthlyPaymentRevenue + eventPaymentRevenue,
       overdueCount,
     },
     overduePayments,
