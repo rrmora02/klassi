@@ -42,8 +42,28 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
   const [studentError,    setStudentError]    = useState("");
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountInputValue, setDiscountInputValue] = useState("");
 
   const today = new Date().toISOString().split('T')[0];
+
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputVal = e.target.value;
+    setDiscountInputValue(inputVal);
+
+    if (inputVal === "" || inputVal === ".") {
+      setDiscountAmount(0);
+      return;
+    }
+
+    const parsed = parseFloat(inputVal);
+    if (!isNaN(parsed) && parsed >= 0) {
+      const amountInPesos = amount || 0;
+      const amountInCents = Math.round(amountInPesos * 100);
+      const discountInCents = Math.round(parsed * 100);
+      const maxDiscount = Math.min(amountInCents, discountInCents);
+      setDiscountAmount(maxDiscount);
+    }
+  };
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -175,23 +195,19 @@ export function NewPaymentModal({ students, onClose }: Props) {
                     <input
                       type="text"
                       inputMode="decimal"
-                      value={discountAmount === 0 ? "" : (discountAmount / 100).toFixed(2)}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === "" || val === ".") {
-                          setDiscountAmount(0);
+                      value={discountInputValue}
+                      onChange={handleDiscountChange}
+                      onBlur={(e) => {
+                        if (discountAmount > 0) {
+                          setDiscountInputValue((discountAmount / 100).toFixed(2));
                         } else {
-                          const num = parseFloat(val);
-                          if (!isNaN(num) && num >= 0) {
-                            const amountInPesos = (amount || 0);
-                            const discountInPesos = num;
-                            const discountInCents = Math.round(discountInPesos * 100);
-                            setDiscountAmount(Math.min(Math.round(amountInPesos * 100), discountInCents));
-                          }
+                          setDiscountInputValue("");
                         }
                       }}
                       className={inputCls}
                       placeholder="0.00"
+                      maxLength={10}
+                      autoComplete="off"
                     />
                   </div>
                   <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
