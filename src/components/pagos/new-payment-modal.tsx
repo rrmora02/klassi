@@ -47,6 +47,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [existingMonthlyPayment, setExistingMonthlyPayment] = useState<any>(null);
   const [pendingPaymentData, setPendingPaymentData] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -101,27 +102,33 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const discountExceedsAmount = amountInCents > 0 && calculatedDiscountAmount > amountInCents;
 
   const createPayment = async (data: FormValues) => {
-    const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
+    try {
+      setErrorMessage("");
+      const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
 
-    const payment = await create.mutateAsync({
-      studentId: selectedStudent!.id,
-      concept:   data.concept,
-      amount:    Math.round(data.amount * 100),
-      method:    data.method,
-      dueDate:   paymentDate,
-    });
-
-    if (data.markAsPaid && paidAt) {
-      await markPaid.mutateAsync({
-        id: payment.id,
-        method: data.method,
-        paidAt: new Date(paidAt),
-        discountAmount: calculatedDiscountAmount,
+      const payment = await create.mutateAsync({
+        studentId: selectedStudent!.id,
+        concept:   data.concept,
+        amount:    Math.round(data.amount * 100),
+        method:    data.method,
+        dueDate:   paymentDate,
       });
-    }
 
-    router.refresh();
-    onClose();
+      if (data.markAsPaid && paidAt) {
+        await markPaid.mutateAsync({
+          id: payment.id,
+          method: data.method,
+          paidAt: new Date(paidAt),
+          discountAmount: calculatedDiscountAmount,
+        });
+      }
+
+      router.refresh();
+      onClose();
+    } catch (error: any) {
+      const message = error?.message || "Error al crear el pago";
+      setErrorMessage(message);
+    }
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -284,6 +291,14 @@ export function NewPaymentModal({ students, onClose }: Props) {
                 </div>
               )}
             </>
+          )}
+
+          {errorMessage && (
+            <div style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: "#b91c1c", margin: 0 }}>
+                {errorMessage}
+              </p>
+            </div>
           )}
 
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
