@@ -298,21 +298,27 @@ export function NewPaymentModal({ students, onClose }: Props) {
               <p style={{ fontSize: 13, color: "#b91c1c", margin: 0 }}>
                 {errorMessage}
               </p>
+              <p style={{ fontSize: 12, color: "#b91c1c", margin: "8px 0 0", fontStyle: "italic" }}>
+                Cambia la fecha de límite para otro mes o cancela
+              </p>
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
-            <button type="button" onClick={onClose} style={{
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
+            <button type="button" onClick={() => {
+              setErrorMessage("");
+              onClose();
+            }} style={{
               padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
               background: "transparent", fontSize: 13, cursor: "pointer",
             }}>
               Cancelar
             </button>
-            <button type="submit" disabled={create.isLoading || markPaid.isLoading} style={{
+            <button type="submit" disabled={create.isLoading || markPaid.isLoading || !!errorMessage} style={{
               padding: "8px 18px", borderRadius: 8, border: "none",
-              background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
-              cursor: (create.isLoading || markPaid.isLoading) ? "not-allowed" : "pointer",
-              opacity: (create.isLoading || markPaid.isLoading) ? 0.6 : 1,
+              background: errorMessage ? "#ccc" : "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
+              cursor: (create.isLoading || markPaid.isLoading || errorMessage) ? "not-allowed" : "pointer",
+              opacity: (create.isLoading || markPaid.isLoading || errorMessage) ? 0.6 : 1,
             }}>
               {create.isLoading ? "Creando..." : markPaid.isLoading ? "Guardando pago..." : "Crear pago"}
             </button>
