@@ -129,25 +129,24 @@ export function NewPaymentModal({ students, onClose }: Props) {
     }
     setStudentError("");
 
-    const isMonthly = data.concept.toLowerCase().includes("mensualidad");
+    try {
+      const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
+      const month = paymentDate.getMonth() + 1;
+      const year = paymentDate.getFullYear();
 
-    if (isMonthly) {
-      try {
-        const now = new Date();
-        const result = await checkMonthly.mutateAsync({
-          studentId: selectedStudent.id,
-          month: now.getMonth() + 1,
-          year: now.getFullYear(),
-        });
+      const result = await checkMonthly.mutateAsync({
+        studentId: selectedStudent.id,
+        month,
+        year,
+      });
 
-        if (result.exists && result.payment) {
-          setShowConfirmation(true);
-          setPendingPaymentData(data);
-          return;
-        }
-      } catch (error) {
-        console.error("Error checking monthly payment:", error);
+      if (result.exists && result.payment) {
+        setShowConfirmation(true);
+        setPendingPaymentData(data);
+        return;
       }
+    } catch (error) {
+      console.error("Error checking payment:", error);
     }
 
     await createPayment(data);
@@ -311,10 +310,10 @@ export function NewPaymentModal({ students, onClose }: Props) {
         }}>
           <div style={{ background: "var(--color-background-primary)", width: 420, borderRadius: 12, padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}>
             <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
-              ⚠️ Pago de mensualidad duplicado
+              ⚠️ Pago ya existe en este mes
             </h2>
             <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 16px" }}>
-              Este estudiante ya tiene un pago de mensualidad registrado en el mes actual.
+              Este estudiante ya tiene un pago registrado para el mismo mes. ¿Deseas continuar creando otro pago?
             </p>
 
             <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, marginBottom: 16 }}>

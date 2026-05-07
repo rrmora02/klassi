@@ -157,13 +157,11 @@ export const paymentsRouter = createTRPCRouter({
         where: {
           studentId: input.studentId,
           tenantId: ctx.tenantId,
-          concept: { contains: "mensualidad", mode: "insensitive" },
-          OR: [
-            { paidAt: { gte: from, lte: to } },
-            { createdAt: { gte: from, lte: to } },
-          ],
+          dueDate: { gte: from, lte: to },
+          status: { in: ["PENDING", "PAID"] },
         },
-        select: { id: true, concept: true, amount: true, status: true, paidAt: true, createdAt: true },
+        select: { id: true, concept: true, amount: true, status: true, dueDate: true },
+        orderBy: { dueDate: "desc" },
       });
 
       return { exists: !!existingPayment, payment: existingPayment };
