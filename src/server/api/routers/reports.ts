@@ -10,10 +10,14 @@ export const reportsRouter = createTRPCRouter({
         Array.from({ length: 12 }, (_, i) => {
           const from = new Date(input.year, i, 1);
           const to   = new Date(input.year, i + 1, 0, 23, 59, 59);
-          return ctx.db.payment.aggregate({
+          return ctx.db.payment.findMany({
             where: { tenantId: ctx.tenantId, status: "PAID", paidAt: { gte: from, lte: to } },
-            _sum: { amount: true }, _count: true,
-          }).then(r => ({ month: i + 1, total: r._sum.amount ?? 0, count: r._count }));
+            select: { amount: true, discountAmount: true },
+          }).then(payments => ({
+            month: i + 1,
+            total: payments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0),
+            count: payments.length
+          }));
         })
       );
       return results;

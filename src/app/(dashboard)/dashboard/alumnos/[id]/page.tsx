@@ -50,7 +50,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
   const activeEnrollments = student.enrollments.filter(e => e.status === "ACTIVE");
   const totalPaid = student.payments
     .filter(p => p.status === "PAID")
-    .reduce((sum, p) => sum + p.amount, 0);
+    .reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
   const overduePayments = student.payments.filter(p => p.status === "OVERDUE");
 
   return (

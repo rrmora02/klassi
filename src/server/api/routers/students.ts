@@ -460,20 +460,20 @@ export const studentsRouter = createTRPCRouter({
         db.attendance.count({
           where: { enrollment: { studentId: input.id }, status: "PRESENT" },
         }),
-        db.payment.aggregate({
-          where:  { studentId: input.id },
-          _sum:   { amount: true },
-          _count: true,
+        db.payment.findMany({
+          where:  { studentId: input.id, status: "PAID" },
+          select: { amount: true, discountAmount: true },
         }),
       ]);
 
       const attendance = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : null;
+      const totalPaid = payments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
 
       return {
         attendanceRate: attendance,
         totalClasses,
-        totalPaid:      payments._sum.amount ?? 0,
-        totalPayments:  payments._count,
+        totalPaid,
+        totalPayments:  payments.length,
       };
     }),
 
