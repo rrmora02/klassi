@@ -109,8 +109,9 @@ export const paymentsRouter = createTRPCRouter({
         }
       }
 
+      const { force, ...paymentData } = input;
       const newPayment = await ctx.db.payment.create({
-        data: { ...input, tenantId: ctx.tenantId, status: "PENDING", dueDate },
+        data: { ...paymentData, tenantId: ctx.tenantId, status: "PENDING", dueDate },
       });
       return { ...newPayment, _isIdempotent: false };
     }),
