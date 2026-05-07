@@ -93,13 +93,12 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
                   Descuento (MXN)
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="text"
+                  inputMode="decimal"
                   value={discountAmount === 0 ? "" : (discountAmount / 100).toFixed(2)}
                   onChange={(e) => {
-                    const val = e.target.value.trim();
-                    if (val === "") {
+                    const val = e.target.value;
+                    if (val === "" || val === ".") {
                       setDiscountAmount(0);
                     } else {
                       const num = parseFloat(val);
