@@ -36,11 +36,12 @@ export default async function ReportesPage() {
     Array.from({ length: 12 }, async (_, i) => {
       const from = new Date(year, i, 1);
       const to   = new Date(year, i + 1, 0, 23, 59, 59);
-      const r = await db.payment.aggregate({
+      const payments = await db.payment.findMany({
         where: { tenantId: tenant.id, status: "PAID", paidAt: { gte: from, lte: to } },
-        _sum: { amount: true }, _count: true,
+        select: { amount: true, discountAmount: true },
       });
-      return { month: i, total: r._sum.amount ?? 0, count: r._count };
+      const total = payments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
+      return { month: i, total, count: payments.length };
     })
   );
 
@@ -68,13 +69,26 @@ export default async function ReportesPage() {
   const totalStudents = discStats.reduce((a, d) => a + d.students, 0);
 
   // Pagos: resumen del mes actual
-  const [paidMonth, pendingAll, overdueAll, collectionPaid, collectionTotal] = await Promise.all([
-    db.payment.aggregate({ where: { tenantId: tenant.id, status: "PAID",    paidAt:  { gte: monthStart, lte: monthEnd } }, _sum: { amount: true }, _count: true }),
-    db.payment.aggregate({ where: { tenantId: tenant.id, status: "PENDING"                                              }, _sum: { amount: true }, _count: true }),
-    db.payment.aggregate({ where: { tenantId: tenant.id, status: "OVERDUE"                                              }, _sum: { amount: true }, _count: true }),
+  const [paidMonthPayments, pendingPayments, overduePayments, collectionPaid, collectionTotal] = await Promise.all([
+    db.payment.findMany({ where: { tenantId: tenant.id, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } }, select: { amount: true, discountAmount: true } }),
+    db.payment.findMany({ where: { tenantId: tenant.id, status: "PENDING" }, select: { amount: true } }),
+    db.payment.findMany({ where: { tenantId: tenant.id, status: "OVERDUE" }, select: { amount: true } }),
     db.payment.count({ where: { tenantId: tenant.id, status: "PAID",    paidAt:  { gte: monthStart, lte: monthEnd } } }),
     db.payment.count({ where: { tenantId: tenant.id, status: { in: ["PAID","PENDING","OVERDUE"] }, dueDate: { gte: monthStart, lte: monthEnd } } }),
   ]);
+
+  const paidMonth = {
+    _sum: { amount: paidMonthPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0) },
+    _count: paidMonthPayments.length,
+  };
+  const pendingAll = {
+    _sum: { amount: pendingPayments.reduce((sum, p) => sum + p.amount, 0) },
+    _count: pendingPayments.length,
+  };
+  const overdueAll = {
+    _sum: { amount: overduePayments.reduce((sum, p) => sum + p.amount, 0) },
+    _count: overduePayments.length,
+  };
 
   const collectionRate = collectionTotal > 0 ? Math.round((collectionPaid / collectionTotal) * 100) : 0;
 
@@ -97,8 +111,10 @@ export default async function ReportesPage() {
         select: {
           id: true,
           amount: true,
+          discountAmount: true,
           status: true,
           paidAt: true,
+          willAttend: true,
         },
       },
     },
@@ -106,12 +122,15 @@ export default async function ReportesPage() {
 
   const monthEvents = events.filter(e => e.date >= monthStart && e.date < monthEnd);
   const eventsPaid = monthEvents.reduce((sum, e) => {
-    const paid = e.eventPayments.filter(p => p.status === "PAID" && p.paidAt !== null).reduce((s, p) => s + p.amount, 0);
+    const paid = e.eventPayments.filter(p => p.status === "PAID" && p.paidAt !== null).reduce((s, p) => s + (p.amount - (p.discountAmount || 0)), 0);
     return sum + paid;
   }, 0);
   const eventsExpected = monthEvents.reduce((sum, e) => {
-    const total = e.eventPayments.filter(p => p.willAttend === true).length * e.amount;
-    return sum + total;
+    const paidPayments = e.eventPayments.filter(p => p.status === "PAID");
+    const pendingPayments = e.eventPayments.filter(p => p.status === "PENDING");
+    const paidAmount = paidPayments.reduce((s, p) => s + (p.amount - (p.discountAmount || 0)), 0);
+    const pendingAmount = pendingPayments.reduce((s, p) => s + p.amount, 0);
+    return sum + paidAmount + pendingAmount;
   }, 0);
   const eventCount = monthEvents.length;
   const eventPaymentsPaid = monthEvents.reduce((sum, e) => sum + e.eventPayments.filter(p => p.status === "PAID").length, 0);
