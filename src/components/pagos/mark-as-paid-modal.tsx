@@ -49,8 +49,22 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
   });
 
   const amountInCents = parseInt(amount) || 0;
-  const discountPercentage = amountInCents > 0 ? ((discountAmount / amountInCents) * 100).toFixed(1) : "0";
-  const totalToPay = amountInCents - discountAmount;
+
+  // Calcular descuento basado en el input actual para sincronización inmediata
+  const calculatedDiscountAmount = (() => {
+    if (discountInputValue === "" || discountInputValue === ".") {
+      return 0;
+    }
+    const parsed = parseFloat(discountInputValue);
+    if (!isNaN(parsed) && parsed >= 0) {
+      const discountInCents = Math.round(parsed * 100);
+      return Math.min(amountInCents, discountInCents);
+    }
+    return 0;
+  })();
+
+  const discountPercentage = amountInCents > 0 ? ((calculatedDiscountAmount / amountInCents) * 100).toFixed(1) : "0";
+  const totalToPay = amountInCents - calculatedDiscountAmount;
 
   const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputVal = e.target.value;
@@ -75,7 +89,7 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
       method:    data.method,
       reference: data.reference || undefined,
       paidAt:    data.paidAt ? new Date(data.paidAt) : new Date(),
-      discountAmount: discountAmount,
+      discountAmount: calculatedDiscountAmount,
     });
     router.refresh();
     onClose();

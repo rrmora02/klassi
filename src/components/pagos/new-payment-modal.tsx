@@ -80,6 +80,21 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const paidAt = watch("paidAt");
   const amount = watch("amount");
 
+  // Calcular descuento basado en el input actual para sincronización inmediata
+  const calculatedDiscountAmount = (() => {
+    if (discountInputValue === "" || discountInputValue === ".") {
+      return 0;
+    }
+    const parsed = parseFloat(discountInputValue);
+    if (!isNaN(parsed) && parsed >= 0) {
+      const amountInPesos = amount || 0;
+      const amountInCents = Math.round(amountInPesos * 100);
+      const discountInCents = Math.round(parsed * 100);
+      return Math.min(amountInCents, discountInCents);
+    }
+    return 0;
+  })();
+
   const onSubmit = async (data: FormValues) => {
     if (!selectedStudent) {
       setStudentError("Selecciona un alumno");
@@ -101,7 +116,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
         id: payment.id,
         method: data.method,
         paidAt: new Date(paidAt),
-        discountAmount: discountAmount,
+        discountAmount: calculatedDiscountAmount,
       });
     }
 
@@ -216,13 +231,13 @@ export function NewPaymentModal({ students, onClose }: Props) {
                   </div>
                   <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
                     <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                      {((amount || 0) > 0 ? ((discountAmount / (Math.round((amount || 0) * 100))) * 100).toFixed(1) : "0")}%
+                      {((amount || 0) > 0 ? ((calculatedDiscountAmount / (Math.round((amount || 0) * 100))) * 100).toFixed(1) : "0")}%
                     </span>
                   </div>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
                   <span>Total a pagar:</span>
-                  <strong>${((Math.round((amount || 0) * 100) - discountAmount) / 100).toFixed(2)}</strong>
+                  <strong>${((Math.round((amount || 0) * 100) - calculatedDiscountAmount) / 100).toFixed(2)}</strong>
                 </div>
               </div>
             </>
