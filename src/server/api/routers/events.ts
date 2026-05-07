@@ -636,7 +636,7 @@ export const eventsRouter = createTRPCRouter({
           const paidPayments = event.eventPayments.filter(
             (p) => p.status === "PAID" && p.paidAt !== null
           );
-          const paidAmount = paidPayments.reduce((sum, p) => sum + p.amount, 0);
+          const paidAmount = paidPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
 
           return {
             eventId: event.id,
