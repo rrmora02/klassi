@@ -101,7 +101,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
 
   const discountExceedsAmount = amountInCents > 0 && calculatedDiscountAmount > amountInCents;
 
-  const createPayment = async (data: FormValues) => {
+  const createPayment = async (data: FormValues, force: boolean = false) => {
     try {
       setErrorMessage("");
       const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
@@ -126,8 +126,19 @@ export function NewPaymentModal({ students, onClose }: Props) {
       router.refresh();
       onClose();
     } catch (error: any) {
-      const message = error?.message || "Error al crear el pago";
-      setErrorMessage(message);
+      if (error?.data?.code === "BAD_REQUEST" && error?.message?.includes("Ya existe")) {
+        setShowConfirmation(true);
+        setPendingPaymentData(data);
+        setExistingMonthlyPayment({
+          concept: "Pago existente en este mes",
+          amount: 0,
+          status: "PENDING",
+          message: error?.message
+        });
+      } else {
+        const message = error?.message || "Error al crear el pago";
+        setErrorMessage(message);
+      }
     }
   };
 
@@ -298,17 +309,11 @@ export function NewPaymentModal({ students, onClose }: Props) {
               <p style={{ fontSize: 13, color: "#b91c1c", margin: 0 }}>
                 {errorMessage}
               </p>
-              <p style={{ fontSize: 12, color: "#b91c1c", margin: "8px 0 0", fontStyle: "italic" }}>
-                Cambia la fecha de límite para otro mes o cancela
-              </p>
             </div>
           )}
 
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
-            <button type="button" onClick={() => {
-              setErrorMessage("");
-              onClose();
-            }} style={{
+            <button type="button" onClick={onClose} style={{
               padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
               background: "transparent", fontSize: 13, cursor: "pointer",
             }}>
@@ -316,7 +321,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
             </button>
             <button type="submit" disabled={create.isLoading || markPaid.isLoading || !!errorMessage} style={{
               padding: "8px 18px", borderRadius: 8, border: "none",
-              background: errorMessage ? "#ccc" : "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
+              background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
               cursor: (create.isLoading || markPaid.isLoading || errorMessage) ? "not-allowed" : "pointer",
               opacity: (create.isLoading || markPaid.isLoading || errorMessage) ? 0.6 : 1,
             }}>
@@ -339,17 +344,25 @@ export function NewPaymentModal({ students, onClose }: Props) {
               Este estudiante ya tiene un pago registrado para el mismo mes. ¿Deseas continuar creando otro pago?
             </p>
 
-            <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
-              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 8px" }}>
-                <strong>Pago existente:</strong>
-              </p>
-              <p style={{ fontSize: 13, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
-                {existingMonthlyPayment.concept}
-              </p>
-              <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>
-                Monto: ${(existingMonthlyPayment.amount / 100).toFixed(2)} · Estado: <strong>{existingMonthlyPayment.status}</strong>
-              </p>
-            </div>
+            {existingMonthlyPayment.message ? (
+              <div style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                <p style={{ fontSize: 13, color: "#b91c1c", margin: 0 }}>
+                  {existingMonthlyPayment.message}
+                </p>
+              </div>
+            ) : (
+              <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 8px" }}>
+                  <strong>Pago existente:</strong>
+                </p>
+                <p style={{ fontSize: 13, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
+                  {existingMonthlyPayment.concept}
+                </p>
+                <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>
+                  Monto: ${(existingMonthlyPayment.amount / 100).toFixed(2)} · Estado: <strong>{existingMonthlyPayment.status}</strong>
+                </p>
+              </div>
+            )}
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button
