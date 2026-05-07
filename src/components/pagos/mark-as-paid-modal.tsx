@@ -116,10 +116,14 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
                   value={discountInputValue}
                   onChange={handleDiscountChange}
                   onBlur={(e) => {
-                    if (discountAmount > 0) {
-                      setDiscountInputValue((discountAmount / 100).toFixed(2));
-                    } else {
+                    const val = e.target.value.trim();
+                    if (val === "" || val === ".") {
                       setDiscountInputValue("");
+                    } else {
+                      const num = parseFloat(val);
+                      if (!isNaN(num) && num >= 0) {
+                        setDiscountInputValue(num.toFixed(2));
+                      }
                     }
                   }}
                   className={inputCls}
