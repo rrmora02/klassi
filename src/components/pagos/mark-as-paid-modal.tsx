@@ -65,6 +65,7 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
 
   const discountPercentage = amountInCents > 0 ? ((calculatedDiscountAmount / amountInCents) * 100).toFixed(1) : "0";
   const totalToPay = amountInCents - calculatedDiscountAmount;
+  const discountExceedsAmount = amountInCents > 0 && calculatedDiscountAmount > amountInCents;
 
   const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputVal = e.target.value;
@@ -135,7 +136,7 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
                       setDiscountInputValue("");
                     } else {
                       const num = parseFloat(val);
-                      if (!isNaN(num) && num >= 0) {
+                      if (!isNaN(num) && num >= 0 && num <= (amountInCents / 100)) {
                         setDiscountInputValue(num.toFixed(2));
                       }
                     }
@@ -152,6 +153,11 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
                 </span>
               </div>
             </div>
+            {discountExceedsAmount && (
+              <p style={{ fontSize: 12, color: "#b91c1c", margin: 0 }}>
+                El descuento no puede ser mayor al monto
+              </p>
+            )}
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
               <span>Total a pagar:</span>
               <strong>${(totalToPay / 100).toFixed(2)}</strong>

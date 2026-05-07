@@ -81,19 +81,20 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const amount = watch("amount");
 
   // Calcular descuento basado en el input actual para sincronización inmediata
+  const amountInCents = Math.round((amount || 0) * 100);
   const calculatedDiscountAmount = (() => {
     if (discountInputValue === "" || discountInputValue === ".") {
       return 0;
     }
     const parsed = parseFloat(discountInputValue);
     if (!isNaN(parsed) && parsed >= 0) {
-      const amountInPesos = amount || 0;
-      const amountInCents = Math.round(amountInPesos * 100);
       const discountInCents = Math.round(parsed * 100);
       return Math.min(amountInCents, discountInCents);
     }
     return 0;
   })();
+
+  const discountExceedsAmount = amountInCents > 0 && calculatedDiscountAmount > amountInCents;
 
   const onSubmit = async (data: FormValues) => {
     if (!selectedStudent) {
@@ -207,7 +208,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
                 <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-secondary)" }}>
                     <span>Monto:</span>
-                    <strong>${((amount || 0) * 100).toFixed(2)}</strong>
+                    <strong>${(amount || 0).toFixed(2)}</strong>
                   </div>
                   <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
                     <div style={{ flex: 1 }}>
@@ -225,7 +226,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
                             setDiscountInputValue("");
                           } else {
                             const num = parseFloat(val);
-                            if (!isNaN(num) && num >= 0) {
+                            if (!isNaN(num) && num >= 0 && num <= ((amount || 0))) {
                               setDiscountInputValue(num.toFixed(2));
                             }
                           }
@@ -237,14 +238,19 @@ export function NewPaymentModal({ students, onClose }: Props) {
                       />
                     </div>
                     <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                        {((amount || 0) > 0 ? ((calculatedDiscountAmount / (Math.round((amount || 0) * 100))) * 100).toFixed(1) : "0")}%
+                      <span style={{ fontSize: 12, fontWeight: 500, color: amountInCents > 0 ? "var(--color-text-secondary)" : "var(--color-text-tertiary)" }}>
+                        {(amountInCents > 0 ? ((calculatedDiscountAmount / amountInCents) * 100).toFixed(1) : "0")}%
                       </span>
                     </div>
                   </div>
+                  {discountExceedsAmount && (
+                    <p style={{ fontSize: 12, color: "#b91c1c", margin: 0 }}>
+                      El descuento no puede ser mayor al monto
+                    </p>
+                  )}
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
                     <span>Total a pagar:</span>
-                    <strong>${((Math.round((amount || 0) * 100) - calculatedDiscountAmount) / 100).toFixed(2)}</strong>
+                    <strong>${((amountInCents - calculatedDiscountAmount) / 100).toFixed(2)}</strong>
                   </div>
                 </div>
               )}
