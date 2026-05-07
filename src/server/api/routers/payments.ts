@@ -62,6 +62,7 @@ export const paymentsRouter = createTRPCRouter({
       currency:  z.string().default("MXN"),
       method:    z.nativeEnum(PaymentMethod).default("CASH"),
       dueDate:   z.date(),
+      force:     z.boolean().default(false), // ignorar validación de duplicados
     }))
     .mutation(async ({ ctx, input }) => {
       const student = await ctx.db.student.findFirst({
@@ -69,27 +70,30 @@ export const paymentsRouter = createTRPCRouter({
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-      // Check for duplicate payments in the same month
-      const dueDate = input.dueDate || new Date();
-      const monthStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
-      const monthEnd = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0, 23, 59, 59);
+      // Check for duplicate payments in the same month (unless force is true)
+      if (!input.force) {
+        const dueDate = input.dueDate || new Date();
+        const monthStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
+        const monthEnd = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0, 23, 59, 59);
 
-      const existingPaymentInMonth = await ctx.db.payment.findFirst({
-        where: {
-          studentId: input.studentId,
-          tenantId: ctx.tenantId,
-          dueDate: { gte: monthStart, lte: monthEnd },
-          status: { in: ["PENDING", "PAID"] },
-        },
-      });
-
-      if (existingPaymentInMonth) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Ya existe un pago registrado para este estudiante en ${monthStart.toLocaleString('es-MX', { month: 'long', year: 'numeric' })}`,
+        const existingPaymentInMonth = await ctx.db.payment.findFirst({
+          where: {
+            studentId: input.studentId,
+            tenantId: ctx.tenantId,
+            dueDate: { gte: monthStart, lte: monthEnd },
+            status: { in: ["PENDING", "PAID"] },
+          },
         });
+
+        if (existingPaymentInMonth) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Ya existe un pago registrado para este estudiante en ${monthStart.toLocaleString('es-MX', { month: 'long', year: 'numeric' })}`,
+          });
+        }
       }
 
+      const dueDate = input.dueDate || new Date();
       const newPayment = await ctx.db.payment.create({
         data: { ...input, tenantId: ctx.tenantId, status: "PENDING", dueDate },
       });

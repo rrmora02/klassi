@@ -104,6 +104,11 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const createPayment = async (data: FormValues, force: boolean = false) => {
     try {
       setErrorMessage("");
+      if (force) {
+        setShowConfirmation(false);
+        setPendingPaymentData(null);
+      }
+
       const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
 
       const payment = await create.mutateAsync({
@@ -112,6 +117,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
         amount:    Math.round(data.amount * 100),
         method:    data.method,
         dueDate:   paymentDate,
+        force,
       });
 
       if (data.markAsPaid && paidAt) {
@@ -382,8 +388,8 @@ export function NewPaymentModal({ students, onClose }: Props) {
               <button
                 type="button"
                 onClick={async () => {
+                  await createPayment(pendingPaymentData, true);
                   setShowConfirmation(false);
-                  await createPayment(pendingPaymentData);
                   setPendingPaymentData(null);
                 }}
                 disabled={checkMonthly.isLoading || create.isLoading}
