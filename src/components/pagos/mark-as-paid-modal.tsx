@@ -111,7 +111,7 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
           </p>
         )}
         <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 20px" }}>
-          {concept} — <strong>{amount}</strong>
+          {concept} — <strong>${(amountInCents / 100).toFixed(2)}</strong>
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
