@@ -70,9 +70,25 @@ export const paymentsRouter = createTRPCRouter({
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
+      // Idempotence: Check if exact payment already exists (same concept, amount, dueDate)
+      const dueDate = input.dueDate || new Date();
+      const existingExactPayment = await ctx.db.payment.findFirst({
+        where: {
+          studentId: input.studentId,
+          tenantId: ctx.tenantId,
+          concept: input.concept,
+          amount: input.amount,
+          dueDate,
+          status: { not: "CANCELLED" },
+        },
+      });
+
+      if (existingExactPayment) {
+        return { ...existingExactPayment, _isIdempotent: true };
+      }
+
       // Check for duplicate payments in the same month (unless force is true)
       if (!input.force) {
-        const dueDate = input.dueDate || new Date();
         const monthStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
         const monthEnd = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0, 23, 59, 59);
 
@@ -93,7 +109,6 @@ export const paymentsRouter = createTRPCRouter({
         }
       }
 
-      const dueDate = input.dueDate || new Date();
       const newPayment = await ctx.db.payment.create({
         data: { ...input, tenantId: ctx.tenantId, status: "PENDING", dueDate },
       });
