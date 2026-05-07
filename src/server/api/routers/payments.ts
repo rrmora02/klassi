@@ -61,7 +61,7 @@ export const paymentsRouter = createTRPCRouter({
       amount:    z.number().int().positive(), // en centavos
       currency:  z.string().default("MXN"),
       method:    z.nativeEnum(PaymentMethod).default("CASH"),
-      dueDate:   z.date().optional(),
+      dueDate:   z.date(),
     }))
     .mutation(async ({ ctx, input }) => {
       const student = await ctx.db.student.findFirst({

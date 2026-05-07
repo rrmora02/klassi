@@ -101,12 +101,14 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const discountExceedsAmount = amountInCents > 0 && calculatedDiscountAmount > amountInCents;
 
   const createPayment = async (data: FormValues) => {
+    const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
+
     const payment = await create.mutateAsync({
       studentId: selectedStudent!.id,
       concept:   data.concept,
       amount:    Math.round(data.amount * 100),
       method:    data.method,
-      dueDate:   data.dueDate ? new Date(data.dueDate) : undefined,
+      dueDate:   paymentDate,
     });
 
     if (data.markAsPaid && paidAt) {
