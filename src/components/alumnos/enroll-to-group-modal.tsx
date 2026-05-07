@@ -44,6 +44,7 @@ export function EnrollToGroupModal({ studentId }: Props) {
       }
 
       handleClose();
+      router.refresh();
       router.push(`/dashboard/alumnos/${studentId}`);
     } catch (err: any) {
       toast({
