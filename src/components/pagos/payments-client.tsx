@@ -8,15 +8,16 @@ import { formatCurrency, formatDate, fullName } from "@/lib/utils";
 import type { PaymentStatus, PaymentMethod } from "@prisma/client";
 
 interface Payment {
-  id:        string;
-  concept:   string;
-  amount:    number;
-  currency:  string;
-  method:    PaymentMethod;
-  status:    PaymentStatus;
-  dueDate:   Date | null;
-  paidAt:    Date | null;
-  reference: string | null;
+  id:             string;
+  concept:        string;
+  amount:         number;
+  currency:       string;
+  method:         PaymentMethod;
+  status:         PaymentStatus;
+  dueDate:        Date | null;
+  paidAt:         Date | null;
+  reference:      string | null;
+  discountAmount: number | null;
   student: { firstName: string; lastName: string };
 }
 
@@ -74,7 +75,7 @@ export function PaymentsClient({ payments, students }: Props) {
                   </span>
                 </td>
                 <td style={{ padding: "8px 10px", fontWeight: 500, color: "var(--color-text-primary)", whiteSpace: "nowrap" }} className="sm:px-3.5 sm:py-2.5">
-                  {formatCurrency(p.amount, p.currency)}
+                  {p.status === "PAID" && p.discountAmount ? formatCurrency(p.amount - p.discountAmount, p.currency) : formatCurrency(p.amount, p.currency)}
                 </td>
                 <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)" }} className="sm:px-3.5 sm:py-2.5">
                   {METHOD_LABELS[p.method] ?? p.method}

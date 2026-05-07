@@ -61,13 +61,13 @@ export default async function PagosPage({ searchParams }: PageProps) {
     db.payment.findMany({
       where, skip: (page - 1) * pageSize, take: pageSize,
       orderBy: [{ status: "asc" }, { dueDate: "desc" }],
-      include: { student: { select: { firstName: true, lastName: true } } },
+      select: { id: true, concept: true, amount: true, currency: true, method: true, status: true, dueDate: true, paidAt: true, reference: true, discountAmount: true, student: { select: { firstName: true, lastName: true } } },
     }),
     db.payment.count({ where }),
     Promise.all([
-      db.payment.aggregate({ where: { tenantId: tenant.id, status: "PAID",    paidAt:  { gte: monthStart, lte: monthEnd } }, _sum: { amount: true }, _count: true }),
-      db.payment.aggregate({ where: { tenantId: tenant.id, status: "PENDING"                                              }, _sum: { amount: true }, _count: true }),
-      db.payment.aggregate({ where: { tenantId: tenant.id, status: "OVERDUE"                                              }, _sum: { amount: true }, _count: true }),
+      db.payment.findMany({ where: { tenantId: tenant.id, status: "PAID",    paidAt:  { gte: monthStart, lte: monthEnd } }, select: { amount: true, discountAmount: true } }),
+      db.payment.findMany({ where: { tenantId: tenant.id, status: "PENDING"                                              }, select: { amount: true } }),
+      db.payment.findMany({ where: { tenantId: tenant.id, status: "OVERDUE"                                              }, select: { amount: true } }),
     ]),
     db.student.findMany({ where: { tenantId: tenant.id, status: "ACTIVE" }, select: { id: true, firstName: true, lastName: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }] }),
     Promise.all([
@@ -78,8 +78,13 @@ export default async function PagosPage({ searchParams }: PageProps) {
     ]),
   ]);
 
-  const [paid, pending, overdue] = summary;
+  const [paidPayments, pendingPayments, overduePayments] = summary;
   const [cntPending, cntPaid, cntOverdue, cntCancelled] = statusCounts;
+
+  const paidTotal = paidPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount ?? 0)), 0);
+  const pendingTotal = pendingPayments.reduce((sum, p) => sum + p.amount, 0);
+  const overdueTotal = overduePayments.reduce((sum, p) => sum + p.amount, 0);
+
   const countMap: Record<string, number> = {
     PENDING:   cntPending,
     PAID:      cntPaid,
@@ -110,23 +115,23 @@ export default async function PagosPage({ searchParams }: PageProps) {
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Cobrado este mes</p>
           <p style={{ fontSize: 16, fontWeight: 600, color: "#15803d", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
-            {formatCurrency(paid._sum.amount ?? 0)}
+            {formatCurrency(paidTotal)}
           </p>
-          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{paid._count} pagos</p>
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{paidPayments.length} pagos</p>
         </div>
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Por cobrar</p>
           <p style={{ fontSize: 16, fontWeight: 600, color: "#b45309", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
-            {formatCurrency(pending._sum.amount ?? 0)}
+            {formatCurrency(pendingTotal)}
           </p>
-          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{pending._count} pendientes</p>
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{pendingPayments.length} pendientes</p>
         </div>
-        <div style={{ background: overdue._count > 0 ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${overdue._count > 0 ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
+        <div style={{ background: overduePayments.length > 0 ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${overduePayments.length > 0 ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Adeudos vencidos</p>
-          <p style={{ fontSize: 16, fontWeight: 600, color: overdue._count > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
-            {formatCurrency(overdue._sum.amount ?? 0)}
+          <p style={{ fontSize: 16, fontWeight: 600, color: overduePayments.length > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
+            {formatCurrency(overdueTotal)}
           </p>
-          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{overdue._count} vencidos</p>
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{overduePayments.length} vencidos</p>
         </div>
       </div>
 
