@@ -16,6 +16,7 @@ const schema = z.object({
   dueDate: z.string().refine(v => !v || !isNaN(Date.parse(v)), "Fecha inválida").optional(),
   markAsPaid: z.boolean().default(false),
   paidAt: z.string().optional(),
+  discountAmount: z.coerce.number().min(0).default(0),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -40,6 +41,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
 
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
   const [studentError,    setStudentError]    = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -50,11 +52,13 @@ export function NewPaymentModal({ students, onClose }: Props) {
       dueDate: today,
       markAsPaid: false,
       paidAt: today,
+      discountAmount: 0,
     },
   });
 
   const markAsPaid = watch("markAsPaid");
   const paidAt = watch("paidAt");
+  const amount = watch("amount");
 
   const onSubmit = async (data: FormValues) => {
     if (!selectedStudent) {
@@ -77,6 +81,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
         id: payment.id,
         method: data.method,
         paidAt: new Date(paidAt),
+        discountAmount: discountAmount,
       });
     }
 
@@ -147,14 +152,61 @@ export function NewPaymentModal({ students, onClose }: Props) {
           </div>
 
           {markAsPaid && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
-                  Fecha de pago
-                </label>
-                <input type="date" {...register("paidAt")} className={dateCls} />
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
+                    Fecha de pago
+                  </label>
+                  <input type="date" {...register("paidAt")} className={dateCls} />
+                </div>
               </div>
-            </div>
+
+              <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-secondary)" }}>
+                  <span>Monto:</span>
+                  <strong>${((amount || 0) * 100).toFixed(2)}</strong>
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
+                      Descuento (MXN)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={discountAmount === 0 ? "" : (discountAmount / 100).toFixed(2)}
+                      onChange={(e) => {
+                        const val = e.target.value.trim();
+                        if (val === "") {
+                          setDiscountAmount(0);
+                        } else {
+                          const num = parseFloat(val);
+                          if (!isNaN(num) && num >= 0) {
+                            const amountInPesos = (amount || 0);
+                            const discountInPesos = num;
+                            const discountInCents = Math.round(discountInPesos * 100);
+                            setDiscountAmount(Math.min(Math.round(amountInPesos * 100), discountInCents));
+                          }
+                        }
+                      }}
+                      className={inputCls}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>
+                      {((amount || 0) > 0 ? ((discountAmount / (Math.round((amount || 0) * 100))) * 100).toFixed(1) : "0")}%
+                    </span>
+                  </div>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
+                  <span>Total a pagar:</span>
+                  <strong>${((Math.round((amount || 0) * 100) - discountAmount) / 100).toFixed(2)}</strong>
+                </div>
+              </div>
+            </>
           )}
 
           <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>

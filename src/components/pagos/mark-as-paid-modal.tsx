@@ -90,30 +90,30 @@ export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClo
             <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
               <div style={{ flex: 1 }}>
                 <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
-                  Descuento
+                  Descuento (MXN)
                 </label>
                 <input
                   type="number"
-                  value={discountAmount === 0 ? "" : discountAmount}
+                  step="0.01"
+                  min="0"
+                  value={discountAmount === 0 ? "" : (discountAmount / 100).toFixed(2)}
                   onChange={(e) => {
                     const val = e.target.value.trim();
                     if (val === "") {
                       setDiscountAmount(0);
                     } else {
-                      const num = parseInt(val, 10);
+                      const num = parseFloat(val);
                       if (!isNaN(num) && num >= 0) {
-                        setDiscountAmount(Math.min(amountInCents, num));
+                        const discountInCents = Math.round(num * 100);
+                        setDiscountAmount(Math.min(amountInCents, discountInCents));
                       }
                     }
                   }}
-                  min="0"
-                  max={amountInCents}
-                  step="1"
                   className={inputCls}
-                  placeholder="0"
+                  placeholder="0.00"
                 />
               </div>
-              <div style={{ textAlign: "right", marginBottom: 10 }}>
+              <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
                 <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>
                   {discountPercentage}%
                 </span>
