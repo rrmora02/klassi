@@ -197,49 +197,57 @@ export function NewPaymentModal({ students, onClose }: Props) {
                 </div>
               </div>
 
-              <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-secondary)" }}>
-                  <span>Monto:</span>
-                  <strong>${((amount || 0) * 100).toFixed(2)}</strong>
+              {!amount || amount <= 0 ? (
+                <div style={{ background: "rgba(251, 146, 60, 0.1)", borderRadius: 8, padding: 12, border: "1px solid rgba(251, 146, 60, 0.3)" }}>
+                  <p style={{ fontSize: 13, color: "#ea580c", margin: 0 }}>
+                    Ingresa un monto válido para aplicar descuento
+                  </p>
                 </div>
-                <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
-                      Descuento (MXN)
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={discountInputValue}
-                      onChange={handleDiscountChange}
-                      onBlur={(e) => {
-                        const val = e.target.value.trim();
-                        if (val === "" || val === ".") {
-                          setDiscountInputValue("");
-                        } else {
-                          const num = parseFloat(val);
-                          if (!isNaN(num) && num >= 0) {
-                            setDiscountInputValue(num.toFixed(2));
+              ) : (
+                <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-secondary)" }}>
+                    <span>Monto:</span>
+                    <strong>${((amount || 0) * 100).toFixed(2)}</strong>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
+                        Descuento (MXN)
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={discountInputValue}
+                        onChange={handleDiscountChange}
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val === "" || val === ".") {
+                            setDiscountInputValue("");
+                          } else {
+                            const num = parseFloat(val);
+                            if (!isNaN(num) && num >= 0) {
+                              setDiscountInputValue(num.toFixed(2));
+                            }
                           }
-                        }
-                      }}
-                      className={inputCls}
-                      placeholder="0.00"
-                      maxLength={10}
-                      autoComplete="off"
-                    />
+                        }}
+                        className={inputCls}
+                        placeholder="0.00"
+                        maxLength={10}
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>
+                        {((amount || 0) > 0 ? ((calculatedDiscountAmount / (Math.round((amount || 0) * 100))) * 100).toFixed(1) : "0")}%
+                      </span>
+                    </div>
                   </div>
-                  <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>
-                      {((amount || 0) > 0 ? ((calculatedDiscountAmount / (Math.round((amount || 0) * 100))) * 100).toFixed(1) : "0")}%
-                    </span>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
+                    <span>Total a pagar:</span>
+                    <strong>${((Math.round((amount || 0) * 100) - calculatedDiscountAmount) / 100).toFixed(2)}</strong>
                   </div>
                 </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
-                  <span>Total a pagar:</span>
-                  <strong>${((Math.round((amount || 0) * 100) - calculatedDiscountAmount) / 100).toFixed(2)}</strong>
-                </div>
-              </div>
+              )}
             </>
           )}
 
