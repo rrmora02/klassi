@@ -3,6 +3,7 @@ import type { AuditAction, LogSeverity, BusinessEventType } from "@prisma/client
 
 interface AuditLogInput {
   tenantId: string | null;
+  userId?: string | null;
   action: AuditAction;
   entity: string;
   entityId: string;
@@ -23,6 +24,7 @@ interface ErrorLogInput {
 
 interface BusinessEventInput {
   tenantId: string;
+  userId?: string | null;
   eventType: BusinessEventType;
   entityType: string;
   entityId: string;
@@ -35,6 +37,7 @@ export const loggingService = {
       const result = await db.auditLog.create({
         data: {
           tenantId: input.tenantId,
+          userId: input.userId || null,
           action: input.action,
           entity: input.entity,
           entityId: input.entityId,
@@ -44,7 +47,7 @@ export const loggingService = {
           userAgent: input.userAgent,
         },
       });
-      console.log("[AUDIT LOG] Created:", { action: input.action, entity: input.entity, entityId: input.entityId });
+      console.log("[AUDIT LOG] Created:", { action: input.action, entity: input.entity, entityId: input.entityId, userId: input.userId });
       return result;
     } catch (error) {
       console.error("[AUDIT LOG ERROR]:", error);
@@ -74,13 +77,14 @@ export const loggingService = {
       const result = await db.businessEvent.create({
         data: {
           tenantId: input.tenantId,
+          userId: input.userId || null,
           eventType: input.eventType,
           entityType: input.entityType,
           entityId: input.entityId,
           metadata: input.metadata || null,
         },
       });
-      console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId);
+      console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId, "by", input.userId || "system");
       return result;
     } catch (error) {
       console.error("[BUSINESS EVENT ERROR]:", error);

@@ -562,6 +562,7 @@ model AuditLog {
   id           String      @id @default(cuid())
   tenantId     String?     // null para super admin logs
   tenant       Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId       String?     // quién hizo el cambio (sin FK - puede estar en Clerk pero no en DB)
   action       AuditAction
   entity       String      // "Payment", "Student", "Enrollment"
   entityId     String      // ID del recurso afectado
@@ -572,6 +573,7 @@ model AuditLog {
   createdAt    DateTime    @default(now())
 
   @@index([tenantId])
+  @@index([userId])
   @@index([entity])
   @@index([entityId])
   @@index([createdAt])
@@ -605,6 +607,7 @@ model BusinessEvent {
   id            String           @id @default(cuid())
   tenantId      String
   tenant        Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId        String?          // quién triggereó el evento (sin FK)
   eventType     BusinessEventType
   entityType    String           // "Payment", "Student", "Enrollment"
   entityId      String           // ID del recurso
@@ -612,6 +615,7 @@ model BusinessEvent {
   createdAt     DateTime         @default(now())
 
   @@index([tenantId])
+  @@index([userId])
   @@index([eventType])
   @@index([createdAt])
   @@index([tenantId, createdAt])
