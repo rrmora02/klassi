@@ -118,7 +118,7 @@ export const paymentsRouter = createTRPCRouter({
       await Promise.all([
         loggingService.logAudit({
           tenantId: ctx.tenantId,
-          userId: ctx.userId || "",
+          userId: ctx.userId,
           action: "CREATE",
           entity: "Payment",
           entityId: newPayment.id,
@@ -126,7 +126,7 @@ export const paymentsRouter = createTRPCRouter({
         }),
         loggingService.logBusinessEvent({
           tenantId: ctx.tenantId,
-          userId: ctx.userId || null,
+          userId: ctx.userId,
           eventType: "PAYMENT_CREATED",
           entityType: "Payment",
           entityId: newPayment.id,
@@ -173,7 +173,7 @@ export const paymentsRouter = createTRPCRouter({
       const loggingPromises = [
         loggingService.logAudit({
           tenantId: ctx.tenantId,
-          userId: ctx.userId || "",
+          userId: ctx.userId,
           action: "UPDATE",
           entity: "Payment",
           entityId: id,
@@ -182,7 +182,7 @@ export const paymentsRouter = createTRPCRouter({
         }),
         loggingService.logBusinessEvent({
           tenantId: ctx.tenantId,
-          userId: ctx.userId || null,
+          userId: ctx.userId,
           eventType: "PAYMENT_MARKED_AS_PAID",
           entityType: "Payment",
           entityId: id,
@@ -198,7 +198,7 @@ export const paymentsRouter = createTRPCRouter({
         loggingPromises.push(
           loggingService.logBusinessEvent({
             tenantId: ctx.tenantId,
-            userId: ctx.userId || null,
+            userId: ctx.userId,
             eventType: "DISCOUNT_APPLIED",
             entityType: "Payment",
             entityId: id,

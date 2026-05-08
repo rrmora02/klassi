@@ -35,6 +35,10 @@ interface BusinessEventInput {
 export const loggingService = {
   async logAudit(input: AuditLogInput) {
     try {
+      if (!input.userId) {
+        console.warn("[AUDIT LOG] Skipping - no userId");
+        return null;
+      }
       const result = await db.auditLog.create({
         data: {
           tenantId: input.tenantId,
@@ -79,7 +83,7 @@ export const loggingService = {
       const result = await db.businessEvent.create({
         data: {
           tenantId: input.tenantId,
-          userId: input.userId,
+          ...(input.userId ? { userId: input.userId } : {}),
           eventType: input.eventType,
           entityType: input.entityType,
           entityId: input.entityId,
@@ -90,7 +94,6 @@ export const loggingService = {
       return result;
     } catch (error) {
       console.error("[BUSINESS EVENT ERROR]:", error);
-      throw error;
     }
   },
 
