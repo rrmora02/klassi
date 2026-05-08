@@ -25,7 +25,6 @@ interface ErrorLogInput {
 
 interface BusinessEventInput {
   tenantId: string;
-  userId?: string | null;
   eventType: BusinessEventType;
   entityType: string;
   entityId: string;
@@ -83,7 +82,6 @@ export const loggingService = {
       const result = await db.businessEvent.create({
         data: {
           tenantId: input.tenantId,
-          ...(input.userId ? { userId: input.userId } : {}),
           eventType: input.eventType,
           entityType: input.entityType,
           entityId: input.entityId,
@@ -228,7 +226,6 @@ export const loggingService = {
         skip,
         take: pageSize,
         orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true, email: true } } },
       }),
       db.businessEvent.count({ where }),
     ]);
