@@ -115,23 +115,24 @@ export const paymentsRouter = createTRPCRouter({
         data: { ...paymentData, tenantId: ctx.tenantId, status: "PENDING", dueDate },
       });
 
-      loggingService.logAudit({
-        tenantId: ctx.tenantId,
-        userId: ctx.userId,
-        action: "CREATE",
-        entity: "Payment",
-        entityId: newPayment.id,
-        newValues: newPayment as any,
-      });
-
-      loggingService.logBusinessEvent({
-        tenantId: ctx.tenantId,
-        userId: ctx.userId,
-        eventType: "PAYMENT_CREATED",
-        entityType: "Payment",
-        entityId: newPayment.id,
-        metadata: { concept: newPayment.concept, amount: newPayment.amount, studentId: newPayment.studentId },
-      });
+      await Promise.all([
+        loggingService.logAudit({
+          tenantId: ctx.tenantId,
+          userId: ctx.userId,
+          action: "CREATE",
+          entity: "Payment",
+          entityId: newPayment.id,
+          newValues: newPayment as any,
+        }),
+        loggingService.logBusinessEvent({
+          tenantId: ctx.tenantId,
+          userId: ctx.userId,
+          eventType: "PAYMENT_CREATED",
+          entityType: "Payment",
+          entityId: newPayment.id,
+          metadata: { concept: newPayment.concept, amount: newPayment.amount, studentId: newPayment.studentId },
+        }),
+      ]);
 
       return { ...newPayment, _isIdempotent: false };
     }),
@@ -169,43 +170,48 @@ export const paymentsRouter = createTRPCRouter({
         data:  { ...data, status: "PAID", discountAmount },
       });
 
-      loggingService.logAudit({
-        tenantId: ctx.tenantId,
-        userId: ctx.userId,
-        action: "UPDATE",
-        entity: "Payment",
-        entityId: id,
-        oldValues: oldPayment as any,
-        newValues: updatedPayment as any,
-      });
-
-      loggingService.logBusinessEvent({
-        tenantId: ctx.tenantId,
-        userId: ctx.userId,
-        eventType: "PAYMENT_MARKED_AS_PAID",
-        entityType: "Payment",
-        entityId: id,
-        metadata: {
-          method: data.method,
-          discountAmount: discountAmount,
-          paidAmount: payment.amount - discountAmount,
-        },
-      });
-
-      if (discountAmount > 0) {
+      const loggingPromises = [
+        loggingService.logAudit({
+          tenantId: ctx.tenantId,
+          userId: ctx.userId,
+          action: "UPDATE",
+          entity: "Payment",
+          entityId: id,
+          oldValues: oldPayment as any,
+          newValues: updatedPayment as any,
+        }),
         loggingService.logBusinessEvent({
           tenantId: ctx.tenantId,
           userId: ctx.userId,
-          eventType: "DISCOUNT_APPLIED",
+          eventType: "PAYMENT_MARKED_AS_PAID",
           entityType: "Payment",
           entityId: id,
           metadata: {
+            method: data.method,
             discountAmount: discountAmount,
-            originalAmount: payment.amount,
-            finalAmount: payment.amount - discountAmount,
+            paidAmount: payment.amount - discountAmount,
           },
-        });
+        }),
+      ];
+
+      if (discountAmount > 0) {
+        loggingPromises.push(
+          loggingService.logBusinessEvent({
+            tenantId: ctx.tenantId,
+            userId: ctx.userId,
+            eventType: "DISCOUNT_APPLIED",
+            entityType: "Payment",
+            entityId: id,
+            metadata: {
+              discountAmount: discountAmount,
+              originalAmount: payment.amount,
+              finalAmount: payment.amount - discountAmount,
+            },
+          })
+        );
       }
+
+      await Promise.all(loggingPromises);
 
       return updatedPayment;
     }),
