@@ -1,10 +1,10 @@
 "use client";
 
 import { formatDate } from "@/lib/utils";
-import type { BusinessEvent, User } from "@prisma/client";
+import type { BusinessEvent } from "@prisma/client";
 
 interface BusinessEventsTableProps {
-  events: (BusinessEvent & { user: User | null })[];
+  events: BusinessEvent[];
   isLoading?: boolean;
 }
 
@@ -112,8 +112,8 @@ export function BusinessEventsTable({ events, isLoading }: BusinessEventsTablePr
                     {event.entityId.slice(0, 8)}...
                   </div>
                 </td>
-                <td style={{ padding: "8px 10px", color: "var(--color-text-primary)" }} className="sm:px-3.5 sm:py-2.5">
-                  {event.user?.name ?? "Sistema"}
+                <td style={{ padding: "8px 10px", color: "var(--color-text-primary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
+                  {event.userId ?? "Sistema"}
                 </td>
                 <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
                   {formatDate(event.createdAt)}

@@ -1,10 +1,10 @@
 "use client";
 
 import { formatDate } from "@/lib/utils";
-import type { ErrorLog, LogSeverity, User } from "@prisma/client";
+import type { ErrorLog, LogSeverity } from "@prisma/client";
 
 interface ErrorLogsTableProps {
-  logs: (ErrorLog & { user: User | null })[];
+  logs: ErrorLog[];
   onResolve?: (errorId: string) => void;
   isLoading?: boolean;
 }
@@ -83,7 +83,7 @@ export function ErrorLogsTable({ logs, onResolve, isLoading }: ErrorLogsTablePro
                 </span>
               </td>
               <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
-                {log.user?.name ?? "—"}
+                Sistema
               </td>
               <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
                 {formatDate(log.createdAt)}

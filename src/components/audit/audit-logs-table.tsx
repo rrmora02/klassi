@@ -1,10 +1,10 @@
 "use client";
 
 import { formatDate } from "@/lib/utils";
-import type { AuditLog, User } from "@prisma/client";
+import type { AuditLog } from "@prisma/client";
 
 interface AuditLogsTableProps {
-  logs: (AuditLog & { user: User | null })[];
+  logs: AuditLog[];
   isLoading?: boolean;
 }
 
@@ -59,11 +59,8 @@ export function AuditLogsTable({ logs, isLoading }: AuditLogsTableProps) {
         <tbody>
           {logs.map(log => (
             <tr key={log.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              <td style={{ padding: "8px 10px", color: "var(--color-text-primary)" }} className="sm:px-3.5 sm:py-2.5">
-                <span style={{ fontWeight: 500 }}>{log.user?.name ?? "—"}</span>
-                <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 2 }}>
-                  {log.user?.email}
-                </div>
+              <td style={{ padding: "8px 10px", color: "var(--color-text-primary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
+                <span style={{ fontWeight: 500 }}>{log.userId ?? "Sistema"}</span>
               </td>
               <td style={{ padding: "8px 10px" }} className="sm:px-3.5 sm:py-2.5">
                 <span
