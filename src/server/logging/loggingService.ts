@@ -42,10 +42,20 @@ export const loggingService = {
         input.newValues
       );
 
+      let validUserId: string | null = null;
+      if (input.userId) {
+        const userExists = await db.user.findUnique({
+          where: { id: input.userId },
+        });
+        if (userExists) {
+          validUserId = input.userId;
+        }
+      }
+
       const result = await db.auditLog.create({
         data: {
           tenantId: input.tenantId,
-          userId: input.userId || null,
+          userId: validUserId,
           action: input.action,
           entity: input.entity,
           entityId: input.entityId,
@@ -56,7 +66,7 @@ export const loggingService = {
           userAgent: input.userAgent,
         },
       });
-      console.log("[AUDIT LOG]", description, `by ${input.userId || "system"}`);
+      console.log("[AUDIT LOG]", description, `by ${validUserId || "system"}`);
       return result;
     } catch (error) {
       console.error("[AUDIT LOG ERROR]:", error);
@@ -83,17 +93,27 @@ export const loggingService = {
 
   async logBusinessEvent(input: BusinessEventInput) {
     try {
+      let validUserId: string | null = null;
+      if (input.userId) {
+        const userExists = await db.user.findUnique({
+          where: { id: input.userId },
+        });
+        if (userExists) {
+          validUserId = input.userId;
+        }
+      }
+
       const result = await db.businessEvent.create({
         data: {
           tenantId: input.tenantId,
-          userId: input.userId || null,
+          userId: validUserId,
           eventType: input.eventType,
           entityType: input.entityType,
           entityId: input.entityId,
           metadata: input.metadata || null,
         },
       });
-      console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId, "by", input.userId || "system");
+      console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId, "by", validUserId || "system");
       return result;
     } catch (error) {
       console.error("[BUSINESS EVENT ERROR]:", error);
