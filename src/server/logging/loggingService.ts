@@ -35,21 +35,24 @@ interface BusinessEventInput {
 export const loggingService = {
   async logAudit(input: AuditLogInput) {
     try {
-      await db.auditLog.create({
+      const result = await db.auditLog.create({
         data: {
           tenantId: input.tenantId,
           userId: input.userId,
           action: input.action,
           entity: input.entity,
           entityId: input.entityId,
-          oldValues: input.oldValues,
-          newValues: input.newValues,
+          oldValues: input.oldValues || null,
+          newValues: input.newValues || null,
           ipAddress: input.ipAddress,
           userAgent: input.userAgent,
         },
       });
+      console.log("[AUDIT LOG] Created:", { action: input.action, entity: input.entity, entityId: input.entityId });
+      return result;
     } catch (error) {
-      console.error("Error logging audit:", error);
+      console.error("[AUDIT LOG ERROR]:", error);
+      throw error;
     }
   },
 
@@ -73,18 +76,21 @@ export const loggingService = {
 
   async logBusinessEvent(input: BusinessEventInput) {
     try {
-      await db.businessEvent.create({
+      const result = await db.businessEvent.create({
         data: {
           tenantId: input.tenantId,
           userId: input.userId,
           eventType: input.eventType,
           entityType: input.entityType,
           entityId: input.entityId,
-          metadata: input.metadata,
+          metadata: input.metadata || null,
         },
       });
+      console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId);
+      return result;
     } catch (error) {
-      console.error("Error logging business event:", error);
+      console.error("[BUSINESS EVENT ERROR]:", error);
+      throw error;
     }
   },
 
