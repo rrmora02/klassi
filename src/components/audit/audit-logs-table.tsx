@@ -1,10 +1,10 @@
 "use client";
 
 import { formatDate } from "@/lib/utils";
-import type { AuditLog } from "@prisma/client";
+import type { AuditLog, User } from "@prisma/client";
 
 interface AuditLogsTableProps {
-  logs: AuditLog[];
+  logs: (AuditLog & { user: User | null })[];
   isLoading?: boolean;
 }
 
@@ -38,7 +38,7 @@ export function AuditLogsTable({ logs, isLoading }: AuditLogsTableProps) {
       <table style={{ width: "100%", minWidth: 900, borderCollapse: "collapse" }} className="text-xs sm:text-sm">
         <thead>
           <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-            {["Usuario", "Acción", "Entidad", "ID", "Fecha", "Detalles"].map(h => (
+            {["Usuario", "Descripción", "Entidad", "Fecha"].map(h => (
               <th
                 key={h}
                 style={{
@@ -59,10 +59,20 @@ export function AuditLogsTable({ logs, isLoading }: AuditLogsTableProps) {
         <tbody>
           {logs.map(log => (
             <tr key={log.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              <td style={{ padding: "8px 10px", color: "var(--color-text-primary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
-                <span style={{ fontWeight: 500 }}>{log.userId ?? "Sistema"}</span>
+              <td style={{ padding: "8px 10px", color: "var(--color-text-primary)", fontWeight: 500, fontSize: 13 }} className="sm:px-3.5 sm:py-2.5">
+                {log.user?.name ?? "Sistema"}
+                {log.user?.email && (
+                  <div style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 2 }}>
+                    {log.user.email}
+                  </div>
+                )}
               </td>
-              <td style={{ padding: "8px 10px" }} className="sm:px-3.5 sm:py-2.5">
+              <td style={{ padding: "8px 10px", color: "var(--color-text-primary)", maxWidth: 400 }} className="sm:px-3.5 sm:py-2.5">
+                <span style={{ fontWeight: 500, display: "block" }}>
+                  {log.description || `${log.action} ${log.entity}`}
+                </span>
+              </td>
+              <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
                 <span
                   style={{
                     display: "inline-block",
@@ -77,17 +87,8 @@ export function AuditLogsTable({ logs, isLoading }: AuditLogsTableProps) {
                   {log.action}
                 </span>
               </td>
-              <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)" }} className="sm:px-3.5 sm:py-2.5">
-                {log.entity}
-              </td>
-              <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 11 }} className="sm:px-3.5 sm:py-2.5">
-                {log.entityId.slice(0, 8)}...
-              </td>
               <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
                 {formatDate(log.createdAt)}
-              </td>
-              <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 11 }} className="sm:px-3.5 sm:py-2.5">
-                {log.oldValues && log.newValues ? "Modificado" : log.action === "CREATE" ? "Creado" : log.action === "DELETE" ? "Eliminado" : "—"}
               </td>
             </tr>
           ))}

@@ -1,4 +1,5 @@
 import { db } from "@/server/db";
+import { createAuditDescription } from "./auditDescriptions";
 import type { AuditAction, LogSeverity, BusinessEventType } from "@prisma/client";
 
 interface AuditLogInput {
@@ -34,6 +35,13 @@ interface BusinessEventInput {
 export const loggingService = {
   async logAudit(input: AuditLogInput) {
     try {
+      const description = createAuditDescription(
+        input.action,
+        input.entity,
+        input.oldValues,
+        input.newValues
+      );
+
       const result = await db.auditLog.create({
         data: {
           tenantId: input.tenantId,
@@ -43,11 +51,12 @@ export const loggingService = {
           entityId: input.entityId,
           oldValues: input.oldValues || null,
           newValues: input.newValues || null,
+          description,
           ipAddress: input.ipAddress,
           userAgent: input.userAgent,
         },
       });
-      console.log("[AUDIT LOG] Created:", { action: input.action, entity: input.entity, entityId: input.entityId, userId: input.userId });
+      console.log("[AUDIT LOG]", description, `by ${input.userId || "system"}`);
       return result;
     } catch (error) {
       console.error("[AUDIT LOG ERROR]:", error);

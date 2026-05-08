@@ -40,6 +40,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: { createdAt: "desc" },
+    include: { user: { select: { id: true, name: true, email: true } } },
   });
 
   const errorLogs = await db.errorLog.findMany({
@@ -47,6 +48,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: { createdAt: "desc" },
+    include: { user: { select: { id: true, name: true, email: true } } },
   });
 
   const businessEvents = await db.businessEvent.findMany({
@@ -54,6 +56,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: { createdAt: "desc" },
+    include: { user: { select: { id: true, name: true, email: true } } },
   });
 
   const [auditTotal, errorTotal, eventTotal] = await Promise.all([

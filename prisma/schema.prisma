@@ -560,11 +560,13 @@ model AuditLog {
   tenantId     String?     // null para super admin logs
   tenant       Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   userId       String?     // quién hizo el cambio (sin FK - puede estar en Clerk pero no en DB)
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   action       AuditAction
   entity       String      // "Payment", "Student", "Enrollment"
   entityId     String      // ID del recurso afectado
   oldValues    Json?       // valores antes del cambio
   newValues    Json?       // valores después del cambio
+  description  String?     // descripción legible del cambio
   ipAddress    String?
   userAgent    String?
   createdAt    DateTime    @default(now())
