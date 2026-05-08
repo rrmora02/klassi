@@ -16,6 +16,7 @@ import {
   Tag,
   Building2,
   Calendar,
+  Shield,
 } from "lucide-react";
 
 const ALL_NAV_ITEMS = [
@@ -34,6 +35,7 @@ const ALL_CONFIG_ITEMS = [
   { label: "Equipo",       href: "/dashboard/configuracion/equipo",      icon: Users,      roles: ["ADMIN"] },
   { label: "Disciplinas",  href: "/dashboard/configuracion/disciplinas", icon: Tag,        roles: ["ADMIN"] },
   { label: "Mi escuela",   href: "/dashboard/configuracion/escuela",     icon: Building2,  roles: ["ADMIN"] },
+  { label: "Auditoría",    href: "/dashboard/configuracion/auditoria",   icon: Shield,     roles: ["ADMIN", "RECEPTIONIST"] },
 ];
 
 interface SidebarProps {

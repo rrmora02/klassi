@@ -130,4 +130,43 @@ export const businessEventsRouter = createTRPCRouter({
         total: byDay.length,
       };
     }),
+
+  getMetricsAll: superAdminProcedure
+    .input(z.object({
+      tenantId: z.string().optional(),
+      days: z.number().default(30),
+    }))
+    .query(async ({ ctx, input }) => {
+      const from = new Date();
+      from.setDate(from.getDate() - input.days);
+
+      const where = {
+        ...(input.tenantId && { tenantId: input.tenantId }),
+        createdAt: { gte: from },
+      };
+
+      const metrics = await ctx.db.businessEvent.groupBy({
+        by: ["eventType"],
+        where,
+        _count: true,
+      });
+
+      const byDay = await ctx.db.businessEvent.findMany({
+        where,
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+      });
+
+      const eventsByDay: Record<string, number> = {};
+      byDay.forEach((event) => {
+        const day = event.createdAt.toISOString().split("T")[0];
+        eventsByDay[day] = (eventsByDay[day] || 0) + 1;
+      });
+
+      return {
+        byEventType: metrics,
+        byDay: eventsByDay,
+        total: byDay.length,
+      };
+    }),
 });

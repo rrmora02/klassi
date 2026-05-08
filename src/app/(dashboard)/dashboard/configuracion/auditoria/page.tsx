@@ -15,17 +15,28 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
 
   const user = await db.user.findUnique({
     where: { clerkId: userId },
+    include: { activeTenant: true },
   });
 
-  if (!user?.isSuperAdmin) {
+  if (!user?.activeTenant) {
+    redirect("/dashboard");
+  }
+
+  const tenantUser = await db.tenantUser.findFirst({
+    where: { tenantId: user.activeTenant.id, userId: user.id },
+  });
+
+  if (!tenantUser || !["ADMIN", "RECEPTIONIST"].includes(tenantUser.role)) {
     redirect("/dashboard");
   }
 
   const tab = searchParams.tab ?? "audit";
   const page = Math.max(1, Number(searchParams.page ?? 1));
   const pageSize = 50;
+  const tenantId = user.activeTenant.id;
 
   const auditLogs = await db.auditLog.findMany({
+    where: { tenantId },
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: { createdAt: "desc" },
@@ -33,6 +44,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
   });
 
   const errorLogs = await db.errorLog.findMany({
+    where: { tenantId },
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: { createdAt: "desc" },
@@ -40,6 +52,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
   });
 
   const businessEvents = await db.businessEvent.findMany({
+    where: { tenantId },
     skip: (page - 1) * pageSize,
     take: pageSize,
     orderBy: { createdAt: "desc" },
@@ -47,9 +60,9 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
   });
 
   const [auditTotal, errorTotal, eventTotal] = await Promise.all([
-    db.auditLog.count(),
-    db.errorLog.count(),
-    db.businessEvent.count(),
+    db.auditLog.count({ where: { tenantId } }),
+    db.errorLog.count({ where: { tenantId } }),
+    db.businessEvent.count({ where: { tenantId } }),
   ]);
 
   return (

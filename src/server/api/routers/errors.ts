@@ -78,7 +78,25 @@ export const errorsRouter = createTRPCRouter({
       };
     }),
 
-  resolve: superAdminProcedure
+  resolve: tenantProcedure
+    .input(z.object({ errorId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const errorLog = await ctx.db.errorLog.findUnique({
+        where: { id: input.errorId },
+      });
+
+      if (!errorLog) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Error log not found" });
+      }
+
+      if (errorLog.tenantId !== ctx.tenantId) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "No tienes permiso para resolver este error" });
+      }
+
+      return loggingService.resolveErrorLog(input.errorId, ctx.userId);
+    }),
+
+  resolveSuperAdmin: superAdminProcedure
     .input(z.object({ errorId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const errorLog = await ctx.db.errorLog.findUnique({
@@ -92,7 +110,42 @@ export const errorsRouter = createTRPCRouter({
       return loggingService.resolveErrorLog(input.errorId, ctx.userId);
     }),
 
-  getSummary: superAdminProcedure
+  getSummary: tenantProcedure
+    .input(z.object({
+      days: z.number().default(7),
+    }))
+    .query(async ({ ctx, input }) => {
+      const from = new Date();
+      from.setDate(from.getDate() - input.days);
+
+      const where = {
+        tenantId: ctx.tenantId,
+        createdAt: { gte: from },
+      };
+
+      const [critical, high, medium, low, total] = await Promise.all([
+        ctx.db.errorLog.count({ where: { ...where, severity: "CRITICAL" } }),
+        ctx.db.errorLog.count({ where: { ...where, severity: "HIGH" } }),
+        ctx.db.errorLog.count({ where: { ...where, severity: "MEDIUM" } }),
+        ctx.db.errorLog.count({ where: { ...where, severity: "LOW" } }),
+        ctx.db.errorLog.count({ where }),
+      ]);
+
+      return {
+        critical,
+        high,
+        medium,
+        low,
+        total,
+        byType: await ctx.db.errorLog.groupBy({
+          by: ["errorType"],
+          where,
+          _count: true,
+        }),
+      };
+    }),
+
+  getSummaryAll: superAdminProcedure
     .input(z.object({
       tenantId: z.string().optional(),
       days: z.number().default(7),
