@@ -3,7 +3,6 @@ import type { AuditAction, LogSeverity, BusinessEventType } from "@prisma/client
 
 interface AuditLogInput {
   tenantId: string | null;
-  userId: string;
   action: AuditAction;
   entity: string;
   entityId: string;
@@ -15,7 +14,6 @@ interface AuditLogInput {
 
 interface ErrorLogInput {
   tenantId?: string | null;
-  userId?: string | null;
   errorType: string;
   message: string;
   stack?: string;
@@ -34,14 +32,9 @@ interface BusinessEventInput {
 export const loggingService = {
   async logAudit(input: AuditLogInput) {
     try {
-      if (!input.userId) {
-        console.warn("[AUDIT LOG] Skipping - no userId");
-        return null;
-      }
       const result = await db.auditLog.create({
         data: {
           tenantId: input.tenantId,
-          userId: input.userId,
           action: input.action,
           entity: input.entity,
           entityId: input.entityId,
@@ -64,7 +57,6 @@ export const loggingService = {
       await db.errorLog.create({
         data: {
           tenantId: input.tenantId,
-          userId: input.userId,
           errorType: input.errorType,
           message: input.message,
           stack: input.stack,
@@ -98,7 +90,6 @@ export const loggingService = {
   async getAuditLogs(
     tenantId: string,
     filters?: {
-      userId?: string;
       entity?: string;
       action?: AuditAction;
       from?: Date;
@@ -113,7 +104,6 @@ export const loggingService = {
 
     const where = {
       tenantId,
-      ...(filters?.userId && { userId: filters.userId }),
       ...(filters?.entity && { entity: filters.entity }),
       ...(filters?.action && { action: filters.action }),
       ...(filters?.from || filters?.to
@@ -132,7 +122,6 @@ export const loggingService = {
         skip,
         take: pageSize,
         orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true, email: true } } },
       }),
       db.auditLog.count({ where }),
     ]);

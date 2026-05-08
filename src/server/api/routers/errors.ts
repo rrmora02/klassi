@@ -59,7 +59,6 @@ export const errorsRouter = createTRPCRouter({
         orderBy: { createdAt: "desc" },
         include: {
           tenant: { select: { id: true, name: true } },
-          user: { select: { id: true, name: true, email: true } },
         },
       });
 

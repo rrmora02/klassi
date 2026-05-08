@@ -562,8 +562,6 @@ model AuditLog {
   id           String      @id @default(cuid())
   tenantId     String?     // null para super admin logs
   tenant       Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userId       String
-  user         User        @relation(fields: [userId], references: [id])
   action       AuditAction
   entity       String      // "Payment", "Student", "Enrollment"
   entityId     String      // ID del recurso afectado
@@ -574,7 +572,6 @@ model AuditLog {
   createdAt    DateTime    @default(now())
 
   @@index([tenantId])
-  @@index([userId])
   @@index([entity])
   @@index([entityId])
   @@index([createdAt])
@@ -587,8 +584,6 @@ model ErrorLog {
   id           String      @id @default(cuid())
   tenantId     String?     // null para errores del sistema
   tenant       Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userId       String?     // quién causó el error (puede ser null)
-  user         User?       @relation(fields: [userId], references: [id])
   errorType    String      // ValidationError, NotFoundError, etc
   message      String
   stack        String?     // stack trace
@@ -596,7 +591,6 @@ model ErrorLog {
   severity     LogSeverity @default(MEDIUM)
   resolved     Boolean     @default(false)
   resolvedAt   DateTime?
-  resolvedBy   String?     // userId de quién lo resolvió
   createdAt    DateTime    @default(now())
 
   @@index([tenantId])

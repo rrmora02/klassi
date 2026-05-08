@@ -33,7 +33,6 @@ export const auditRouter = createTRPCRouter({
     .input(
       z.object({
         tenantId: z.string().optional(),
-        userId: z.string().optional(),
         entity: z.string().optional(),
         from: z.date().optional(),
         to: z.date().optional(),
@@ -45,7 +44,6 @@ export const auditRouter = createTRPCRouter({
       const logs = await ctx.db.auditLog.findMany({
         where: {
           ...(input.tenantId && { tenantId: input.tenantId }),
-          ...(input.userId && { userId: input.userId }),
           ...(input.entity && { entity: input.entity }),
           ...(input.from || input.to
             ? {
@@ -59,16 +57,11 @@ export const auditRouter = createTRPCRouter({
         skip: (input.page - 1) * input.pageSize,
         take: input.pageSize,
         orderBy: { createdAt: "desc" },
-        include: {
-          tenant: { select: { id: true, name: true } },
-          user: { select: { id: true, name: true, email: true } },
-        },
       });
 
       const total = await ctx.db.auditLog.count({
         where: {
           ...(input.tenantId && { tenantId: input.tenantId }),
-          ...(input.userId && { userId: input.userId }),
           ...(input.entity && { entity: input.entity }),
         },
       });

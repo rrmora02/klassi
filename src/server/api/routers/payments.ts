@@ -118,7 +118,6 @@ export const paymentsRouter = createTRPCRouter({
       await Promise.all([
         loggingService.logAudit({
           tenantId: ctx.tenantId,
-          userId: ctx.userId,
           action: "CREATE",
           entity: "Payment",
           entityId: newPayment.id,
@@ -172,7 +171,6 @@ export const paymentsRouter = createTRPCRouter({
       const loggingPromises = [
         loggingService.logAudit({
           tenantId: ctx.tenantId,
-          userId: ctx.userId,
           action: "UPDATE",
           entity: "Payment",
           entityId: id,
