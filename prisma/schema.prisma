@@ -612,7 +612,7 @@ model BusinessEvent {
   tenantId      String
   tenant        Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   userId        String?
-  user          User?            @relation(fields: [userId], references: [id])
+  user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   eventType     BusinessEventType
   entityType    String           // "Payment", "Student", "Enrollment"
   entityId      String           // ID del recurso
