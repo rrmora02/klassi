@@ -1,5 +1,12 @@
 import type { AuditAction } from "@prisma/client";
 
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: "Pendiente",
+  PAID: "Pagado",
+  OVERDUE: "Vencido",
+  CANCELLED: "Cancelado",
+};
+
 export function createAuditDescription(
   action: AuditAction,
   entity: string,
@@ -25,7 +32,9 @@ export function createAuditDescription(
     const changes: string[] = [];
 
     if (newValues.status && oldValues?.status) {
-      changes.push(`estado: ${oldValues.status} → ${newValues.status}`);
+      const oldLabel = STATUS_LABELS[oldValues.status] || oldValues.status;
+      const newLabel = STATUS_LABELS[newValues.status] || newValues.status;
+      changes.push(`estado: ${oldLabel} → ${newLabel}`);
     }
     if (newValues.amount && oldValues?.amount && newValues.amount !== oldValues.amount) {
       changes.push(`monto: $${(oldValues.amount / 100).toFixed(2)} → $${(newValues.amount / 100).toFixed(2)}`);
