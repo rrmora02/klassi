@@ -12,21 +12,27 @@ import { announcementsRouter }  from "./routers/announcements";
 import { reportsRouter }        from "./routers/reports";
 import { exportsRouter }        from "./routers/exports";
 import { eventsRouter }         from "./routers/events";
+import { auditRouter }          from "./routers/audit";
+import { errorsRouter }         from "./routers/errors";
+import { businessEventsRouter } from "./routers/business-events";
 
 export const appRouter = createTRPCRouter({
-  students:      studentsRouter,
-  disciplines:   disciplinesRouter,
-  payments:      paymentsRouter,
-  groups:        groupsRouter,
-  instructors:   instructorsRouter,
-  attendance:    attendanceRouter,
-  enrollments:   enrollmentsRouter,
-  tenants:       tenantsRouter,
-  team:          teamRouter,
-  announcements: announcementsRouter,
-  reports:       reportsRouter,
-  exports:       exportsRouter,
-  events:        eventsRouter,
+  students:       studentsRouter,
+  disciplines:    disciplinesRouter,
+  payments:       paymentsRouter,
+  groups:         groupsRouter,
+  instructors:    instructorsRouter,
+  attendance:     attendanceRouter,
+  enrollments:    enrollmentsRouter,
+  tenants:        tenantsRouter,
+  team:           teamRouter,
+  announcements:  announcementsRouter,
+  reports:        reportsRouter,
+  exports:        exportsRouter,
+  events:         eventsRouter,
+  audit:          auditRouter,
+  errors:         errorsRouter,
+  businessEvents: businessEventsRouter,
 });
 
 export type AppRouter = typeof appRouter;

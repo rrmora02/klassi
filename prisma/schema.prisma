@@ -88,6 +88,40 @@ enum GroupLevel {
   PROFESSIONAL
 }
 
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  EXPORT
+}
+
+enum LogSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BusinessEventType {
+  PAYMENT_CREATED
+  PAYMENT_MARKED_AS_PAID
+  PAYMENT_CANCELLED
+  DISCOUNT_APPLIED
+  STUDENT_ENROLLED
+  STUDENT_UNENROLLED
+  STUDENT_CREATED
+  STUDENT_UPDATED
+  STUDENT_DELETED
+  ATTENDANCE_RECORDED
+  USER_INVITED
+  USER_ROLE_CHANGED
+  GROUP_CREATED
+  GROUP_UPDATED
+  EVENT_CREATED
+  EVENT_CANCELLED
+}
+
 // ─── Tenant (Escuela) ─────────────────────────────────────────────
 
 model Tenant {
@@ -120,6 +154,9 @@ model Tenant {
   announcements Announcement[]
   subscription  Subscription[]
   events        Event[]
+  auditLogs     AuditLog[]
+  errorLogs     ErrorLog[]
+  businessEvents BusinessEvent[]
 
   @@index([slug])
 }
@@ -153,6 +190,7 @@ model User {
   name           String
   phone          String?
   avatar         String?
+  isSuperAdmin   Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -162,6 +200,9 @@ model User {
   parentOf        ParentStudent[]
   attendanceLogs  Attendance[]
   invitationsSent TeamInvitation[] @relation("SentInvitations")
+  auditLogs       AuditLog[]
+  errorLogs       ErrorLog[]
+  businessEvents  BusinessEvent[]
 
   @@index([clerkId])
   @@index([email])
@@ -513,4 +554,74 @@ model EventPayment {
   @@index([studentId])
   @@index([status])
   @@index([eventId, status])
+}
+
+// ─── Auditoría de Cambios ────────────────────────────────────────
+
+model AuditLog {
+  id           String      @id @default(cuid())
+  tenantId     String?     // null para super admin logs
+  tenant       Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  action       AuditAction
+  entity       String      // "Payment", "Student", "Enrollment"
+  entityId     String      // ID del recurso afectado
+  oldValues    Json?       // valores antes del cambio
+  newValues    Json?       // valores después del cambio
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime    @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([tenantId, createdAt])
+}
+
+// ─── Log de Errores ──────────────────────────────────────────────
+
+model ErrorLog {
+  id           String      @id @default(cuid())
+  tenantId     String?     // null para errores del sistema
+  tenant       Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId       String?     // quién causó el error (puede ser null)
+  user         User?       @relation(fields: [userId], references: [id])
+  errorType    String      // ValidationError, NotFoundError, etc
+  message      String
+  stack        String?     // stack trace
+  context      Json?       // contexto adicional
+  severity     LogSeverity @default(MEDIUM)
+  resolved     Boolean     @default(false)
+  resolvedAt   DateTime?
+  resolvedBy   String?     // userId de quién lo resolvió
+  createdAt    DateTime    @default(now())
+
+  @@index([tenantId])
+  @@index([severity])
+  @@index([resolved])
+  @@index([createdAt])
+}
+
+// ─── Eventos de Negocio ──────────────────────────────────────────
+
+model BusinessEvent {
+  id            String           @id @default(cuid())
+  tenantId      String
+  tenant        Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId        String?
+  user          User?            @relation(fields: [userId], references: [id])
+  eventType     BusinessEventType
+  entityType    String           // "Payment", "Student", "Enrollment"
+  entityId      String           // ID del recurso
+  metadata      Json?            // info adicional específica del evento
+  createdAt     DateTime         @default(now())
+
+  @@index([tenantId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([tenantId, createdAt])
+  @@index([entityType, entityId])
 }

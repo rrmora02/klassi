@@ -59,9 +59,16 @@ const hasTenant = t.middleware(({ ctx, next }) => {
   return next({ ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId, dbUser: ctx.dbUser } });
 });
 
+const isSuperAdmin = t.middleware(({ ctx, next }) => {
+  if (!ctx.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+  if (!ctx.dbUser?.isSuperAdmin) throw new TRPCError({ code: "FORBIDDEN", message: "Solo super admin puede acceder" });
+  return next({ ctx: { ...ctx, userId: ctx.userId, dbUser: ctx.dbUser } });
+});
+
 // ─── Exports ─────────────────────────────────────────────────────
 
 export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure;
 export const protectedProcedure = t.procedure.use(isAuthenticated);
 export const tenantProcedure = t.procedure.use(hasTenant);
+export const superAdminProcedure = t.procedure.use(isSuperAdmin);

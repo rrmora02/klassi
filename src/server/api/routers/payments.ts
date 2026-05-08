@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
+import { loggingService } from "@/server/logging/loggingService";
 
 export const paymentsRouter = createTRPCRouter({
 
@@ -113,6 +114,25 @@ export const paymentsRouter = createTRPCRouter({
       const newPayment = await ctx.db.payment.create({
         data: { ...paymentData, tenantId: ctx.tenantId, status: "PENDING", dueDate },
       });
+
+      loggingService.logAudit({
+        tenantId: ctx.tenantId,
+        userId: ctx.userId,
+        action: "CREATE",
+        entity: "Payment",
+        entityId: newPayment.id,
+        newValues: newPayment as any,
+      });
+
+      loggingService.logBusinessEvent({
+        tenantId: ctx.tenantId,
+        userId: ctx.userId,
+        eventType: "PAYMENT_CREATED",
+        entityType: "Payment",
+        entityId: newPayment.id,
+        metadata: { concept: newPayment.concept, amount: newPayment.amount, studentId: newPayment.studentId },
+      });
+
       return { ...newPayment, _isIdempotent: false };
     }),
 
@@ -140,10 +160,54 @@ export const paymentsRouter = createTRPCRouter({
         });
       }
 
-      return ctx.db.payment.update({
+      const oldPayment = await ctx.db.payment.findFirst({
+        where: { id },
+      });
+
+      const updatedPayment = await ctx.db.payment.update({
         where: { id },
         data:  { ...data, status: "PAID", discountAmount },
       });
+
+      loggingService.logAudit({
+        tenantId: ctx.tenantId,
+        userId: ctx.userId,
+        action: "UPDATE",
+        entity: "Payment",
+        entityId: id,
+        oldValues: oldPayment as any,
+        newValues: updatedPayment as any,
+      });
+
+      loggingService.logBusinessEvent({
+        tenantId: ctx.tenantId,
+        userId: ctx.userId,
+        eventType: "PAYMENT_MARKED_AS_PAID",
+        entityType: "Payment",
+        entityId: id,
+        metadata: {
+          method: data.method,
+          discountAmount: discountAmount,
+          paidAmount: payment.amount - discountAmount,
+        },
+      });
+
+      if (discountAmount > 0) {
+        loggingService.logBusinessEvent({
+          tenantId: ctx.tenantId,
+          userId: ctx.userId,
+          eventType: "DISCOUNT_APPLIED",
+          entityType: "Payment",
+          entityId: id,
+          metadata: {
+            discountAmount: discountAmount,
+            originalAmount: payment.amount,
+            finalAmount: payment.amount - discountAmount,
+          },
+        });
+      }
+
+      return updatedPayment;
     }),
 
   summary: tenantProcedure
