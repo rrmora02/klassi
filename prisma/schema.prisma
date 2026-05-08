@@ -200,9 +200,6 @@ model User {
   parentOf        ParentStudent[]
   attendanceLogs  Attendance[]
   invitationsSent TeamInvitation[] @relation("SentInvitations")
-  auditLogs       AuditLog[]
-  errorLogs       ErrorLog[]
-  businessEvents  BusinessEvent[]
 
   @@index([clerkId])
   @@index([email])
