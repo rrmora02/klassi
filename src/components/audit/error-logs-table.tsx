@@ -16,6 +16,13 @@ const SEVERITY_COLORS: Record<LogSeverity, string> = {
   CRITICAL: "#b91c1c",
 };
 
+const SEVERITY_LABELS: Record<LogSeverity, string> = {
+  LOW: "Baja",
+  MEDIUM: "Media",
+  HIGH: "Alta",
+  CRITICAL: "Crítica",
+};
+
 export function ErrorLogsTable({ logs, onResolve, isLoading }: ErrorLogsTableProps) {
   if (isLoading) {
     return (
@@ -71,7 +78,7 @@ export function ErrorLogsTable({ logs, onResolve, isLoading }: ErrorLogsTablePro
                     fontWeight: 500,
                   }}
                 >
-                  {log.severity}
+                  {SEVERITY_LABELS[log.severity]}
                 </span>
               </td>
               <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">

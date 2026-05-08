@@ -16,6 +16,14 @@ const ACTION_COLORS: Record<string, string> = {
   EXPORT: "#f59e0b",
 };
 
+const ACTION_LABELS: Record<string, string> = {
+  CREATE: "Crear",
+  UPDATE: "Actualizar",
+  DELETE: "Eliminar",
+  VIEW: "Ver",
+  EXPORT: "Exportar",
+};
+
 export function AuditLogsTable({ logs, isLoading }: AuditLogsTableProps) {
   if (isLoading) {
     return (
@@ -84,7 +92,7 @@ export function AuditLogsTable({ logs, isLoading }: AuditLogsTableProps) {
                     fontWeight: 500,
                   }}
                 >
-                  {log.action}
+                  {ACTION_LABELS[log.action]}
                 </span>
               </td>
               <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
