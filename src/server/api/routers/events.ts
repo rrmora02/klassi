@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, tenantProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { type Prisma } from "@prisma/client";
+import { loggingService } from "@/server/logging/loggingService";
 
 // ─── Validación ───────────────────────────────────────────────────
 
@@ -106,14 +107,38 @@ export const eventsRouter = createTRPCRouter({
 
       // Crear EventPayment para cada alumno
       if (studentIds.length > 0) {
+        const eventPayments = studentIds.map((studentId) => ({
+          eventId: event.id,
+          studentId,
+          amount: input.amount,
+          status: "PENDING",
+          dueDate: input.dueDate,
+        }));
+
         await db.eventPayment.createMany({
-          data: studentIds.map((studentId) => ({
-            eventId: event.id,
-            studentId,
+          data: eventPayments,
+        });
+
+        await loggingService.logAudit({
+          tenantId,
+          userId: ctx.userId,
+          action: "CREATE",
+          entity: "Event",
+          entityId: event.id,
+          newValues: event as any,
+        });
+
+        await loggingService.logBusinessEvent({
+          tenantId,
+          userId: ctx.userId,
+          eventType: "EVENT_CREATED",
+          entityType: "Event",
+          entityId: event.id,
+          metadata: {
+            name: event.name,
+            studentCount: studentIds.length,
             amount: input.amount,
-            status: "PENDING",
-            dueDate: input.dueDate,
-          })),
+          },
         });
       }
 
@@ -322,11 +347,12 @@ export const eventsRouter = createTRPCRouter({
         });
       }
 
+      const oldPayment = payment;
       const newStatus = input.willAttend
         ? "PENDING"
         : "NOT_ATTENDING";
 
-      return db.eventPayment.update({
+      const updatedPayment = await db.eventPayment.update({
         where: { id: input.paymentId },
         data: {
           willAttend: input.willAttend,
@@ -335,6 +361,18 @@ export const eventsRouter = createTRPCRouter({
           confirmedVia: "admin",
         },
       });
+
+      await loggingService.logAudit({
+        tenantId,
+        userId: ctx.userId,
+        action: "UPDATE",
+        entity: "EventPayment",
+        entityId: input.paymentId,
+        oldValues: oldPayment as any,
+        newValues: updatedPayment as any,
+      });
+
+      return updatedPayment;
     }),
 
   // Marcar como pagado
@@ -369,7 +407,8 @@ export const eventsRouter = createTRPCRouter({
         });
       }
 
-      return db.eventPayment.update({
+      const oldPayment = payment;
+      const updatedPayment = await db.eventPayment.update({
         where: { id: input.paymentId },
         data: {
           status: "PAID",
@@ -377,6 +416,47 @@ export const eventsRouter = createTRPCRouter({
           discountAmount: input.discountAmount,
         },
       });
+
+      await Promise.all([
+        loggingService.logAudit({
+          tenantId,
+          userId: ctx.userId,
+          action: "UPDATE",
+          entity: "EventPayment",
+          entityId: input.paymentId,
+          oldValues: oldPayment as any,
+          newValues: updatedPayment as any,
+        }),
+        loggingService.logBusinessEvent({
+          tenantId,
+          userId: ctx.userId,
+          eventType: "PAYMENT_MARKED_AS_PAID",
+          entityType: "EventPayment",
+          entityId: input.paymentId,
+          metadata: {
+            method: input.method,
+            discountAmount: input.discountAmount,
+            paidAmount: payment.amount - input.discountAmount,
+          },
+        }),
+      ]);
+
+      if (input.discountAmount > 0) {
+        await loggingService.logBusinessEvent({
+          tenantId,
+          userId: ctx.userId,
+          eventType: "DISCOUNT_APPLIED",
+          entityType: "EventPayment",
+          entityId: input.paymentId,
+          metadata: {
+            discountAmount: input.discountAmount,
+            originalAmount: payment.amount,
+            finalAmount: payment.amount - input.discountAmount,
+          },
+        });
+      }
+
+      return updatedPayment;
     }),
 
   // Confirmar asistencia desde link de WhatsApp (público)
@@ -406,9 +486,10 @@ export const eventsRouter = createTRPCRouter({
         });
       }
 
+      const oldPayment = payment;
       const newStatus = input.willAttend ? "PENDING" : "NOT_ATTENDING";
 
-      return db.eventPayment.update({
+      const updatedPayment = await db.eventPayment.update({
         where: { id: input.eventPaymentId },
         data: {
           willAttend: input.willAttend,
@@ -417,6 +498,24 @@ export const eventsRouter = createTRPCRouter({
           confirmedVia: "whatsapp_link",
         },
       });
+
+      const event = await db.event.findUnique({
+        where: { id: payment.eventId },
+      });
+
+      if (event) {
+        await loggingService.logAudit({
+          tenantId: event.tenantId,
+          userId: null,
+          action: "UPDATE",
+          entity: "EventPayment",
+          entityId: input.eventPaymentId,
+          oldValues: oldPayment as any,
+          newValues: updatedPayment as any,
+        });
+      }
+
+      return updatedPayment;
     }),
 
   // Actualizar evento
