@@ -45,10 +45,10 @@ export const loggingService = {
       let validUserId: string | null = null;
       if (input.userId) {
         const userExists = await db.user.findUnique({
-          where: { id: input.userId },
+          where: { clerkId: input.userId },
         });
         if (userExists) {
-          validUserId = input.userId;
+          validUserId = userExists.id; // Guardar el ID de la BD, no el clerkId
         }
       }
 
@@ -104,10 +104,10 @@ export const loggingService = {
       let validUserId: string | null = null;
       if (input.userId) {
         const userExists = await db.user.findUnique({
-          where: { id: input.userId },
+          where: { clerkId: input.userId },
         });
         if (userExists) {
-          validUserId = input.userId;
+          validUserId = userExists.id; // Guardar el ID de la BD, no el clerkId
         }
       }
 
