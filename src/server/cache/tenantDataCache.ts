@@ -16,15 +16,18 @@ export async function getDisciplinesByTenant(
   const cacheKey = `${tenantId}:disciplines`;
   const cached = disciplineCache.get(cacheKey);
   if (cached !== undefined) {
+    console.log(`[CACHE HIT] Disciplines for tenant ${tenantId} found in cache (${cached.length} items)`);
     return cached;
   }
 
+  console.log(`[CACHE MISS] Disciplines for tenant ${tenantId} not in cache, querying database...`);
   const disciplines = await db.discipline.findMany({
     where: { tenantId, isActive: true },
     orderBy: { name: "asc" },
   });
 
   disciplineCache.set(cacheKey, disciplines);
+  console.log(`[CACHE SET] Disciplines for tenant ${tenantId} cached (${disciplines.length} items)`);
   return disciplines;
 }
 
@@ -41,15 +44,18 @@ export async function getActiveGroupsByTenant(
   const cacheKey = `${tenantId}:groups:active`;
   const cached = groupCache.get(cacheKey);
   if (cached !== undefined) {
+    console.log(`[CACHE HIT] Active groups for tenant ${tenantId} found in cache (${cached.length} items)`);
     return cached;
   }
 
+  console.log(`[CACHE MISS] Active groups for tenant ${tenantId} not in cache, querying database...`);
   const groups = await db.group.findMany({
     where: { tenantId, isActive: true },
     orderBy: { name: "asc" },
   });
 
   groupCache.set(cacheKey, groups);
+  console.log(`[CACHE SET] Active groups for tenant ${tenantId} cached (${groups.length} items)`);
   return groups;
 }
 

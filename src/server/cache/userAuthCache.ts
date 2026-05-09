@@ -12,14 +12,17 @@ export async function getUserByClerkId(
 ): Promise<User | null> {
   const cached = userCache.get(clerkId);
   if (cached !== undefined) {
+    console.log(`[CACHE HIT] User ${clerkId} found in cache (${cached ? 'user: ' + cached.email : 'null'})`);
     return cached;
   }
 
+  console.log(`[CACHE MISS] User ${clerkId} not in cache, querying database...`);
   const user = await db.user.findUnique({
     where: { clerkId },
   });
 
   userCache.set(clerkId, user);
+  console.log(`[CACHE SET] User ${clerkId} cached (${user ? 'user: ' + user.email : 'null'})`);
   return user;
 }
 
