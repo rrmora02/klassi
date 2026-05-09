@@ -17,6 +17,7 @@ import {
   Building2,
   Calendar,
   Shield,
+  AlertTriangle,
 } from "lucide-react";
 
 const ALL_NAV_ITEMS = [
@@ -38,6 +39,10 @@ const ALL_CONFIG_ITEMS = [
   { label: "Auditoría",    href: "/dashboard/configuracion/auditoria",   icon: Shield,     roles: ["ADMIN", "RECEPTIONIST"] },
 ];
 
+const SUPER_ADMIN_ITEMS = [
+  { label: "Errores del Sistema", href: "/dashboard/super-admin/errores", icon: AlertTriangle, roles: ["SUPER_ADMIN"] },
+];
+
 interface SidebarProps {
   userRole?: UserRole;
 }
@@ -48,6 +53,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
   // Filtrar items según el rol
   const NAV_ITEMS = ALL_NAV_ITEMS.filter(item => item.roles.includes(userRole));
   const CONFIG_ITEMS = ALL_CONFIG_ITEMS.filter(item => item.roles.includes(userRole));
+  const ADMIN_ITEMS = SUPER_ADMIN_ITEMS.filter(item => item.roles.includes(userRole));
 
   return (
     <div className="flex h-full w-full flex-col border-r border-gray-200 dark:border-[rgba(255,255,255,0.10)] bg-white dark:bg-sb-house md:w-60">
@@ -101,6 +107,33 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
             );
           })}
         </div>
+
+        {/* Super Admin */}
+        {ADMIN_ITEMS.length > 0 && (
+          <div className="pt-4">
+            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-sb-light/50">
+              Super Admin
+            </p>
+            {ADMIN_ITEMS.map(({ label, href, icon: Icon }) => {
+              const active = pathname === href || pathname.startsWith(href + "/");
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
+                      : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </nav>
     </div>
   );
