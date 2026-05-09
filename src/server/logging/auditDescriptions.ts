@@ -5,6 +5,10 @@ const STATUS_LABELS: Record<string, string> = {
   PAID: "Pagado",
   OVERDUE: "Vencido",
   CANCELLED: "Cancelado",
+  PRESENT: "Presente",
+  ABSENT: "Ausente",
+  JUSTIFIED: "Justificado",
+  LATE: "Tarde",
 };
 
 export function createAuditDescription(
@@ -22,7 +26,11 @@ export function createAuditDescription(
   };
 
   const actionLabel = actionLabels[action];
-  const entityLabel = entity === "Payment" ? "pago" : entity === "Student" ? "alumno" : entity.toLowerCase();
+  let entityLabel = entity.toLowerCase();
+
+  if (entity === "Payment") entityLabel = "pago";
+  if (entity === "Student") entityLabel = "alumno";
+  if (entity === "Attendance") entityLabel = "asistencia";
 
   if (action === "CREATE" || action === "DELETE") {
     return `${actionLabel} ${entityLabel}`;

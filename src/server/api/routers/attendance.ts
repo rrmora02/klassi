@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { loggingService } from "@/server/logging/loggingService";
 
 export const attendanceRouter = createTRPCRouter({
 
@@ -107,13 +108,29 @@ export const attendanceRouter = createTRPCRouter({
        status: z.enum(["PRESENT", "ABSENT", "JUSTIFIED", "LATE"]),
     }))
     .mutation(async ({ ctx, input }) => {
-       const check = await ctx.db.enrollment.findFirst({
+       const enrollment = await ctx.db.enrollment.findFirst({
          where:  { id: input.enrollmentId, group: { tenantId: ctx.tenantId } },
-         select: { id: true },
+         include: { student: { select: { id: true, firstName: true, lastName: true } } },
        });
-       if (!check) throw new TRPCError({ code: "FORBIDDEN" });
+       if (!enrollment) throw new TRPCError({ code: "FORBIDDEN" });
 
-       return ctx.db.attendance.upsert({
+       // Obtener la asistencia anterior si existe
+       const oldAttendance = await ctx.db.attendance.findUnique({
+         where: {
+            enrollmentId_sessionId: {
+               enrollmentId: input.enrollmentId,
+               sessionId: input.sessionId,
+            }
+         },
+       });
+
+       // Obtener información de la sesión para contexto
+       const session = await ctx.db.classSession.findUnique({
+         where: { id: input.sessionId },
+         include: { group: { select: { name: true } } },
+       });
+
+       const newAttendance = await ctx.db.attendance.upsert({
          where: {
             enrollmentId_sessionId: {
                enrollmentId: input.enrollmentId,
@@ -129,5 +146,35 @@ export const attendanceRouter = createTRPCRouter({
             status: input.status,
          }
        });
+
+       // Registrar auditoría
+       await loggingService.logAudit({
+         tenantId: ctx.tenantId,
+         userId: ctx.userId,
+         action: oldAttendance ? "UPDATE" : "CREATE",
+         entity: "Attendance",
+         entityId: newAttendance.id,
+         oldValues: oldAttendance as any,
+         newValues: newAttendance as any,
+       });
+
+       // Registrar evento de negocio
+       await loggingService.logBusinessEvent({
+         tenantId: ctx.tenantId,
+         userId: ctx.userId,
+         eventType: "ATTENDANCE_RECORDED",
+         entityType: "Attendance",
+         entityId: newAttendance.id,
+         metadata: {
+           studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+           studentId: enrollment.student.id,
+           status: input.status,
+           groupName: session?.group.name,
+           sessionDate: session?.date,
+           enrollmentId: input.enrollmentId,
+         },
+       });
+
+       return newAttendance;
     })
 });
