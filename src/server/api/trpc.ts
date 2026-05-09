@@ -6,6 +6,7 @@ import { db } from "@/server/db";
 import { loggingService } from "@/server/logging/loggingService";
 import { formatErrorForLogging } from "@/server/logging/error-parser";
 import { getUserByClerkId } from "@/server/cache/userAuthCache";
+import { createCacheInvalidationMiddleware } from "@/server/cache/cacheInvalidationMiddleware";
 
 // ─── Contexto ────────────────────────────────────────────────────
 
@@ -97,10 +98,12 @@ const isSuperAdmin = t.middleware(({ ctx, next }) => {
   return next({ ctx: { ...ctx, userId: ctx.userId, dbUser: ctx.dbUser } });
 });
 
+const cacheInvalidation = createCacheInvalidationMiddleware(t);
+
 // ─── Exports ─────────────────────────────────────────────────────
 
 export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure.use(errorHandler);
 export const protectedProcedure = t.procedure.use(errorHandler).use(isAuthenticated);
-export const tenantProcedure = t.procedure.use(errorHandler).use(hasTenant);
+export const tenantProcedure = t.procedure.use(errorHandler).use(hasTenant).use(cacheInvalidation);
 export const superAdminProcedure = t.procedure.use(errorHandler).use(isSuperAdmin);
