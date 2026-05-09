@@ -95,10 +95,11 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   const gap = 12;
   const tooltipWidth = 224; // w-56 = 14rem = 224px
   const tooltipHeight = 200; // Aproximado
+  const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth; // Detecta ancho real de scrollbar
   let position = step.position || "right";
 
   // Detectar si hay espacio y ajustar posición automáticamente
-  if (position === "right" && elemRect.right + gap + tooltipWidth > window.innerWidth) {
+  if (position === "right" && elemRect.right + gap + tooltipWidth > window.innerWidth - scrollbarWidth) {
     position = "left";
   }
   if (position === "bottom" && elemRect.bottom + gap + tooltipHeight > window.innerHeight) {
