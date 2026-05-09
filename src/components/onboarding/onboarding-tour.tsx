@@ -96,30 +96,35 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   const position = step.position || "right";
 
   const getPosition = () => {
+    const marginBottom = 16; // 4px * 4 (Tailwind mb-4 = 1rem = 16px)
     switch (position) {
       case "right":
         return {
           top: `${elemRect.top + elemRect.height / 2}px`,
           left: `${elemRect.right + gap}px`,
           transform: "translateY(-50%)",
+          marginBottom: `${marginBottom}px`,
         };
       case "left":
         return {
           top: `${elemRect.top + elemRect.height / 2}px`,
           right: `calc(100vw - ${elemRect.left - gap}px)`,
           transform: "translateY(-50%)",
+          marginBottom: `${marginBottom}px`,
         };
       case "bottom":
         return {
           top: `${elemRect.bottom + gap}px`,
           left: `${elemRect.left + elemRect.width / 2}px`,
           transform: "translateX(-50%)",
+          marginBottom: `${marginBottom}px`,
         };
       default:
         return {
           bottom: `calc(100vh - ${elemRect.top - gap}px)`,
           left: `${elemRect.left + elemRect.width / 2}px`,
           transform: "translateX(-50%)",
+          marginBottom: `${marginBottom}px`,
         };
     }
   };
@@ -150,8 +155,12 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
 
       {/* Tooltip */}
       <div
-        className="fixed z-50 w-56 rounded-lg bg-gradient-to-br from-sb-green to-emerald-600 p-3 text-white shadow-xl pointer-events-auto"
-        style={getPosition() as React.CSSProperties}
+        className="fixed z-50 w-56 max-w-xs rounded-lg bg-gradient-to-br from-sb-green to-emerald-600 p-3 text-white shadow-xl pointer-events-auto"
+        style={{
+          ...getPosition(),
+          maxHeight: "90vh",
+          overflowY: "auto",
+        } as React.CSSProperties}
       >
         {/* Arrow */}
         <div className={`absolute ${arrowClasses[position]} h-0 w-0`} />
