@@ -1,5 +1,6 @@
 import { db } from "@/server/db";
 import { createAuditDescription } from "./auditDescriptions";
+import { getUserByClerkId } from "@/server/cache/userAuthCache";
 import type { AuditAction, LogSeverity, BusinessEventType } from "@prisma/client";
 
 interface AuditLogInput {
@@ -44,9 +45,7 @@ export const loggingService = {
 
       let validUserId: string | null = null;
       if (input.userId) {
-        const userExists = await db.user.findUnique({
-          where: { clerkId: input.userId },
-        });
+        const userExists = await getUserByClerkId(input.userId, db);
         if (userExists) {
           validUserId = userExists.id; // Guardar el ID de la BD, no el clerkId
         }
@@ -105,9 +104,7 @@ export const loggingService = {
       let userName = "Sistema";
 
       if (input.userId) {
-        const userExists = await db.user.findUnique({
-          where: { clerkId: input.userId },
-        });
+        const userExists = await getUserByClerkId(input.userId, db);
         if (userExists) {
           validUserId = userExists.id;
           userName = userExists.name || userExists.email || "Sistema";

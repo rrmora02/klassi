@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 import { db } from "@/server/db";
 import { loggingService } from "@/server/logging/loggingService";
 import { formatErrorForLogging } from "@/server/logging/error-parser";
+import { getUserByClerkId } from "@/server/cache/userAuthCache";
 
 // ─── Contexto ────────────────────────────────────────────────────
 
@@ -14,7 +15,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
   let tenantId = null;
   let dbUser = null;
   if (userId) {
-    const user = await db.user.findUnique({ where: { clerkId: userId } });
+    const user = await getUserByClerkId(userId, db);
     tenantId = user?.activeTenantId ?? null;
     dbUser = user;
   }
