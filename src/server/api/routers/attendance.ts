@@ -147,15 +147,24 @@ export const attendanceRouter = createTRPCRouter({
          }
        });
 
-       // Registrar auditoría
+       // Registrar auditoría con información detallada
        await loggingService.logAudit({
          tenantId: ctx.tenantId,
          userId: ctx.userId,
          action: oldAttendance ? "UPDATE" : "CREATE",
          entity: "Attendance",
          entityId: newAttendance.id,
-         oldValues: oldAttendance as any,
-         newValues: newAttendance as any,
+         oldValues: oldAttendance ? {
+           status: oldAttendance.status,
+           studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+           groupName: session?.group.name,
+         } : null,
+         newValues: {
+           status: newAttendance.status,
+           studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+           groupName: session?.group.name,
+           sessionDate: session?.date,
+         } as any,
        });
 
        // Registrar evento de negocio

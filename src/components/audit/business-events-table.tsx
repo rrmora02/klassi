@@ -113,7 +113,7 @@ export function BusinessEventsTable({ events, isLoading }: BusinessEventsTablePr
                   </div>
                 </td>
                 <td style={{ padding: "8px 10px", color: "var(--color-text-primary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
-                  {event.userId ?? "Sistema"}
+                  {(event.metadata as any)?.userName ?? "Sistema"}
                 </td>
                 <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", fontSize: 12 }} className="sm:px-3.5 sm:py-2.5">
                   {formatDate(event.createdAt)}

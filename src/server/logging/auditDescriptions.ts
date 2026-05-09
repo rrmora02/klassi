@@ -33,6 +33,12 @@ export function createAuditDescription(
   if (entity === "Attendance") entityLabel = "asistencia";
 
   if (action === "CREATE" || action === "DELETE") {
+    // Manejo especial para asistencia
+    if (entity === "Attendance" && newValues?.studentName) {
+      const status = newValues.status ? (STATUS_LABELS[newValues.status] || newValues.status) : "";
+      const groupName = newValues.groupName ? ` (${newValues.groupName})` : "";
+      return `${actionLabel} ${entityLabel}: ${newValues.studentName} como ${status}${groupName}`;
+    }
     return `${actionLabel} ${entityLabel}`;
   }
 
@@ -64,6 +70,14 @@ export function createAuditDescription(
     }
     if (newValues.lastName && oldValues?.lastName !== newValues.lastName) {
       changes.push(`apellido: "${oldValues?.lastName}" → "${newValues.lastName}"`);
+    }
+
+    // Manejo especial para asistencia
+    if (entity === "Attendance" && newValues.studentName && newValues.status) {
+      const oldStatus = oldValues?.status ? (STATUS_LABELS[oldValues.status] || oldValues.status) : "";
+      const newStatus = STATUS_LABELS[newValues.status] || newValues.status;
+      const groupName = newValues.groupName ? ` (${newValues.groupName})` : "";
+      return `${actionLabel} asistencia: ${newValues.studentName} de ${oldStatus} a ${newStatus}${groupName}`;
     }
 
     if (changes.length > 0) {

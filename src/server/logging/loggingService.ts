@@ -102,12 +102,15 @@ export const loggingService = {
   async logBusinessEvent(input: BusinessEventInput) {
     try {
       let validUserId: string | null = null;
+      let userName = "Sistema";
+
       if (input.userId) {
         const userExists = await db.user.findUnique({
           where: { clerkId: input.userId },
         });
         if (userExists) {
-          validUserId = userExists.id; // Guardar el ID de la BD, no el clerkId
+          validUserId = userExists.id;
+          userName = userExists.name || userExists.email || "Sistema";
         }
       }
 
@@ -118,10 +121,13 @@ export const loggingService = {
           eventType: input.eventType,
           entityType: input.entityType,
           entityId: input.entityId,
-          metadata: input.metadata || null,
+          metadata: {
+            ...input.metadata,
+            userName, // Agregar nombre del usuario al metadata
+          },
         },
       });
-      console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId, "by", validUserId || "system");
+      console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId, "by", userName);
       return result;
     } catch (error) {
       console.error("[BUSINESS EVENT ERROR]:", error);
