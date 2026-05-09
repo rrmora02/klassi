@@ -1,6 +1,7 @@
 import { db } from "@/server/db";
 import { createAuditDescription } from "./auditDescriptions";
 import { getUserByClerkId } from "@/server/cache/userAuthCache";
+import { batchLoggingQueue } from "./batchLogger";
 import type { AuditAction, LogSeverity, BusinessEventType } from "@prisma/client";
 
 interface AuditLogInput {
@@ -34,7 +35,7 @@ interface BusinessEventInput {
 }
 
 export const loggingService = {
-  async logAudit(input: AuditLogInput) {
+  async logAudit(input: AuditLogInput, opts?: { batch?: boolean }) {
     try {
       const description = createAuditDescription(
         input.action,
@@ -47,24 +48,32 @@ export const loggingService = {
       if (input.userId) {
         const userExists = await getUserByClerkId(input.userId, db);
         if (userExists) {
-          validUserId = userExists.id; // Guardar el ID de la BD, no el clerkId
+          validUserId = userExists.id;
         }
       }
 
-      const result = await db.auditLog.create({
-        data: {
-          tenantId: input.tenantId,
-          userId: validUserId,
-          action: input.action,
-          entity: input.entity,
-          entityId: input.entityId,
-          oldValues: input.oldValues || null,
-          newValues: input.newValues || null,
-          description,
-          ipAddress: input.ipAddress,
-          userAgent: input.userAgent,
-        },
-      });
+      const auditData = {
+        tenantId: input.tenantId,
+        userId: validUserId,
+        action: input.action,
+        entity: input.entity,
+        entityId: input.entityId,
+        oldValues: input.oldValues || null,
+        newValues: input.newValues || null,
+        description,
+        ipAddress: input.ipAddress,
+        userAgent: input.userAgent,
+      };
+
+      // Use batch mode if specified
+      if (opts?.batch) {
+        await batchLoggingQueue.enqueue({ type: "audit", data: auditData });
+        console.log("[AUDIT LOG] (batched)", description, `by ${validUserId || "system"}`);
+        return { id: "", createdAt: new Date(), updatedAt: new Date(), ...auditData };
+      }
+
+      // Synchronous mode (default for backwards compatibility)
+      const result = await db.auditLog.create({ data: auditData });
       console.log("[AUDIT LOG]", description, `by ${validUserId || "system"}`);
       return result;
     } catch (error) {
@@ -73,18 +82,30 @@ export const loggingService = {
     }
   },
 
-  async logError(input: ErrorLogInput) {
+  async logError(input: ErrorLogInput, opts?: { batch?: boolean }) {
     try {
-      const result = await db.errorLog.create({
-        data: {
-          tenantId: input.tenantId || null,
-          errorType: input.errorType,
+      const errorData = {
+        tenantId: input.tenantId || null,
+        errorType: input.errorType,
+        message: input.message,
+        stack: input.stack,
+        context: input.context,
+        severity: input.severity || "MEDIUM" as LogSeverity,
+      };
+
+      // Use batch mode if specified (but keep errors mostly synchronous for debugging)
+      if (opts?.batch) {
+        await batchLoggingQueue.enqueue({ type: "error", data: errorData });
+        console.error("[ERROR LOG] (batched)", {
+          type: input.errorType,
           message: input.message,
-          stack: input.stack,
-          context: input.context,
-          severity: input.severity || "MEDIUM",
-        },
-      });
+          severity: input.severity,
+        });
+        return { id: "", createdAt: new Date(), updatedAt: new Date(), resolved: false, resolvedAt: null, resolvedBy: null, ...errorData };
+      }
+
+      // Synchronous mode (default - errors should be logged immediately)
+      const result = await db.errorLog.create({ data: errorData });
       console.error("[ERROR LOG]", {
         type: input.errorType,
         message: input.message,
@@ -94,11 +115,10 @@ export const loggingService = {
       return result;
     } catch (error) {
       console.error("[ERROR LOGGING FAILED]:", error);
-      // No re-throw para no interrumpir el flujo de la aplicación
     }
   },
 
-  async logBusinessEvent(input: BusinessEventInput) {
+  async logBusinessEvent(input: BusinessEventInput, opts?: { batch?: boolean }) {
     try {
       let validUserId: string | null = null;
       let userName = "Sistema";
@@ -111,19 +131,27 @@ export const loggingService = {
         }
       }
 
-      const result = await db.businessEvent.create({
-        data: {
-          tenantId: input.tenantId,
-          userId: validUserId,
-          eventType: input.eventType,
-          entityType: input.entityType,
-          entityId: input.entityId,
-          metadata: {
-            ...input.metadata,
-            userName, // Agregar nombre del usuario al metadata
-          },
+      const eventData = {
+        tenantId: input.tenantId,
+        userId: validUserId,
+        eventType: input.eventType,
+        entityType: input.entityType,
+        entityId: input.entityId,
+        metadata: {
+          ...input.metadata,
+          userName,
         },
-      });
+      };
+
+      // Use batch mode if specified
+      if (opts?.batch) {
+        await batchLoggingQueue.enqueue({ type: "business", data: eventData });
+        console.log("[BUSINESS EVENT] (batched)", input.eventType, "for", input.entityType, input.entityId, "by", userName);
+        return { id: "", createdAt: new Date(), updatedAt: new Date(), ...eventData };
+      }
+
+      // Synchronous mode (default for backwards compatibility)
+      const result = await db.businessEvent.create({ data: eventData });
       console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId, "by", userName);
       return result;
     } catch (error) {
