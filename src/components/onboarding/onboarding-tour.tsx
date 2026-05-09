@@ -93,38 +93,43 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   }
 
   const gap = 12;
-  const position = step.position || "right";
+  const tooltipWidth = 224; // w-56 = 14rem = 224px
+  const tooltipHeight = 200; // Aproximado
+  let position = step.position || "right";
+
+  // Detectar si hay espacio y ajustar posición automáticamente
+  if (position === "right" && elemRect.right + gap + tooltipWidth > window.innerWidth) {
+    position = "left";
+  }
+  if (position === "bottom" && elemRect.bottom + gap + tooltipHeight > window.innerHeight) {
+    position = "top";
+  }
 
   const getPosition = () => {
-    const marginBottom = 16; // 4px * 4 (Tailwind mb-4 = 1rem = 16px)
     switch (position) {
       case "right":
         return {
           top: `${elemRect.top + elemRect.height / 2}px`,
           left: `${elemRect.right + gap}px`,
           transform: "translateY(-50%)",
-          marginBottom: `${marginBottom}px`,
         };
       case "left":
         return {
           top: `${elemRect.top + elemRect.height / 2}px`,
-          right: `calc(100vw - ${elemRect.left - gap}px)`,
+          right: `${window.innerWidth - elemRect.left + gap}px`,
           transform: "translateY(-50%)",
-          marginBottom: `${marginBottom}px`,
         };
       case "bottom":
         return {
           top: `${elemRect.bottom + gap}px`,
           left: `${elemRect.left + elemRect.width / 2}px`,
           transform: "translateX(-50%)",
-          marginBottom: `${marginBottom}px`,
         };
       default:
         return {
-          bottom: `calc(100vh - ${elemRect.top - gap}px)`,
+          top: `${elemRect.top - gap - tooltipHeight}px`,
           left: `${elemRect.left + elemRect.width / 2}px`,
           transform: "translateX(-50%)",
-          marginBottom: `${marginBottom}px`,
         };
     }
   };
@@ -163,7 +168,7 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
         } as React.CSSProperties}
       >
         {/* Arrow */}
-        <div className={`absolute ${arrowClasses[position]} h-0 w-0`} />
+        <div className={`absolute ${arrowClasses[position] || arrowClasses.right} h-0 w-0`} />
 
         {/* Content */}
         <div className="relative">
