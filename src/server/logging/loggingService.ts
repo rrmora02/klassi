@@ -76,9 +76,9 @@ export const loggingService = {
 
   async logError(input: ErrorLogInput) {
     try {
-      await db.errorLog.create({
+      const result = await db.errorLog.create({
         data: {
-          tenantId: input.tenantId,
+          tenantId: input.tenantId || null,
           errorType: input.errorType,
           message: input.message,
           stack: input.stack,
@@ -86,8 +86,16 @@ export const loggingService = {
           severity: input.severity || "MEDIUM",
         },
       });
+      console.error("[ERROR LOG]", {
+        type: input.errorType,
+        message: input.message,
+        severity: input.severity,
+        context: input.context,
+      });
+      return result;
     } catch (error) {
-      console.error("Error logging error:", error);
+      console.error("[ERROR LOGGING FAILED]:", error);
+      // No re-throw para no interrumpir el flujo de la aplicación
     }
   },
 

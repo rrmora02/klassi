@@ -3,6 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
 import { db } from "@/server/db";
+import { loggingService } from "@/server/logging/loggingService";
+import { formatErrorForLogging } from "@/server/logging/error-parser";
 
 // ─── Contexto ────────────────────────────────────────────────────
 
@@ -46,6 +48,35 @@ const t = initTRPC.context<TRPCContext>().create({
 
 // ─── Middlewares ─────────────────────────────────────────────────
 
+const errorHandler = t.middleware(async ({ next, ctx, path, type, rawInput }) => {
+  try {
+    return await next();
+  } catch (err) {
+    // No registrar errores de validación (ZodError)
+    if (!(err instanceof ZodError) && !(err instanceof TRPCError && err.code === "BAD_REQUEST")) {
+      const { errorType, message, stack, context } = formatErrorForLogging(err, {
+        trpcPath: path,
+        trpcType: type,
+        userId: ctx.userId,
+        tenantId: ctx.tenantId,
+      });
+
+      await loggingService.logError({
+        tenantId: ctx.tenantId,
+        errorType,
+        message,
+        stack,
+        context,
+        severity: err instanceof TRPCError ? "MEDIUM" : "HIGH",
+      }).catch(e => {
+        console.error("[ERROR LOGGING FAILED]", e);
+      });
+    }
+
+    throw err;
+  }
+});
+
 const isAuthenticated = t.middleware(({ ctx, next }) => {
   if (!ctx.userId) {
     throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -68,7 +99,7 @@ const isSuperAdmin = t.middleware(({ ctx, next }) => {
 // ─── Exports ─────────────────────────────────────────────────────
 
 export const createTRPCRouter = t.router;
-export const publicProcedure = t.procedure;
-export const protectedProcedure = t.procedure.use(isAuthenticated);
-export const tenantProcedure = t.procedure.use(hasTenant);
-export const superAdminProcedure = t.procedure.use(isSuperAdmin);
+export const publicProcedure = t.procedure.use(errorHandler);
+export const protectedProcedure = t.procedure.use(errorHandler).use(isAuthenticated);
+export const tenantProcedure = t.procedure.use(errorHandler).use(hasTenant);
+export const superAdminProcedure = t.procedure.use(errorHandler).use(isSuperAdmin);
