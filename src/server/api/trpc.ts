@@ -7,6 +7,7 @@ import { loggingService } from "@/server/logging/loggingService";
 import { formatErrorForLogging } from "@/server/logging/error-parser";
 import { getUserByClerkId } from "@/server/cache/userAuthCache";
 import { createCacheInvalidationMiddleware } from "@/server/cache/cacheInvalidationMiddleware";
+import { metricsCollector } from "@/server/metrics/metricsCollector";
 
 // ─── Contexto ────────────────────────────────────────────────────
 
@@ -100,10 +101,35 @@ const isSuperAdmin = t.middleware(({ ctx, next }) => {
 
 const cacheInvalidation = createCacheInvalidationMiddleware(t);
 
+const metricsEnabled = process.env.ENABLE_METRICS === "true";
+
+const performanceMetrics = metricsEnabled
+  ? t.middleware(async ({ next, path, type }) => {
+      const startTime = Date.now();
+      const result = await next();
+      const duration = Date.now() - startTime;
+
+      try {
+        const responseSize = JSON.stringify(result).length;
+        const hasCacheHit = path.includes("list") || path.includes("get");
+        metricsCollector.recordProcedure(
+          `${path} (${type})`,
+          duration,
+          responseSize,
+          hasCacheHit
+        );
+      } catch (e) {
+        // Silently fail if metrics recording fails
+      }
+
+      return result;
+    })
+  : t.middleware(async ({ next }) => next());
+
 // ─── Exports ─────────────────────────────────────────────────────
 
 export const createTRPCRouter = t.router;
-export const publicProcedure = t.procedure.use(errorHandler);
-export const protectedProcedure = t.procedure.use(errorHandler).use(isAuthenticated);
-export const tenantProcedure = t.procedure.use(errorHandler).use(hasTenant).use(cacheInvalidation);
-export const superAdminProcedure = t.procedure.use(errorHandler).use(isSuperAdmin);
+export const publicProcedure = t.procedure.use(errorHandler).use(performanceMetrics);
+export const protectedProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(isAuthenticated);
+export const tenantProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(hasTenant).use(cacheInvalidation);
+export const superAdminProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(isSuperAdmin);
