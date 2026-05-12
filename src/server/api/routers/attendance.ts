@@ -158,7 +158,7 @@ export const attendanceRouter = createTRPCRouter({
            status: oldAttendance.status,
            studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
            groupName: session?.group.name,
-         } : null,
+         } : undefined,
          newValues: {
            status: newAttendance.status,
            studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,

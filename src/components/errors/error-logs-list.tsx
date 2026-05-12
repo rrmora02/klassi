@@ -11,12 +11,12 @@ interface ErrorLogsListProps {
   isLoading?: boolean;
 }
 
-const SEVERITY_COLORS: Record<string, { bg: string; text: string; label: string }> = {
+const SEVERITY_COLORS = {
   CRITICAL: { bg: "#b91c1c", text: "#fecaca", label: "Crítico" },
   HIGH: { bg: "#dc2626", text: "#fca5a5", label: "Alto" },
   MEDIUM: { bg: "#f59e0b", text: "#fef3c7", label: "Medio" },
   LOW: { bg: "#8b5cf6", text: "#ede9fe", label: "Bajo" },
-};
+} as const;
 
 export function ErrorLogsList({ logs, onResolve, isLoading }: ErrorLogsListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -40,7 +40,8 @@ export function ErrorLogsList({ logs, onResolve, isLoading }: ErrorLogsListProps
   return (
     <div style={{ overflowX: "auto" }}>
       {logs.map(log => {
-        const severity = SEVERITY_COLORS[log.severity as keyof typeof SEVERITY_COLORS];
+        const severityKey = log.severity as keyof typeof SEVERITY_COLORS;
+        const severity = SEVERITY_COLORS[severityKey] ?? SEVERITY_COLORS.LOW;
         const isExpanded = expandedId === log.id;
         const context = log.context as Record<string, any> | null;
 

@@ -22,7 +22,7 @@ export function OnboardingTour({ steps }: OnboardingTourProps) {
   const [sessionCompleted, setSessionCompleted] = useState<string[]>([]);
 
   const step = steps[currentStep];
-  const isCompleted = sessionCompleted.includes(step?.id);
+  const isCompleted = step ? sessionCompleted.includes(step.id) : false;
 
   useEffect(() => {
     const handleRestartTour = () => {

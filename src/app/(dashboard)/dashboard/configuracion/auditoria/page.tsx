@@ -63,6 +63,8 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
     db.businessEvent.count({ where: { tenantId } }),
   ]);
 
+  const currentTotal = tab === "audit" ? auditTotal : tab === "errors" ? errorTotal : tab === "events" ? eventTotal : 0;
+
   return (
     <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
       <div style={{ marginBottom: 24 }}>
@@ -104,12 +106,12 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
       </div>
 
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 16, marginBottom: 24 }}>
-        {tab === "audit" && <AuditLogsTable logs={auditLogs} />}
-        {tab === "errors" && <ErrorLogsTable logs={errorLogs} />}
-        {tab === "events" && <BusinessEventsTable events={businessEvents} />}
+        {tab === "audit" && <AuditLogsTable logs={auditLogs as any} />}
+        {tab === "errors" && <ErrorLogsTable logs={errorLogs as any} />}
+        {tab === "events" && <BusinessEventsTable events={businessEvents as any} />}
       </div>
 
-      {[auditTotal, errorTotal, eventTotal][["audit", "errors", "events"].indexOf(tab)] > pageSize && (
+      {currentTotal > pageSize && (
         <div style={{ marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
           <div style={{ display: "flex", gap: 4, overflowX: "auto" }} className="flex-wrap sm:flex-nowrap">
             {page > 1 && (
@@ -128,7 +130,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
               </a>
             )}
             <span style={{ padding: "5px 12px" }}>Página {page}</span>
-            {[auditTotal, errorTotal, eventTotal][["audit", "errors", "events"].indexOf(tab)] > page * pageSize && (
+            {currentTotal > page * pageSize && (
               <a
                 href={`/dashboard/configuracion/auditoria?tab=${tab}&page=${page + 1}`}
                 style={{

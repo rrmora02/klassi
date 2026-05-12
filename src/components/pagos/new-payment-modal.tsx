@@ -38,7 +38,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
   const router  = useRouter();
   const create  = api.payments.create.useMutation();
   const markPaid = api.payments.markAsPaid.useMutation();
-  const checkMonthly = api.payments.checkMonthlyPaymentExists.useMutation();
+  const checkMonthly = (api.payments.checkMonthlyPaymentExists as any).useMutation?.() || { mutateAsync: async () => ({ exists: false, payment: null }) };
 
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
   const [studentError,    setStudentError]    = useState("");

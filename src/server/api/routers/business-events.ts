@@ -119,7 +119,7 @@ export const businessEventsRouter = createTRPCRouter({
 
       const eventsByDay: Record<string, number> = {};
       byDay.forEach((event) => {
-        const day = event.createdAt.toISOString().split("T")[0];
+        const day = (event.createdAt ?? new Date()).toISOString().split("T")[0] ?? "unknown";
         eventsByDay[day] = (eventsByDay[day] || 0) + 1;
       });
 
@@ -158,7 +158,7 @@ export const businessEventsRouter = createTRPCRouter({
 
       const eventsByDay: Record<string, number> = {};
       byDay.forEach((event) => {
-        const day = event.createdAt.toISOString().split("T")[0];
+        const day = (event.createdAt ?? new Date()).toISOString().split("T")[0] ?? "unknown";
         eventsByDay[day] = (eventsByDay[day] || 0) + 1;
       });
 

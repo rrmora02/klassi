@@ -58,11 +58,11 @@ export const loggingService = {
         action: input.action,
         entity: input.entity,
         entityId: input.entityId,
-        oldValues: input.oldValues || null,
-        newValues: input.newValues || null,
+        oldValues: (input.oldValues || null) as any,
+        newValues: (input.newValues || null) as any,
         description,
-        ipAddress: input.ipAddress,
-        userAgent: input.userAgent,
+        ipAddress: input.ipAddress || undefined,
+        userAgent: input.userAgent || undefined,
       };
 
       // Use batch mode if specified
@@ -73,7 +73,7 @@ export const loggingService = {
       }
 
       // Synchronous mode (default for backwards compatibility)
-      const result = await db.auditLog.create({ data: auditData });
+      const result = await db.auditLog.create({ data: auditData as any });
       console.log("[AUDIT LOG]", description, `by ${validUserId || "system"}`);
       return result;
     } catch (error) {
@@ -162,6 +162,7 @@ export const loggingService = {
   async getAuditLogs(
     tenantId: string,
     filters?: {
+      userId?: string;
       entity?: string;
       action?: AuditAction;
       from?: Date;
@@ -176,6 +177,7 @@ export const loggingService = {
 
     const where = {
       tenantId,
+      ...(filters?.userId && { userId: filters.userId }),
       ...(filters?.entity && { entity: filters.entity }),
       ...(filters?.action && { action: filters.action }),
       ...(filters?.from || filters?.to

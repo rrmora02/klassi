@@ -177,7 +177,7 @@ export default async function ErroresPage({ searchParams }: PageProps) {
       </div>
 
       {/* Error List */}
-      <ErrorLogsList logs={errorLogs} />
+      <ErrorLogsList logs={errorLogs as any} />
 
       {/* Pagination */}
       {totalPages > 1 && (
