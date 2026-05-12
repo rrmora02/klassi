@@ -153,7 +153,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                     ))}
                   </div>
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}><div><div>{s.phone ?? "—"}</div>{s.email && s.phone && <div style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}>{s.email}</div>}</div></td>
+                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}><div><div>{s.phone ?? s.email ?? "—"}</div>{s.phone && s.email && <div style={{ fontSize: 10, color: "var(--color-text-tertiary)", marginTop: 2 }}>{s.email}</div>}</div></td>
                 <td style={{ padding: "11px 14px" }}><StudentStatusBadge status={s.status} /></td>
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
                   <Link href={`/dashboard/alumnos/${s.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer" }}>
