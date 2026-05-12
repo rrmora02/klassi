@@ -306,7 +306,7 @@ export const loggingService = {
         resolved: true,
         resolvedAt: new Date(),
         resolvedBy,
-      },
+      } as any,
     });
   },
 };
