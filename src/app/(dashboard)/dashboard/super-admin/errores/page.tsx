@@ -22,7 +22,7 @@ export default async function ErroresPage({ searchParams }: PageProps) {
   const severity = searchParams.severity as any;
   const resolved = searchParams.resolved === "true";
   const page = Math.max(1, Number(searchParams.page ?? 1));
-  const pageSize = 50;
+  const pageSize = 10;
 
   // Obtener resumen de errores
   const from = new Date();

@@ -36,7 +36,7 @@ export default async function PagosPage({ searchParams }: PageProps) {
   }
 
   const page      = Math.max(1, Number(searchParams.page ?? 1));
-  const pageSize  = 20;
+  const pageSize  = 10;
   const status    = searchParams.status as PaymentStatus | undefined;
   const search    = searchParams.q?.trim() ?? "";
 

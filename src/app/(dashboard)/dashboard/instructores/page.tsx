@@ -25,7 +25,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   }
 
   const page = Math.max(1, Number(searchParams.page ?? 1));
-  const pageSize = 20;
+  const pageSize = 10;
   const search = searchParams.q?.trim() ?? "";
   const activeFilter = searchParams.active === "false" ? false : searchParams.active === "true" ? true : undefined;
 

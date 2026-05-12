@@ -48,7 +48,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
   }
 
   const page     = Math.max(1, Number(searchParams.page ?? 1));
-  const pageSize = 20;
+  const pageSize = 10;
   const search   = searchParams.q?.trim() ?? "";
   const discId   = searchParams.disc;
   const levelFilter = searchParams.level as GroupLevel | undefined;

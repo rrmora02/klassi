@@ -27,7 +27,7 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
   }
 
   const page     = Math.max(1, Number(searchParams.page ?? 1));
-  const pageSize = 20;
+  const pageSize = 10;
 
   const [announcements, total] = await Promise.all([
     db.announcement.findMany({

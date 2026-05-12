@@ -32,7 +32,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps) {
 
   const tab = searchParams.tab ?? "audit";
   const page = Math.max(1, Number(searchParams.page ?? 1));
-  const pageSize = 50;
+  const pageSize = 10;
   const tenantId = user.activeTenant.id;
 
   const auditLogs = await db.auditLog.findMany({
