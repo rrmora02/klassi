@@ -240,7 +240,6 @@ export const loggingService = {
         skip,
         take: pageSize,
         orderBy: { createdAt: "desc" },
-        include: { user: { select: { name: true, email: true } } },
       }),
       db.errorLog.count({ where }),
     ]);

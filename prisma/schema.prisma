@@ -593,6 +593,7 @@ model ErrorLog {
   severity     LogSeverity @default(MEDIUM)
   resolved     Boolean     @default(false)
   resolvedAt   DateTime?
+  resolvedBy   String?     // quién resolvió el error
   createdAt    DateTime    @default(now())
 
   @@index([tenantId])

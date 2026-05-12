@@ -1,10 +1,9 @@
 import { db } from "@/server/db";
-import type { AuditLogCreateInput, ErrorLogCreateInput, BusinessEventCreateInput } from "@prisma/client";
 
 type BatchEntry =
-  | { type: "audit"; data: AuditLogCreateInput }
-  | { type: "error"; data: ErrorLogCreateInput }
-  | { type: "business"; data: BusinessEventCreateInput };
+  | { type: "audit"; data: any }
+  | { type: "error"; data: any }
+  | { type: "business"; data: any };
 
 export class BatchLoggingQueue {
   private queue: BatchEntry[] = [];
@@ -32,9 +31,10 @@ export class BatchLoggingQueue {
     }
 
     this.isProcessing = true;
+    let batch: BatchEntry[] = [];
 
     try {
-      const batch = this.queue.splice(0);
+      batch = this.queue.splice(0);
       if (this.flushTimer) {
         clearTimeout(this.flushTimer);
         this.flushTimer = null;
