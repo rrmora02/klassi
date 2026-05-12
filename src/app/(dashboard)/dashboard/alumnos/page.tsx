@@ -46,7 +46,19 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
     db.student.findMany({
       where, skip: (page - 1) * pageSize, take: pageSize,
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-      include: { enrollments: { where: { status: "ACTIVE" }, include: { group: { include: { discipline: true } } } } },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        birthDate: true,
+        email: true,
+        phone: true,
+        status: true,
+        enrollments: {
+          where: { status: "ACTIVE" },
+          include: { group: { include: { discipline: true } } }
+        }
+      }
     }),
     db.student.count({ where }),
     db.discipline.findMany({ where: { tenantId: tenant.id, isActive: true }, orderBy: { sortOrder: "asc" } }),
