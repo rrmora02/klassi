@@ -38,6 +38,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
       { lastName:  { contains: search, mode: "insensitive" } },
       { email:     { contains: search, mode: "insensitive" } },
       { phone:     { contains: search } },
+      { parents: { some: { user: { name: { contains: search, mode: "insensitive" } } } } },
     ]}),
     ...(discId && { enrollments: { some: { status: "ACTIVE", group: { disciplineId: discId } } } }),
   };
@@ -57,6 +58,10 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
         enrollments: {
           where: { status: "ACTIVE" },
           include: { group: { include: { discipline: true } } }
+        },
+        parents: {
+          include: { user: true },
+          orderBy: { isPrimary: "desc" }
         }
       }
     }),
@@ -165,7 +170,24 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                     ))}
                   </div>
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}><div><div>{s.phone ?? s.email ?? "—"}</div>{s.phone && s.email && <div style={{ fontSize: 10, color: "var(--color-text-tertiary)", marginTop: 2 }}>{s.email}</div>}</div></td>
+                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>
+                  <div>
+                    {s.parents.length === 0 ? (
+                      <span style={{ color: "var(--color-text-tertiary)" }}>—</span>
+                    ) : (
+                      s.parents.map((parent, idx) => (
+                        <div key={parent.id}>
+                          <div style={{ fontWeight: parent.isPrimary ? 500 : 400 }}>
+                            {parent.user.name} {parent.relationship && <span style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}>({parent.relationship})</span>}
+                          </div>
+                          {parent.user.phone && <div style={{ fontSize: 10, color: "var(--color-text-tertiary)", marginTop: 2 }}>{parent.user.phone}</div>}
+                          {!parent.user.phone && parent.user.email && <div style={{ fontSize: 10, color: "var(--color-text-tertiary)", marginTop: 2 }}>{parent.user.email}</div>}
+                          {idx < s.parents.length - 1 && <div style={{ marginTop: 6, borderTop: "0.5px solid var(--color-border-tertiary)" }} />}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </td>
                 <td style={{ padding: "11px 14px" }}><StudentStatusBadge status={s.status} /></td>
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
                   <Link href={`/dashboard/alumnos/${s.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer" }}>
