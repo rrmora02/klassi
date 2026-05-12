@@ -106,7 +106,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
       {/* Filtros */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <form style={{ flex: 1, minWidth: 200 }} className="sm:max-w-sm">
-          <input name="q" defaultValue={search} placeholder="Buscar nombre, email..." className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-[rgba(255,255,255,0.08)] text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors" />
+          <input name="q" defaultValue={search} placeholder="Buscar por nombre, email o teléfono..." className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-[rgba(255,255,255,0.08)] text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors" />
         </form>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {[{ id: undefined, name: "Todas" }, ...disciplines].map(d => (
@@ -153,7 +153,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
                     ))}
                   </div>
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>{s.phone ?? s.email ?? "—"}</td>
+                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}><div><div>{s.phone ?? "—"}</div>{s.email && s.phone && <div style={{ fontSize: 10, color: "var(--color-text-tertiary)" }}>{s.email}</div>}</div></td>
                 <td style={{ padding: "11px 14px" }}><StudentStatusBadge status={s.status} /></td>
                 <td style={{ padding: "11px 14px", textAlign: "right" }}>
                   <Link href={`/dashboard/alumnos/${s.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer" }}>
