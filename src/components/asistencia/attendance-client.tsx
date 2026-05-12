@@ -61,6 +61,13 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
       )
   };
 
+  const statusBadges = [
+    { symbol: "✓", label: "Presente", color: "#10b981", bgColor: "rgba(16, 185, 129, 0.1)" },
+    { symbol: "✗", label: "Ausente", color: "#ef4444", bgColor: "rgba(239, 68, 68, 0.1)" },
+    { symbol: "↓", label: "Tardío", color: "#f59e0b", bgColor: "rgba(245, 158, 11, 0.1)" },
+    { symbol: "⊘", label: "Justificado", color: "#64748b", bgColor: "rgba(100, 116, 139, 0.1)" },
+  ];
+
   return (
     <div>
       {/* Breadcrumb */}
@@ -74,6 +81,46 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Pase de lista</h1>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>Registra la asistencia en tiempo real.</p>
         </div>
+      </div>
+
+      {/* Legend / Badges */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }} className="flex-col sm:flex-row sm:items-center">
+        {statusBadges.map((badge) => (
+          <div
+            key={badge.label}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 12px",
+              borderRadius: 8,
+              background: badge.bgColor,
+              border: `1px solid ${badge.color}`,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                background: badge.color,
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              {badge.symbol}
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-primary)" }}>
+                {badge.label}
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Filtros */}
