@@ -14,6 +14,7 @@ interface EventDetailClientProps {
   eventAmount: number;
   isSchoolWide: boolean;
   groups: Array<{ id: string; name: string }>;
+  eventStatus?: "PENDING" | "ONGOING" | "COMPLETED" | "CANCELLED";
 }
 
 export function EventDetailClient({
@@ -23,6 +24,7 @@ export function EventDetailClient({
   eventAmount,
   isSchoolWide,
   groups,
+  eventStatus = "PENDING",
 }: EventDetailClientProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -206,9 +208,9 @@ export function EventDetailClient({
             </h2>
             <button
               onClick={handleGenerateMissingPayments}
-              disabled={generateMissingMutation.isPending}
-              className="rounded px-3 py-1.5 text-xs font-medium bg-sb-accent text-white hover:bg-sb-green transition-colors disabled:opacity-50"
-              title="Generar pagos para alumnos nuevos que se inscribieron después de crear el evento"
+              disabled={generateMissingMutation.isPending || eventStatus === "COMPLETED"}
+              className="rounded px-3 py-1.5 text-xs font-medium bg-sb-accent text-white hover:bg-sb-green transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              title={eventStatus === "COMPLETED" ? "No se pueden agregar alumnos a eventos completados" : "Generar pagos para alumnos nuevos que se inscribieron después de crear el evento"}
             >
               {generateMissingMutation.isPending ? "Generando..." : "+ Agregar nuevos alumnos"}
             </button>
@@ -360,7 +362,9 @@ export function EventDetailClient({
                           payment.willAttend === true && (
                             <button
                               onClick={() => handleMarkAsPaid(payment.id, payment.amount, fullName(payment.student.firstName, payment.student.lastName))}
-                              className="rounded px-2.5 py-1 text-xs bg-sb-accent text-white hover:bg-sb-green transition-colors"
+                              disabled={eventStatus === "COMPLETED"}
+                              className="rounded px-2.5 py-1 text-xs bg-sb-accent text-white hover:bg-sb-green transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={eventStatus === "COMPLETED" ? "No se pueden registrar pagos en eventos completados" : ""}
                             >
                               Pagar
                             </button>
@@ -373,7 +377,9 @@ export function EventDetailClient({
                                 payment.willAttend !== true
                               )
                             }
-                            className="rounded px-2.5 py-1 text-xs bg-gray-200 dark:bg-sb-house text-gray-700 dark:text-sb-light/80 hover:bg-gray-300 dark:hover:bg-sb-house/80 transition-colors"
+                            disabled={eventStatus === "COMPLETED"}
+                            className="rounded px-2.5 py-1 text-xs bg-gray-200 dark:bg-sb-house text-gray-700 dark:text-sb-light/80 hover:bg-gray-300 dark:hover:bg-sb-house/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={eventStatus === "COMPLETED" ? "No se puede modificar asistencia en eventos completados" : ""}
                           >
                             {payment.willAttend === true ? "No" : "Sí"}
                           </button>

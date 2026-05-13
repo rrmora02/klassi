@@ -184,6 +184,7 @@ export default async function EventoDetailPage({ params }: PageProps) {
         eventAmount={event.amount}
         isSchoolWide={event.isSchoolWide}
         groups={event.groups}
+        eventStatus={event.status as any}
       />
     </div>
   );
