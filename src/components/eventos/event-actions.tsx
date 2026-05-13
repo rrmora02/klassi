@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/trpc";
+import { useToast } from "@/hooks/use-toast";
 import type { EventStatus } from "@prisma/client";
 
 interface EventActionsProps {
@@ -12,23 +13,36 @@ interface EventActionsProps {
 
 export function EventActions({ eventId, eventStatus }: EventActionsProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const markAsCompletedMutation = api.events.markAsCompleted.useMutation();
 
   const handleMarkAsCompleted = async () => {
     if (eventStatus === "COMPLETED") {
-      alert("Este evento ya está marcado como completado");
+      toast({
+        title: "Evento ya completado",
+        description: "Este evento ya está marcado como completado",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsLoading(true);
     try {
       await markAsCompletedMutation.mutateAsync({ id: eventId });
-      alert("Evento marcado como completado");
+      toast({
+        title: "¡Éxito!",
+        description: "Evento marcado como completado correctamente",
+        variant: "default",
+      });
       router.refresh();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al marcar como completado";
-      alert(msg);
+      toast({
+        title: "Error",
+        description: msg,
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
