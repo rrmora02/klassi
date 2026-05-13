@@ -347,10 +347,11 @@ export function GroupForm({
         />
       </div>
 
-      {/* ── Cobro mensual ────────────────────────────── */}
-      <SectionTitle>Cobro mensual (opcional)</SectionTitle>
+      {/* ── Configuración de Cobro ────────────────────────────── */}
+      <SectionTitle>Configuración de cobro (opcional)</SectionTitle>
+
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
-        <Field label="Mensualidad (MXN)" error={errors.monthlyFee?.message}>
+        <Field label="Monto (MXN)" error={errors.monthlyFee?.message}>
           <Input
             {...register("monthlyFee", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
             type="number"
@@ -360,23 +361,102 @@ export function GroupForm({
             error={!!errors.monthlyFee}
           />
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
-            Monto que se cobrará automáticamente cada mes a todos los alumnos del grupo.
+            Monto que se cobrará automáticamente a todos los alumnos del grupo.
           </p>
         </Field>
-        <Field label="Día de cobro" error={errors.billingDay?.message}>
-          <Input
-            {...register("billingDay", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
-            type="number"
-            min={1}
-            max={28}
-            placeholder="Ej: 5"
-            error={!!errors.billingDay}
-          />
+
+        <Field label="Frecuencia de cobro" error={errors.billingFrequency?.message}>
+          <select
+            {...register("billingFrequency")}
+            style={{
+              width: "100%", padding: "8px 12px", borderRadius: 8,
+              border: "0.5px solid var(--color-border-secondary)",
+              background: "var(--color-background-primary)",
+              color: "var(--color-text-primary)",
+              fontSize: 14,
+            }}
+          >
+            <option value="MONTHLY">Mensual</option>
+            <option value="WEEKLY">Semanal</option>
+            <option value="BIWEEKLY">Quincenal</option>
+          </select>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
-            Día del mes en que se generará el cobro (1-28). Deja vacío para no generar cobros automáticos.
+            Define cuándo se generarán los cobros automáticos.
           </p>
         </Field>
       </div>
+
+      {/* Opciones específicas por frecuencia */}
+      {watch("billingFrequency") === "MONTHLY" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
+          <Field label="Día del mes (fecha límite de pago)" error={errors.billingDay?.message}>
+            <Input
+              {...register("billingDay", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
+              type="number"
+              min={1}
+              max={28}
+              placeholder="Ej: 15"
+              error={!!errors.billingDay}
+            />
+            <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+              Día del mes para la fecha límite (1-28). El cobro se generará 2 días antes.
+            </p>
+          </Field>
+        </div>
+      )}
+
+      {watch("billingFrequency") === "WEEKLY" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
+          <Field label="Día de la semana (fecha límite)" error={errors.billingDayOfWeek?.message}>
+            <select
+              {...register("billingDayOfWeek")}
+              style={{
+                width: "100%", padding: "8px 12px", borderRadius: 8,
+                border: "0.5px solid var(--color-border-secondary)",
+                background: "var(--color-background-primary)",
+                color: "var(--color-text-primary)",
+                fontSize: 14,
+              }}
+            >
+              <option value="">Selecciona un día</option>
+              <option value="MON">Lunes</option>
+              <option value="TUE">Martes</option>
+              <option value="WED">Miércoles</option>
+              <option value="THU">Jueves</option>
+              <option value="FRI">Viernes</option>
+              <option value="SAT">Sábado</option>
+              <option value="SUN">Domingo</option>
+            </select>
+            <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+              Día de la semana para la fecha límite. El cobro se generará 2 días antes.
+            </p>
+          </Field>
+        </div>
+      )}
+
+      {watch("billingFrequency") === "BIWEEKLY" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
+          <Field label="Quincena (fecha límite)" error={errors.billingWeekOfMonth?.message}>
+            <select
+              {...register("billingWeekOfMonth", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
+              style={{
+                width: "100%", padding: "8px 12px", borderRadius: 8,
+                border: "0.5px solid var(--color-border-secondary)",
+                background: "var(--color-background-primary)",
+                color: "var(--color-text-primary)",
+                fontSize: 14,
+              }}
+            >
+              <option value="">Selecciona una quincena</option>
+              <option value="1">Primera quincena (días 1-15)</option>
+              <option value="2">Segunda quincena (días 16-30)</option>
+            </select>
+            <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+              Quincena para la fecha límite. El cobro se generará 2 días antes.
+            </p>
+          </Field>
+        </div>
+      )}
 
       {/* ── Acciones ─────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 16, borderTop: "0.5px solid var(--color-border-tertiary)" }}>

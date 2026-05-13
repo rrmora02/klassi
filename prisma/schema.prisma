@@ -88,6 +88,12 @@ enum GroupLevel {
   PROFESSIONAL
 }
 
+enum BillingFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
 enum AuditAction {
   CREATE
   UPDATE
@@ -295,24 +301,27 @@ enum GroupType {
 }
 
 model Group {
-  id           String      @id @default(cuid())
-  tenantId     String
-  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  disciplineId String
-  discipline   Discipline  @relation(fields: [disciplineId], references: [id])
-  instructorId String?
-  instructor   Instructor? @relation(fields: [instructorId], references: [id])
-  name         String
-  type         GroupType   @default(FIXED)
-  level        GroupLevel  @default(BEGINNER)
-  capacity     Int         @default(20)
-  room         String?
-  schedule     Json
-  monthlyFee   Int? // Mensualidad en centavos (ej. 50000 = $500.00 MXN)
-  billingDay   Int? // Día del mes para generar cobros (1-28)
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id                 String           @id @default(cuid())
+  tenantId           String
+  tenant             Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  disciplineId       String
+  discipline         Discipline       @relation(fields: [disciplineId], references: [id])
+  instructorId       String?
+  instructor         Instructor?      @relation(fields: [instructorId], references: [id])
+  name               String
+  type               GroupType        @default(FIXED)
+  level              GroupLevel       @default(BEGINNER)
+  capacity           Int              @default(20)
+  room               String?
+  schedule           Json
+  monthlyFee         Int? // Monto en centavos (ej. 50000 = $500.00 MXN)
+  billingFrequency   BillingFrequency @default(MONTHLY) // WEEKLY, BIWEEKLY, o MONTHLY
+  billingDay         Int? // Para MONTHLY: día del mes (1-28)
+  billingDayOfWeek   String? // Para WEEKLY: día de la semana (MON-SUN)
+  billingWeekOfMonth Int? // Para BIWEEKLY: 1=primera quincena, 2=segunda quincena
+  isActive           Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   enrollments Enrollment[]
   sessions    ClassSession[]

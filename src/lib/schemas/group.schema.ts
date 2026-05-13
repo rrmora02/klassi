@@ -68,12 +68,29 @@ export const groupFormSchema = z.object({
       .optional()
   ),
 
+  billingFrequency: z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"], { required_error: "Selecciona frecuencia" })
+    .default("MONTHLY"),
+
   billingDay: z.preprocess(
     (v) => (v === "" || v === null || v === undefined || (typeof v === "number" && isNaN(v))) ? null : Number(v),
     z.number({ invalid_type_error: "Ingresa un día válido" })
       .int("Debe ser entero")
       .min(1, "Mínimo día 1")
       .max(28, "Máximo día 28")
+      .nullable()
+      .optional()
+  ),
+
+  billingDayOfWeek: z.enum(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"])
+    .nullable()
+    .optional(),
+
+  billingWeekOfMonth: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined || (typeof v === "number" && isNaN(v))) ? null : Number(v),
+    z.number({ invalid_type_error: "Selecciona una quincena" })
+      .int("Debe ser entero")
+      .min(1, "Mínimo 1")
+      .max(2, "Máximo 2")
       .nullable()
       .optional()
   ),
@@ -84,14 +101,17 @@ export type GroupFormValues = z.infer<typeof groupFormSchema>;
 // ─── Defaults ─────────────────────────────────────────────────────
 
 export const groupFormDefaults: GroupFormValues = {
-  name:         "",
-  disciplineId: "",
-  instructorId: "",
-  level:        "BEGINNER",
-  type:         "FIXED",
-  capacity:     20,
-  room:         "",
-  schedule:     [{ day: "MON", startTime: "", endTime: "" }],
-  monthlyFee:   null,
-  billingDay:   null,
+  name:              "",
+  disciplineId:      "",
+  instructorId:      "",
+  level:             "BEGINNER",
+  type:              "FIXED",
+  capacity:          20,
+  room:              "",
+  schedule:          [{ day: "MON", startTime: "", endTime: "" }],
+  monthlyFee:        null,
+  billingFrequency:  "MONTHLY",
+  billingDay:        null,
+  billingDayOfWeek:  null,
+  billingWeekOfMonth: null,
 };

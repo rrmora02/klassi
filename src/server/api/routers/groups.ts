@@ -30,15 +30,18 @@ const scheduleSlotSchema = z.object({
 });
 
 const groupCreateSchema = z.object({
-  name:         z.string().min(2).max(80),
-  disciplineId: z.string().min(1),
-  instructorId: z.string().optional().or(z.literal("")),
-  level:        z.nativeEnum(GroupLevel),
-  capacity:     z.number().int().min(1).max(200),
-  room:         z.string().max(60).optional().or(z.literal("")),
-  schedule:     z.array(scheduleSlotSchema).min(1),
-  monthlyFee:   z.number().int().min(0).max(10_000_000).optional().nullable(),
-  billingDay:   z.number().int().min(1).max(28).optional().nullable(),
+  name:              z.string().min(2).max(80),
+  disciplineId:      z.string().min(1),
+  instructorId:      z.string().optional().or(z.literal("")),
+  level:             z.nativeEnum(GroupLevel),
+  capacity:          z.number().int().min(1).max(200),
+  room:              z.string().max(60).optional().or(z.literal("")),
+  schedule:          z.array(scheduleSlotSchema).min(1),
+  monthlyFee:        z.number().int().min(0).max(10_000_000).optional().nullable(),
+  billingFrequency:  z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).default("MONTHLY"),
+  billingDay:        z.number().int().min(1).max(28).optional().nullable(),
+  billingDayOfWeek:  z.enum(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]).optional().nullable(),
+  billingWeekOfMonth: z.number().int().min(1).max(2).optional().nullable(),
 });
 
 const groupUpdateSchema = groupCreateSchema.partial().extend({
@@ -217,15 +220,18 @@ export const groupsRouter = createTRPCRouter({
       return db.group.create({
         data: {
           tenantId,
-          name:         input.name,
-          disciplineId: input.disciplineId,
-          instructorId: input.instructorId || null,
-          level:        input.level,
-          capacity:     input.capacity,
-          room:         input.room || null,
-          schedule:     input.schedule as unknown as Prisma.InputJsonValue,
-          monthlyFee:   normalizeMonthlyFee(input.monthlyFee),
-          billingDay:   input.billingDay ?? null,
+          name:               input.name,
+          disciplineId:       input.disciplineId,
+          instructorId:       input.instructorId || null,
+          level:              input.level,
+          capacity:           input.capacity,
+          room:               input.room || null,
+          schedule:           input.schedule as unknown as Prisma.InputJsonValue,
+          monthlyFee:         normalizeMonthlyFee(input.monthlyFee),
+          billingFrequency:   input.billingFrequency || "MONTHLY",
+          billingDay:         input.billingDay ?? null,
+          billingDayOfWeek:   input.billingDayOfWeek ?? null,
+          billingWeekOfMonth: input.billingWeekOfMonth ?? null,
         },
       });
     }),
@@ -276,7 +282,10 @@ export const groupsRouter = createTRPCRouter({
       if (data.room !== undefined) updateData.room = data.room || null;
       if (data.schedule !== undefined) updateData.schedule = data.schedule as unknown as Prisma.InputJsonValue;
       if (data.monthlyFee !== undefined) updateData.monthlyFee = normalizeMonthlyFee(data.monthlyFee);
+      if (data.billingFrequency !== undefined) updateData.billingFrequency = data.billingFrequency;
       if (data.billingDay !== undefined) updateData.billingDay = data.billingDay ?? null;
+      if (data.billingDayOfWeek !== undefined) updateData.billingDayOfWeek = data.billingDayOfWeek ?? null;
+      if (data.billingWeekOfMonth !== undefined) updateData.billingWeekOfMonth = data.billingWeekOfMonth ?? null;
 
       return db.group.update({
         where: { id },
