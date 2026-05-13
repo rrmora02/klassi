@@ -55,3 +55,28 @@ export function translatePaymentStatus(status: string): string {
   };
   return translations[status] ?? status;
 }
+
+/** Formatea fecha de cobro según frecuencia */
+export function formatBillingInfo(frequency: string, billingDay?: number | null, billingDayOfWeek?: string | null, billingWeekOfMonth?: number | null): string {
+  const dayLabels: Record<string, string> = {
+    MON: "Lunes",
+    TUE: "Martes",
+    WED: "Miércoles",
+    THU: "Jueves",
+    FRI: "Viernes",
+    SAT: "Sábado",
+    SUN: "Domingo",
+  };
+
+  if (frequency === "MONTHLY" && billingDay) {
+    return `${billingDay}° de cada mes`;
+  }
+  if (frequency === "WEEKLY" && billingDayOfWeek) {
+    return `Cada ${dayLabels[billingDayOfWeek] ?? billingDayOfWeek}`;
+  }
+  if (frequency === "BIWEEKLY" && billingWeekOfMonth) {
+    const label = billingWeekOfMonth === 1 ? "primera quincena" : "segunda quincena";
+    return `${label} de cada mes`;
+  }
+  return "—";
+}

@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
+import { formatBillingInfo } from "@/lib/utils";
 import type { ScheduleSlot } from "@/lib/schemas/group.schema";
 import type { GroupLevel } from "@prisma/client";
 
@@ -248,8 +249,8 @@ export default async function GruposPage({ searchParams }: PageProps) {
                   <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12, maxWidth: 200 }}>
                     {schedule.length > 0 ? formatSchedule(schedule) : "—"}
                   </td>
-                  <td style={{ padding: "11px 14px", color: g.billingDay ? "var(--color-text-primary)" : "var(--color-text-tertiary)" }}>
-                    {g.billingDay ? `${g.billingDay}° de mes` : "—"}
+                  <td style={{ padding: "11px 14px", color: (g.billingDay || g.billingDayOfWeek || g.billingWeekOfMonth) ? "var(--color-text-primary)" : "var(--color-text-tertiary)" }}>
+                    {formatBillingInfo(g.billingFrequency, g.billingDay, g.billingDayOfWeek, g.billingWeekOfMonth)}
                   </td>
                   <td style={{ padding: "11px 14px" }}>
                     <span style={{ color: isFull ? "#b91c1c" : "var(--color-text-primary)", fontWeight: isFull ? 500 : 400 }}>
