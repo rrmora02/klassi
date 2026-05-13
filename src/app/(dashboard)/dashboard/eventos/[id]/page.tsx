@@ -6,6 +6,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { EventDetailClient } from "@/components/eventos/event-detail-client";
 import { EventDownloadButton } from "@/components/eventos/event-download-button";
 import { EventInvitationPreview } from "@/components/eventos/event-invitation-preview";
+import { EventActions } from "@/components/eventos/event-actions";
 import { Users } from "lucide-react";
 
 interface PageProps {
@@ -112,10 +113,19 @@ export default async function EventoDetailPage({ params }: PageProps) {
                   padding: "6px 12px",
                   fontSize: 12,
                   fontWeight: 500,
-                  background: event.status === "ACTIVE" ? "rgba(21, 128, 61, 0.15)" : "rgba(220, 38, 38, 0.15)",
-                  color: event.status === "ACTIVE" ? "#15803d" : "#dc2626"
+                  background: event.status === "PENDING" ? "rgba(59, 130, 246, 0.15)" :
+                             event.status === "ONGOING" ? "rgba(245, 158, 11, 0.15)" :
+                             event.status === "COMPLETED" ? "rgba(34, 197, 94, 0.15)" :
+                             "rgba(220, 38, 38, 0.15)",
+                  color: event.status === "PENDING" ? "#3b82f6" :
+                         event.status === "ONGOING" ? "#f59e0b" :
+                         event.status === "COMPLETED" ? "#22c55e" :
+                         "#dc2626"
                 }}>
-                  {event.status === "ACTIVE" ? "Activo" : "Cancelado"}
+                  {event.status === "PENDING" ? "Pendiente" :
+                   event.status === "ONGOING" ? "En curso" :
+                   event.status === "COMPLETED" ? "Completado" :
+                   "Cancelado"}
                 </span>
               </div>
             </div>
@@ -147,23 +157,21 @@ export default async function EventoDetailPage({ params }: PageProps) {
 
               <div style={{ padding: 12, borderRadius: 8, background: "var(--color-background-secondary)" }}>
                 <p style={{ fontSize: 11, color: "var(--color-text-secondary)", margin: "0 0 6px" }}>Estado</p>
-                <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color: event.status === "ACTIVE" ? "#15803d" : "#dc2626" }}>
-                  ● {event.status === "ACTIVE" ? "Activo" : "Cancelado"}
+                <p style={{ fontSize: 13, fontWeight: 600, margin: 0, color:
+                  event.status === "PENDING" ? "#3b82f6" :
+                  event.status === "ONGOING" ? "#f59e0b" :
+                  event.status === "COMPLETED" ? "#22c55e" :
+                  "#dc2626"
+                }}>
+                  ● {event.status === "PENDING" ? "Pendiente" :
+                     event.status === "ONGOING" ? "En curso" :
+                     event.status === "COMPLETED" ? "Completado" :
+                     "Cancelado"}
                 </p>
               </div>
             </div>
 
-            <div style={{ marginTop: 16, paddingTop: 16, borderTop: "0.5px solid var(--color-border-tertiary)", display: "flex", flexDirection: "column", gap: 8 }}>
-              <Link
-                href={`/dashboard/eventos/${event.id}/editar`}
-                style={{ display: "block", width: "100%", borderRadius: 8, background: "#006241", color: "#fff", textAlign: "center", padding: "8px 16px", fontSize: 13, fontWeight: 500, textDecoration: "none", border: "none", cursor: "pointer" }}
-              >
-                Editar evento
-              </Link>
-              <button style={{ display: "block", width: "100%", borderRadius: 8, border: "1px solid #dc2626", background: "transparent", color: "#dc2626", textAlign: "center", padding: "8px 16px", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
-                Cancelar evento
-              </button>
-            </div>
+            <EventActions eventId={event.id} eventStatus={event.status as any} />
           </div>
         </div>
       </div>

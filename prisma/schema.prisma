@@ -81,6 +81,13 @@ enum DayOfWeek {
   SUN
 }
 
+enum EventStatus {
+  PENDING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
 enum GroupLevel {
   BEGINNER
   INTERMEDIATE
@@ -516,7 +523,8 @@ model Event {
   groups       Group[] @relation("EventToGroup")
 
   amount Int // en centavos
-  status String @default("ACTIVE") // ACTIVE, CANCELLED
+  status EventStatus @default(PENDING) // PENDING, ONGOING, COMPLETED, CANCELLED
+  completedAt DateTime? // fecha de cuando se marcó como completado
 
   eventPayments EventPayment[]
 

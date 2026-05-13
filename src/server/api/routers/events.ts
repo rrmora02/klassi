@@ -773,6 +773,64 @@ export const eventsRouter = createTRPCRouter({
         throw error;
       }
     }),
+
+  // Marcar evento como completado
+  markAsCompleted: tenantProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { tenantId, db } = ctx;
+
+      const event = await db.event.findFirst({
+        where: { id: input.id, tenantId },
+      });
+
+      if (!event) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Evento no encontrado",
+        });
+      }
+
+      if (event.status === "COMPLETED") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Este evento ya está marcado como completado",
+        });
+      }
+
+      const oldEvent = event;
+      const updatedEvent = await db.event.update({
+        where: { id: input.id },
+        data: {
+          status: "COMPLETED",
+          completedAt: new Date(),
+        },
+      });
+
+      await loggingService.logAudit({
+        tenantId,
+        userId: ctx.userId,
+        action: "UPDATE",
+        entity: "Event",
+        entityId: input.id,
+        oldValues: oldEvent as any,
+        newValues: updatedEvent as any,
+      });
+
+      await loggingService.logBusinessEvent({
+        tenantId,
+        userId: ctx.userId,
+        eventType: "EVENT_CREATED",
+        entityType: "Event",
+        entityId: input.id,
+        metadata: {
+          action: "marked_as_completed",
+          name: updatedEvent.name,
+        },
+      });
+
+      return updatedEvent;
+    }),
 });
 
 export type EventsRouter = typeof eventsRouter;
