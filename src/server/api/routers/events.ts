@@ -67,7 +67,7 @@ export const eventsRouter = createTRPCRouter({
           date: input.date,
           isSchoolWide: input.isSchoolWide,
           amount: input.amount,
-          status: "ACTIVE",
+          status: "PENDING",
           groups: !input.isSchoolWide
             ? {
                 connect: input.groupIds.map((id) => ({ id })),
@@ -529,7 +529,7 @@ export const eventsRouter = createTRPCRouter({
         amount: z.number().int().min(1).optional(),
         paymentDueDate: z.date().optional().nullable(),
         dueDate: z.date().optional(),
-        status: z.enum(["ACTIVE", "CANCELLED"]).optional(),
+        status: z.enum(["PENDING", "ONGOING", "COMPLETED", "CANCELLED"]).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

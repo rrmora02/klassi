@@ -2,6 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { auth } from "@clerk/nextjs/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import * as Sentry from "@sentry/nextjs";
 import { db } from "@/server/db";
 import { loggingService } from "@/server/logging/loggingService";
 import { formatErrorForLogging } from "@/server/logging/error-parser";
@@ -74,6 +75,24 @@ const errorHandler = t.middleware(async ({ next, ctx, path, type, rawInput }) =>
       }).catch(e => {
         console.error("[ERROR LOGGING FAILED]", e);
       });
+
+      // Capture to Sentry
+      if (process.env.SENTRY_DSN) {
+        Sentry.captureException(err, {
+          contexts: {
+            trpc: {
+              path,
+              type,
+              rawInput: rawInput ? JSON.stringify(rawInput).substring(0, 1000) : undefined,
+            },
+            user: {
+              id: ctx.userId,
+              tenant_id: ctx.tenantId,
+            },
+          },
+          level: err instanceof TRPCError ? "warning" : "error",
+        });
+      }
     }
 
     throw err;

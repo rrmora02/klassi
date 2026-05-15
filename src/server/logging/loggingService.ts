@@ -1,8 +1,13 @@
+import { logger, childLogger } from "@/lib/logger";
 import { db } from "@/server/db";
 import { createAuditDescription } from "./auditDescriptions";
 import { getUserByClerkId } from "@/server/cache/userAuthCache";
 import { batchLoggingQueue } from "./batchLogger";
 import type { AuditAction, LogSeverity, BusinessEventType } from "@prisma/client";
+
+const auditLogger = childLogger("audit");
+const errorLogger = childLogger("error");
+const businessLogger = childLogger("business");
 
 interface AuditLogInput {
   tenantId: string | null;
@@ -68,16 +73,16 @@ export const loggingService = {
       // Use batch mode if specified
       if (opts?.batch) {
         await batchLoggingQueue.enqueue({ type: "audit", data: auditData });
-        console.log("[AUDIT LOG] (batched)", description, `by ${validUserId || "system"}`);
+        auditLogger.info({ batched: true, ...auditData }, description);
         return { id: "", createdAt: new Date(), updatedAt: new Date(), ...auditData };
       }
 
       // Synchronous mode (default for backwards compatibility)
       const result = await db.auditLog.create({ data: auditData as any });
-      console.log("[AUDIT LOG]", description, `by ${validUserId || "system"}`);
+      auditLogger.info(auditData, description);
       return result;
     } catch (error) {
-      console.error("[AUDIT LOG ERROR]:", error);
+      auditLogger.error({ error }, "Audit log creation failed");
       throw error;
     }
   },
@@ -96,25 +101,16 @@ export const loggingService = {
       // Use batch mode if specified (but keep errors mostly synchronous for debugging)
       if (opts?.batch) {
         await batchLoggingQueue.enqueue({ type: "error", data: errorData });
-        console.error("[ERROR LOG] (batched)", {
-          type: input.errorType,
-          message: input.message,
-          severity: input.severity,
-        });
+        errorLogger.warn({ batched: true, ...errorData }, input.message);
         return { id: "", createdAt: new Date(), updatedAt: new Date(), resolved: false, resolvedAt: null, resolvedBy: null, ...errorData };
       }
 
       // Synchronous mode (default - errors should be logged immediately)
       const result = await db.errorLog.create({ data: errorData });
-      console.error("[ERROR LOG]", {
-        type: input.errorType,
-        message: input.message,
-        severity: input.severity,
-        context: input.context,
-      });
+      errorLogger.error({ ...errorData }, input.message);
       return result;
     } catch (error) {
-      console.error("[ERROR LOGGING FAILED]:", error);
+      errorLogger.error({ error }, "Error log creation failed");
     }
   },
 
@@ -146,16 +142,16 @@ export const loggingService = {
       // Use batch mode if specified
       if (opts?.batch) {
         await batchLoggingQueue.enqueue({ type: "business", data: eventData });
-        console.log("[BUSINESS EVENT] (batched)", input.eventType, "for", input.entityType, input.entityId, "by", userName);
+        businessLogger.info({ batched: true, ...eventData }, `${input.eventType} for ${input.entityType}`);
         return { id: "", createdAt: new Date(), updatedAt: new Date(), ...eventData };
       }
 
       // Synchronous mode (default for backwards compatibility)
       const result = await db.businessEvent.create({ data: eventData });
-      console.log("[BUSINESS EVENT]", input.eventType, "for", input.entityType, input.entityId, "by", userName);
+      businessLogger.info(eventData, `${input.eventType} for ${input.entityType}`);
       return result;
     } catch (error) {
-      console.error("[BUSINESS EVENT ERROR]:", error);
+      businessLogger.error({ error }, "Business event log creation failed");
     }
   },
 

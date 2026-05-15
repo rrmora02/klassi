@@ -35,7 +35,7 @@ export function GroupEditClient({ group, disciplines, instructors }: Props) {
     monthlyFee:        group.monthlyFee ? Math.round(group.monthlyFee / 100) : null,
     billingFrequency:  group.billingFrequency || "MONTHLY",
     billingDay:        group.billingDay ?? null,
-    billingDayOfWeek:  group.billingDayOfWeek ?? null,
+    billingDayOfWeek:  (group.billingDayOfWeek as "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | null | undefined) ?? null,
     billingWeekOfMonth: group.billingWeekOfMonth ?? null,
   };
 
