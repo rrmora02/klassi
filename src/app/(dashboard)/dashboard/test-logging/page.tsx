@@ -14,26 +14,13 @@ export default async function TestLoggingPage() {
   const tenant = user?.activeTenant;
   if (!tenant) return null;
 
-  const isSuperAdmin = user?.isSuperAdmin;
+  // Solo permitir acceso a super admins
+  if (!user?.isSuperAdmin) {
+    redirect("/dashboard");
+  }
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: 20 }}>
-      {!isSuperAdmin && (
-        <div
-          style={{
-            background: "#fef3c7",
-            border: "1px solid #fcd34d",
-            padding: 15,
-            borderRadius: 8,
-            marginBottom: 20,
-          }}
-        >
-          <p style={{ margin: 0, color: "#92400e" }}>
-            ℹ️ <strong>Nota:</strong> Esta es una página de prueba. Recomendamos
-            usar solo en desarrollo.
-          </p>
-        </div>
-      )}
       <h1>🧪 Verificar Logging y Sentry</h1>
 
       <div style={{ marginBottom: 30 }}>

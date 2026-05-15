@@ -18,6 +18,7 @@ import {
   Calendar,
   Shield,
   AlertTriangle,
+  Beaker,
 } from "lucide-react";
 
 const ALL_NAV_ITEMS = [
@@ -41,6 +42,7 @@ const ALL_CONFIG_ITEMS = [
 
 const SUPER_ADMIN_ITEMS = [
   { label: "Errores del Sistema", href: "/dashboard/super-admin/errores", icon: AlertTriangle, roles: ["SUPER_ADMIN"] },
+  { label: "Pruebas Sentry & Pino", href: "/dashboard/test-logging", icon: Beaker, roles: ["SUPER_ADMIN"] },
 ];
 
 interface SidebarProps {
