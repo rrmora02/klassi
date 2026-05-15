@@ -1,9 +1,11 @@
-export async function register() {
-  if (process.env.NEXT_ENV === "server") {
-    await import("../sentry.server.config");
-  }
+import * as Sentry from "@sentry/nextjs";
 
-  if (process.env.NEXT_ENV === "edge-runtime") {
-    await import("../sentry.edge.config");
+export async function register() {
+  if (process.env.SENTRY_DSN) {
+    Sentry.init({
+      dsn: process.env.SENTRY_DSN,
+      environment: process.env.NODE_ENV,
+      tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
+    });
   }
 }
