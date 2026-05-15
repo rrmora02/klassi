@@ -1,35 +1,27 @@
-import { NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST() {
-  console.log("🧪 [TEST-ERROR] Registrando error de prueba en Sentry...");
+export async function POST(request: NextRequest) {
+  console.log("🧪 [TEST-ERROR] Endpoint ejecutado, intentando capturar error...");
 
-  const testError = new Error("🧪 Test Error - This error should appear in Sentry dashboard");
+  try {
+    // Simulamos un error
+    throw new Error(
+      "🧪 Test Error - This error should appear in Sentry dashboard. Thrown from /api/test/log-error"
+    );
+  } catch (error) {
+    // Log en consola
+    console.error("❌ [TEST-ERROR] Error capturado:", error);
 
-  // Capturar explícitamente en Sentry
-  Sentry.captureException(testError, {
-    tags: {
-      test: "true",
-      endpoint: "api/test/log-error",
-    },
-    contexts: {
-      test: {
+    // Retornar error al cliente
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
-        message: "Manual test error from /api/test/log-error endpoint",
       },
-    },
-  });
-
-  console.log("✅ [TEST-ERROR] Error capturado y enviado a Sentry");
-
-  return NextResponse.json(
-    {
-      success: true,
-      message: "Error de prueba capturado y enviado a Sentry",
-      timestamp: new Date().toISOString(),
-      instructions: "Revisa tu dashboard en https://sentry.io - busca el tag test:true",
-    },
-    { status: 200 }
-  );
+      { status: 500 }
+    );
+  }
 }
+
 
