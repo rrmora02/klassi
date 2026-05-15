@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import * as Sentry from "@sentry/nextjs";
 import { createLogger } from "@/lib/loggingService";
 
 const logger = createLogger("test-error");
@@ -9,32 +8,20 @@ export async function POST(req: NextRequest) {
     // Log a Pino
     logger.info("Test error request received");
 
-    // Simular un error
+    // Simular un error y loguear
     const error = new Error("Test error message - This is a controlled test error");
 
-    // Capturar a Sentry
-    if (process.env.SENTRY_DSN) {
-      Sentry.captureException(error, {
-        tags: {
-          type: "test",
-          endpoint: "/api/test/log-error",
-        },
-        contexts: {
-          test: {
-            timestamp: new Date().toISOString(),
-            testType: "manual-error-trigger",
-          },
-        },
-      });
-
-      logger.info("Error sent to Sentry", { errorMessage: error.message });
-    }
+    logger.error("Test error triggered", error, {
+      timestamp: new Date().toISOString(),
+      testType: "manual-error-trigger",
+      endpoint: "/api/test/log-error",
+    });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Error de prueba enviado a Sentry",
-        sentryConfigured: !!process.env.SENTRY_DSN,
+        message: "Error de prueba registrado en logs y Sentry",
+        timestamp: new Date().toISOString(),
       },
       { status: 200 }
     );
@@ -46,3 +33,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
