@@ -48,6 +48,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
   const attendanceRate = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : null;
 
   const activeEnrollments = student.enrollments.filter(e => e.status === "ACTIVE");
+  const hasActiveKarateGroup = activeEnrollments.some(e => e.group.discipline?.name.toLowerCase().includes("karate"));
   const totalPaid = student.payments
     .filter(p => p.status === "PAID")
     .reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
@@ -155,7 +156,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
         </div>
 
         {/* 🥋 Karate Belt */}
-        {student.currentBeltColor && (
+        {student.currentBeltColor && hasActiveKarateGroup && (
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>🥋 Cinta de Karate</h2>
