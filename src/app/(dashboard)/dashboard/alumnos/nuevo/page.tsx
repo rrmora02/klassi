@@ -40,7 +40,13 @@ export default function NuevoAlumnoPage() {
           </p>
 
           <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 16 }}>
-            <EnrollToGroupModal studentId={newStudentId} />
+            <EnrollToGroupModal
+              studentId={newStudentId}
+              onEnrollSuccess={() => {
+                router.push(`/dashboard/alumnos/${newStudentId}`);
+                router.refresh();
+              }}
+            />
             <button
               onClick={() => {
                 router.push("/dashboard/alumnos");
