@@ -157,7 +157,9 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
               <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>🥋 Cinta de Karate</h2>
-              <Link href={`/dashboard/alumnos/${student.id}/editar`} style={{ fontSize: 12, color: "#006241", textDecoration: "none" }}>Editar</Link>
+              <Link href={`/dashboard/alumnos/${student.id}/editar`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer" }}>
+                Editar →
+              </Link>
             </div>
             {(() => {
               const beltNames: Record<string, string> = {
