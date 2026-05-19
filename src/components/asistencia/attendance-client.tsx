@@ -172,28 +172,53 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
                <thead>
                  <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                    <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 text-xs">Alumno</th>
+                   {rosterData.isKarate && (
+                     <th style={{ padding: "10px 12px", textAlign: "center", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 text-xs">🥋 Cinta</th>
+                   )}
                    <th style={{ padding: "10px 8px", textAlign: "center", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 sm:text-right text-xs">Estado</th>
                  </tr>
                </thead>
                <tbody>
                   {rosterData.enrollments.length === 0 && (
-                     <tr><td colSpan={2} style={{ textAlign: "center", padding: 40, color: "var(--color-text-tertiary)", fontSize: 13 }}>No hay alumnos inscritos en este grupo de momento.</td></tr>
+                     <tr><td colSpan={rosterData.isKarate ? 3 : 2} style={{ textAlign: "center", padding: 40, color: "var(--color-text-tertiary)", fontSize: 13 }}>No hay alumnos inscritos en este grupo de momento.</td></tr>
                   )}
-                  {rosterData.enrollments.map((enr) => (
-                    <tr key={enr.enrollmentId} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                       <td style={{ padding: "10px 12px" }} className="sm:px-5 sm:py-3">
-                          <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }} className="text-xs sm:text-sm">{enr.student.lastName} {enr.student.firstName}</span>
-                       </td>
-                       <td style={{ padding: "10px 4px" }} className="sm:px-5 sm:py-3">
-                           <div style={{ display: "flex", gap: 3, justifyContent: "center" }} className="sm:gap-2 sm:justify-end flex-wrap">
-                              <StatusButton enrId={enr.enrollmentId} label="✓" val="PRESENT" color="#10b981" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="✗" val="ABSENT" color="#ef4444" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="↓" val="LATE" color="#f59e0b" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="⊘" val="JUSTIFIED" color="#64748b" currentStatus={enr.attendance?.status} />
-                           </div>
-                       </td>
-                    </tr>
-                  ))}
+                  {rosterData.enrollments.map((enr) => {
+                    const beltEmojis: Record<string, string> = {
+                      WHITE: "⚪",
+                      YELLOW: "🟡",
+                      ORANGE: "🟠",
+                      GREEN: "🟢",
+                      BLUE: "🔵",
+                      BROWN: "🟤",
+                      BLACK: "⚫",
+                    };
+                    return (
+                      <tr key={enr.enrollmentId} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+                         <td style={{ padding: "10px 12px" }} className="sm:px-5 sm:py-3">
+                            <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }} className="text-xs sm:text-sm">{enr.student.lastName} {enr.student.firstName}</span>
+                         </td>
+                         {rosterData.isKarate && (
+                           <td style={{ padding: "10px 12px", textAlign: "center" }} className="sm:px-5 sm:py-3">
+                             {enr.student.currentBeltColor ? (
+                               <span style={{ fontSize: 18 }}>
+                                 {beltEmojis[enr.student.currentBeltColor] || "—"}
+                               </span>
+                             ) : (
+                               <span style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>—</span>
+                             )}
+                           </td>
+                         )}
+                         <td style={{ padding: "10px 4px" }} className="sm:px-5 sm:py-3">
+                             <div style={{ display: "flex", gap: 3, justifyContent: "center" }} className="sm:gap-2 sm:justify-end flex-wrap">
+                                <StatusButton enrId={enr.enrollmentId} label="✓" val="PRESENT" color="#10b981" currentStatus={enr.attendance?.status} />
+                                <StatusButton enrId={enr.enrollmentId} label="✗" val="ABSENT" color="#ef4444" currentStatus={enr.attendance?.status} />
+                                <StatusButton enrId={enr.enrollmentId} label="↓" val="LATE" color="#f59e0b" currentStatus={enr.attendance?.status} />
+                                <StatusButton enrId={enr.enrollmentId} label="⊘" val="JUSTIFIED" color="#64748b" currentStatus={enr.attendance?.status} />
+                             </div>
+                         </td>
+                      </tr>
+                    );
+                  })}
                </tbody>
              </table>
          </div>

@@ -47,7 +47,8 @@ export const attendanceRouter = createTRPCRouter({
     }))
     .query(async ({ ctx, input }) => {
        const group = await ctx.db.group.findFirst({
-         where: { id: input.groupId, tenantId: ctx.tenantId }
+         where: { id: input.groupId, tenantId: ctx.tenantId },
+         include: { discipline: true }
        });
        if (!group) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -61,7 +62,7 @@ export const attendanceRouter = createTRPCRouter({
        if (!session) {
           const dayMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
           const dayEnum = dayMap[dateObj.getUTCDay()];
-          
+
           let st = "00:00", et = "00:00";
           if (Array.isArray(group.schedule)) {
              const slot = (group.schedule as any[]).find((s: any) => s.day === dayEnum);
@@ -84,15 +85,20 @@ export const attendanceRouter = createTRPCRouter({
        // Traer a los alumnos ACTIVOS
        const enrollments = await ctx.db.enrollment.findMany({
           where: { groupId: input.groupId, status: "ACTIVE" },
-          include: { 
-            student: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+          include: {
+            student: { select: { id: true, firstName: true, lastName: true, avatarUrl: true, currentBeltColor: true } },
             attendances: { where: { sessionId: session.id } }
           },
           orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }]
        });
 
+       // Detectar si es Karate (case-insensitive)
+       const isKarate = group.discipline?.name.toLowerCase().includes("karate") ?? false;
+
        return {
          session,
+         isKarate,
+         groupName: group.discipline?.name || group.name,
          enrollments: enrollments.map(e => ({
             enrollmentId: e.id,
             student: e.student,
