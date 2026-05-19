@@ -7,6 +7,7 @@ import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 import { StudentActions } from "@/components/alumnos/student-actions";
 import { StudentEnrollmentsSection } from "@/components/alumnos/student-enrollments-section";
 import { StudentShareButton } from "@/components/alumnos/student-share-button";
+import { AssignFirstBeltSection } from "@/components/alumnos/assign-first-belt-section";
 
 export default async function AlumnoDetailPage({ params }: { params: { id: string } }) {
   const { userId } = await auth();
@@ -155,7 +156,15 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           ))}
         </div>
 
-        {/* 🥋 Karate Belt */}
+        {/* 🥋 Asignar primera cinta (solo si no tiene cinta y tiene grupo Karate) */}
+        {!student.currentBeltColor && hasActiveKarateGroup && (
+          <AssignFirstBeltSection
+            studentId={student.id}
+            studentName={fullName(student.firstName, student.lastName)}
+          />
+        )}
+
+        {/* 🥋 Karate Belt (mostrar cuando ya tiene cinta asignada) */}
         {student.currentBeltColor && hasActiveKarateGroup && (
           <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>

@@ -521,4 +521,26 @@ export const studentsRouter = createTRPCRouter({
       });
       return result;
     }),
+
+  // ── Actualizar solo cinta (para asignación rápida) ───────────────────────────
+  updateBeltColor: tenantProcedure
+    .input(z.object({
+      studentId: z.string().cuid(),
+      beltColor: z.enum(["WHITE", "YELLOW", "ORANGE", "GREEN", "BLUE", "BROWN", "BLACK"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const student = await ctx.db.student.findFirst({
+        where: { id: input.studentId, tenantId: ctx.tenantId },
+      });
+      if (!student) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const updated = await ctx.db.student.update({
+        where: { id: input.studentId },
+        data: {
+          currentBeltColor: input.beltColor,
+          beltUpdatedAt: new Date(),
+        },
+      });
+      return updated;
+    }),
 });
