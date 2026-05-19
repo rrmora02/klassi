@@ -38,6 +38,7 @@ export function StudentEditFormClient({ student, studentId }: Props) {
     tutorEmail: primaryParent?.user.email ?? "",
     tutorPhone: primaryParent?.user.phone ?? "",
     tutorRelationship: (primaryParent?.relationship as any) ?? undefined,
+    currentBeltColor: undefined, // La cinta se edita desde enrollments, no aquí
   };
 
   async function handleSubmit(data: StudentFormValues) {

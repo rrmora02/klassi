@@ -268,25 +268,7 @@ export function StudentForm({
       </div>
 
       {/* ── Sistema de Karate ────────────────────────── */}
-      {isEdit && (
-        <>
-          <SectionTitle>🥋 Sistema de Karate</SectionTitle>
-          <div style={{ marginBottom: 28 }}>
-            <Field label="Cinta actual" error={errors.currentBeltColor?.message}>
-              <Select {...register("currentBeltColor")} error={!!errors.currentBeltColor}>
-                <option value="">Sin cinta asignada</option>
-                <option value="WHITE">⚪ Blanca</option>
-                <option value="YELLOW">🟡 Amarilla</option>
-                <option value="ORANGE">🟠 Naranja</option>
-                <option value="GREEN">🟢 Verde</option>
-                <option value="BLUE">🔵 Azul</option>
-                <option value="BROWN">🟤 Marrón</option>
-                <option value="BLACK">⚫ Negra</option>
-              </Select>
-            </Field>
-          </div>
-        </>
-      )}
+      {/* Nota: La cinta se asigna al agregar/editar el alumno en un grupo de Karate, no aquí */}
 
       {/* ── Acciones ─────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 16, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
