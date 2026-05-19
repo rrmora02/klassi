@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { api } from "@/lib/trpc";
 import { AttendanceStatus } from "@prisma/client";
 
@@ -14,6 +14,12 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
   const { data: rosterData, isLoading: loadingRoster, refetch } = api.attendance.getSessionRoster.useQuery(
     { groupId, dateString: dateStr },
     { enabled: !!groupId && !!dateStr }
+  );
+
+  // Obtener cintas de los estudiantes (solo si es Karate)
+  const { data: studentBelts = {} } = api.students.getStudentBelts.useQuery(
+    { studentIds: rosterData?.enrollments?.map(e => e.student.id) || [] },
+    { enabled: !!rosterData?.isKarate && (rosterData?.enrollments?.length || 0) > 0 }
   );
 
   const markMutation = api.attendance.markAttendance.useMutation();
@@ -192,6 +198,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
                       BROWN: "🟤",
                       BLACK: "⚫",
                     };
+                    const studentBelt = studentBelts[enr.student.id];
                     return (
                       <tr key={enr.enrollmentId} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
                          <td style={{ padding: "10px 12px" }} className="sm:px-5 sm:py-3">
@@ -199,9 +206,9 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
                          </td>
                          {rosterData.isKarate && (
                            <td style={{ padding: "10px 12px", textAlign: "center" }} className="sm:px-5 sm:py-3">
-                             {enr.student.currentBeltColor ? (
+                             {studentBelt ? (
                                <span style={{ fontSize: 18 }}>
-                                 {beltEmojis[enr.student.currentBeltColor] || "—"}
+                                 {beltEmojis[studentBelt] || "—"}
                                </span>
                              ) : (
                                <span style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>—</span>

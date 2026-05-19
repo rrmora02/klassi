@@ -496,4 +496,29 @@ export const studentsRouter = createTRPCRouter({
       // El CUID del alumno es el token — 25 chars aleatorios, imposible de adivinar
       return { shareToken: student.id };
     }),
+
+  // ── Obtener cintas de estudiantes (para asistencia) ───────────────────────────
+  getStudentBelts: tenantProcedure
+    .input(z.object({ studentIds: z.array(z.string().cuid()) }))
+    .query(async ({ ctx, input }) => {
+      if (input.studentIds.length === 0) return {};
+
+      const students = await ctx.db.student.findMany({
+        where: {
+          id: { in: input.studentIds },
+          tenantId: ctx.tenantId
+        },
+        select: {
+          id: true,
+          currentBeltColor: true
+        }
+      });
+
+      // Retornar objeto mapeado: { studentId: beltColor }
+      const result: Record<string, string | null> = {};
+      students.forEach(s => {
+        result[s.id] = s.currentBeltColor;
+      });
+      return result;
+    }),
 });

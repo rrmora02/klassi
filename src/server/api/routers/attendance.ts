@@ -86,7 +86,7 @@ export const attendanceRouter = createTRPCRouter({
        const enrollments = await ctx.db.enrollment.findMany({
           where: { groupId: input.groupId, status: "ACTIVE" },
           include: {
-            student: { select: { id: true, firstName: true, lastName: true, avatarUrl: true, currentBeltColor: true } },
+            student: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
             attendances: { where: { sessionId: session.id } }
           },
           orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }]
