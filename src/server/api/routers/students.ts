@@ -288,7 +288,7 @@ export const studentsRouter = createTRPCRouter({
   update: tenantProcedure
     .input(studentUpdateSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, tutorName, tutorPhone, tutorEmail, tutorRelationship, ...data } = input;
+      const { id, tutorName, tutorPhone, tutorEmail, tutorRelationship, currentBeltColor, ...data } = input;
       const { tenantId, db } = ctx;
 
       const existing = await db.student.findFirst({
@@ -326,7 +326,7 @@ export const studentsRouter = createTRPCRouter({
           email:    data.email    || null,
           phone:    data.phone    || null,
           avatarUrl: data.avatarUrl || null,
-          ...(data.currentBeltColor && { beltUpdatedAt: new Date() }),
+          ...(currentBeltColor && { currentBeltColor, beltUpdatedAt: new Date() }),
         },
       });
 
