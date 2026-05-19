@@ -3,22 +3,37 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
+import { BeltColor } from "@prisma/client";
 
 interface Props {
   groupId: string;
 }
 
+const BELT_COLORS = [
+  { value: "WHITE" as const, label: "⚪ Blanca" },
+  { value: "YELLOW" as const, label: "🟡 Amarilla" },
+  { value: "ORANGE" as const, label: "🟠 Naranja" },
+  { value: "GREEN" as const, label: "🟢 Verde" },
+  { value: "BLUE" as const, label: "🔵 Azul" },
+  { value: "BROWN" as const, label: "🟤 Marrón" },
+  { value: "BLACK" as const, label: "⚫ Negra" },
+];
+
 export function EnrollStudentModal({ groupId }: Props) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [studentId, setStudentId] = useState("");
+  const [selectedBelt, setSelectedBelt] = useState<BeltColor | "">("WHITE");
 
   const { data, isLoading } = api.enrollments.getStudentsAvailableForGroup.useQuery({ groupId }, { enabled: isOpen });
   const enroll = api.enrollments.enroll.useMutation();
 
+  const isKarateDiscipline = data?.isKarate ?? false;
+
   const handleClose = () => {
     setIsOpen(false);
     setStudentId("");
+    setSelectedBelt("WHITE");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,7 +41,12 @@ export function EnrollStudentModal({ groupId }: Props) {
     if (!studentId) return;
 
     try {
-      await enroll.mutateAsync({ studentId, groupId, discount: 0 });
+      await enroll.mutateAsync({
+        studentId,
+        groupId,
+        discount: 0,
+        ...(isKarateDiscipline && selectedBelt ? { currentBeltColor: selectedBelt as BeltColor } : {})
+      });
       router.refresh();
       handleClose();
     } catch (err: any) {
@@ -85,6 +105,23 @@ export function EnrollStudentModal({ groupId }: Props) {
                 </p>
               )}
             </div>
+
+            {isKarateDiscipline && (
+              <div>
+                <label style={{ display: "block", fontSize: 13, marginBottom: 6, color: "var(--color-text-secondary)" }}>🥋 Selecciona Cinta</label>
+                <select
+                   value={selectedBelt}
+                   onChange={e => setSelectedBelt(e.target.value as BeltColor | "")}
+                   className="w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors"
+                   required={isKarateDiscipline}
+                >
+                  <option value="">Selecciona cinta...</option>
+                  {BELT_COLORS.map(belt => (
+                    <option key={belt.value} value={belt.value}>{belt.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 8 }}>
               <button type="button" onClick={handleClose} style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid var(--color-border-secondary)", background: "transparent", cursor: "pointer" }}>Cancelar</button>

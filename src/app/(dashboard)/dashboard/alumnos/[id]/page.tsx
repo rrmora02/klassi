@@ -152,6 +152,42 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           ))}
         </div>
 
+        {/* 🥋 Karate Belt */}
+        {student.currentBeltColor && (
+          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+              <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>🥋 Cinta de Karate</h2>
+              <Link href={`/dashboard/alumnos/${student.id}/editar`} style={{ fontSize: 12, color: "#006241", textDecoration: "none" }}>Editar</Link>
+            </div>
+            {(() => {
+              const beltNames: Record<string, string> = {
+                WHITE: "⚪ Blanca",
+                YELLOW: "🟡 Amarilla",
+                ORANGE: "🟠 Naranja",
+                GREEN: "🟢 Verde",
+                BLUE: "🔵 Azul",
+                BROWN: "🟤 Marrón",
+                BLACK: "⚫ Negra",
+              };
+              return (
+                <>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", fontSize: 13 }}>
+                    <span style={{ color: "var(--color-text-secondary)" }}>Cinta actual</span>
+                    <span style={{ color: "var(--color-text-primary)", fontWeight: 500, fontSize: 16 }}>
+                      {beltNames[student.currentBeltColor] || student.currentBeltColor}
+                    </span>
+                  </div>
+                  {student.beltUpdatedAt && (
+                    <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "6px 0 0" }}>
+                      Última actualización: {formatDate(student.beltUpdatedAt)}
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+
         {/* Inscripciones activas */}
         <StudentEnrollmentsSection studentId={student.id} activeEnrollments={activeEnrollments} />
 

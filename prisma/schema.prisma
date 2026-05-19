@@ -95,6 +95,16 @@ enum GroupLevel {
   PROFESSIONAL
 }
 
+enum BeltColor {
+  WHITE
+  YELLOW
+  ORANGE
+  GREEN
+  BLUE
+  BROWN
+  BLACK
+}
+
 enum BillingFrequency {
   WEEKLY
   BIWEEKLY
@@ -354,6 +364,11 @@ model Student {
   avatarUrl String?
   status    StudentStatus @default(ACTIVE)
   notes     String?
+
+  // 🥋 Karate belt system
+  currentBeltColor BeltColor?  // ⚪ Blanca, 🟡 Amarilla, etc (solo si es Karate)
+  beltUpdatedAt    DateTime?   // Cuándo cambió de cinta
+
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 

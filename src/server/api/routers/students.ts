@@ -68,6 +68,9 @@ export const studentCreateSchema = z.object({
 
   notes: z.string().max(500, "Las notas no pueden exceder 500 caracteres").optional(),
   avatarUrl: z.string().url("URL de avatar inválida").optional().or(z.literal("")),
+
+  // 🥋 Karate belt system
+  currentBeltColor: z.enum(["WHITE", "YELLOW", "ORANGE", "GREEN", "BLUE", "BROWN", "BLACK"]).optional(),
 });
 
 export const studentUpdateSchema = studentCreateSchema.partial().extend({
@@ -323,6 +326,7 @@ export const studentsRouter = createTRPCRouter({
           email:    data.email    || null,
           phone:    data.phone    || null,
           avatarUrl: data.avatarUrl || null,
+          ...(data.currentBeltColor && { beltUpdatedAt: new Date() }),
         },
       });
 

@@ -10,6 +10,7 @@ export const enrollmentsRouter = createTRPCRouter({
        const group = await ctx.db.group.findFirst({
          where: { id: input.groupId, tenantId: ctx.tenantId },
          include: {
+            discipline: true,
             _count: { select: { enrollments: { where: { status: "ACTIVE" } } } }
          }
        });
@@ -30,11 +31,12 @@ export const enrollmentsRouter = createTRPCRouter({
          orderBy: [{ lastName: "asc" }, { firstName: "asc" }]
        });
 
-       return { 
-          students, 
+       return {
+          students,
           isFull: group._count.enrollments >= group.capacity,
           enrolledCount: group._count.enrollments,
-          capacity: group.capacity 
+          capacity: group.capacity,
+          isKarate: group.discipline?.name.toLowerCase().includes("karate")
        };
     }),
 
@@ -75,6 +77,7 @@ export const enrollmentsRouter = createTRPCRouter({
        studentId: z.string().cuid(),
        groupId: z.string().cuid(),
        discount: z.number().int().min(0).max(100).default(0),
+       currentBeltColor: z.enum(["WHITE", "YELLOW", "ORANGE", "GREEN", "BLUE", "BROWN", "BLACK"]).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
        // Validate that both belong to tenant
@@ -84,6 +87,17 @@ export const enrollmentsRouter = createTRPCRouter({
        ]);
 
        if (!group || !student) throw new TRPCError({ code: "NOT_FOUND" });
+
+       // If Karate and belt provided, update student's belt
+       if (input.currentBeltColor) {
+         await ctx.db.student.update({
+           where: { id: input.studentId },
+           data: {
+             currentBeltColor: input.currentBeltColor,
+             beltUpdatedAt: new Date()
+           }
+         });
+       }
 
        // Verify if already ACTIVE to prevent duplicate
        const existing = await ctx.db.enrollment.findFirst({
