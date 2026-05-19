@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { api } from "@/lib/trpc";
 import { useToast } from "@/hooks/use-toast";
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function AssignFirstBeltSection({ studentId, studentName }: Props) {
+  const router = useRouter();
   const { toast } = useToast();
   const [selectedBelt, setSelectedBelt] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
@@ -40,8 +42,8 @@ export function AssignFirstBeltSection({ studentId, studentName }: Props) {
         description: `${studentName} ahora es ${belts.find(b => b.value === selectedBelt)?.label}`,
       });
 
-      setSelectedBelt("");
-      window.location.reload();
+      // Actualizar la página para mostrar la sección de cinta en lugar del selector
+      router.refresh();
     } catch (err: any) {
       toast({
         title: "Error",
