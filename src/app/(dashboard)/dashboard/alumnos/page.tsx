@@ -57,9 +57,11 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
         status: true,
         enrollments: {
           where: { status: "ACTIVE" },
+          take: 3,
           include: { group: { include: { discipline: true } } }
         },
         parents: {
+          take: 2,
           include: { user: true },
           orderBy: { isPrimary: "desc" }
         }

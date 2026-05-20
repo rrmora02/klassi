@@ -30,8 +30,8 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
   const [
     totalStudents,
     activeGroups,
-    monthPayments,
-    monthEventPayments,
+    monthPaymentResult,
+    monthEventPaymentResult,
     overdueCount,
     overduePayments,
     recentStudents,
@@ -41,18 +41,18 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
 
     db.group.count({ where: { tenantId, isActive: true } }),
 
-    db.payment.findMany({
+    db.payment.aggregate({
       where: { tenantId, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } },
-      select: { amount: true, discountAmount: true },
+      _sum: { amount: true, discountAmount: true },
     }),
 
-    db.eventPayment.findMany({
+    db.eventPayment.aggregate({
       where: {
         event: { tenantId },
         status: "PAID",
         paidAt: { gte: monthStart, lte: monthEnd },
       },
-      select: { amount: true, discountAmount: true },
+      _sum: { amount: true, discountAmount: true },
     }),
 
     db.payment.count({ where: { tenantId, status: "OVERDUE" } }),
@@ -86,7 +86,8 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
         discipline: { select: { name: true, color: true } },
         instructor: { select: { user: { select: { name: true } } } },
       },
-      orderBy: { name: "asc" }
+      orderBy: { name: "asc" },
+      take: 100
     }),
   ]);
 
@@ -111,8 +112,8 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
       };
     });
 
-  const monthlyPaymentRevenue = monthPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
-  const eventPaymentRevenue = monthEventPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
+  const monthlyPaymentRevenue = (monthPaymentResult._sum.amount || 0) - (monthPaymentResult._sum.discountAmount || 0);
+  const eventPaymentRevenue = (monthEventPaymentResult._sum.amount || 0) - (monthEventPaymentResult._sum.discountAmount || 0);
 
   return {
     stats: {
