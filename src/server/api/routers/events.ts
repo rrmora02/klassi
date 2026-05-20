@@ -714,9 +714,12 @@ export const eventsRouter = createTRPCRouter({
         const monthStart = new Date(input.year, input.month - 1, 1);
         const monthEnd = new Date(input.year, input.month, 1);
 
-        // Simple query without date filtering first
-        const events = await db.event.findMany({
-          where: { tenantId },
+        // Filter by date at DB level to avoid loading all events into memory
+        const filteredEvents = await db.event.findMany({
+          where: {
+            tenantId,
+            date: { gte: monthStart, lt: monthEnd }
+          },
           include: {
             eventPayments: {
               select: {
@@ -729,11 +732,6 @@ export const eventsRouter = createTRPCRouter({
             },
           },
         });
-
-        // Filter in memory by date
-        const filteredEvents = events.filter(
-          (e) => e.date >= monthStart && e.date < monthEnd
-        );
 
         const summary = filteredEvents.map((event) => {
           const paidPayments = event.eventPayments.filter(

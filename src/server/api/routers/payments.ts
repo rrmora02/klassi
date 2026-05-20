@@ -44,16 +44,32 @@ export const paymentsRouter = createTRPCRouter({
     }),
 
   overdueList: tenantProcedure
-    .query(({ ctx }) =>
-      ctx.db.payment.findMany({
-        where: {
-          tenantId: ctx.tenantId,
-          status:   "OVERDUE",
-        },
-        include: { student: { select: { firstName: true, lastName: true, phone: true, email: true } } },
-        orderBy: { dueDate: "asc" },
-      })
-    ),
+    .input(z.object({
+      page: z.number().int().min(1).default(1),
+      pageSize: z.number().int().min(1).max(100).default(50),
+    }))
+    .query(async ({ ctx, input }) => {
+      const skip = (input.page - 1) * input.pageSize;
+      const [payments, total] = await Promise.all([
+        ctx.db.payment.findMany({
+          where: {
+            tenantId: ctx.tenantId,
+            status:   "OVERDUE",
+          },
+          include: { student: { select: { firstName: true, lastName: true, phone: true, email: true } } },
+          orderBy: { dueDate: "asc" },
+          skip,
+          take: input.pageSize,
+        }),
+        ctx.db.payment.count({
+          where: {
+            tenantId: ctx.tenantId,
+            status:   "OVERDUE",
+          }
+        })
+      ]);
+      return { payments, total, pages: Math.ceil(total / input.pageSize) };
+    }),
 
   create: tenantProcedure
     .input(z.object({
@@ -225,16 +241,30 @@ export const paymentsRouter = createTRPCRouter({
       const from = new Date(input.year, input.month - 1, 1);
       const to   = new Date(input.year, input.month, 0, 23, 59, 59);
 
-      const [paid, pending, overdue] = await Promise.all([
-        ctx.db.payment.findMany({ where: { tenantId: ctx.tenantId, status: "PAID",    paidAt: { gte: from, lte: to } }, select: { amount: true, discountAmount: true } }),
-        ctx.db.payment.findMany({ where: { tenantId: ctx.tenantId, status: "PENDING", dueDate: { gte: from, lte: to } }, select: { amount: true } }),
-        ctx.db.payment.findMany({ where: { tenantId: ctx.tenantId, status: "OVERDUE"                                 }, select: { amount: true } }),
+      const [paidResult, pendingResult, overdueResult] = await Promise.all([
+        ctx.db.payment.aggregate({
+          where: { tenantId: ctx.tenantId, status: "PAID", paidAt: { gte: from, lte: to } },
+          _sum: { amount: true, discountAmount: true },
+          _count: true,
+        }),
+        ctx.db.payment.aggregate({
+          where: { tenantId: ctx.tenantId, status: "PENDING", dueDate: { gte: from, lte: to } },
+          _sum: { amount: true },
+          _count: true,
+        }),
+        ctx.db.payment.aggregate({
+          where: { tenantId: ctx.tenantId, status: "OVERDUE" },
+          _sum: { amount: true },
+          _count: true,
+        }),
       ]);
 
+      const paidTotal = (paidResult._sum.amount || 0) - (paidResult._sum.discountAmount || 0);
+
       return {
-        paid:    { total: paid.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0), count: paid.length },
-        pending: { total: pending.reduce((sum, p) => sum + p.amount, 0), count: pending.length },
-        overdue: { total: overdue.reduce((sum, p) => sum + p.amount, 0), count: overdue.length },
+        paid:    { total: paidTotal, count: paidResult._count },
+        pending: { total: pendingResult._sum.amount || 0, count: pendingResult._count },
+        overdue: { total: overdueResult._sum.amount || 0, count: overdueResult._count },
       };
     }),
 

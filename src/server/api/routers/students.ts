@@ -129,6 +129,7 @@ export const studentsRouter = createTRPCRouter({
           include: {
             enrollments: {
               where:   { status: "ACTIVE" },
+              take:    5,
               include: { group: { include: { discipline: true } } },
             },
             _count: {
@@ -156,6 +157,7 @@ export const studentsRouter = createTRPCRouter({
         where: { id: input.id, tenantId: ctx.tenantId },
         include: {
           enrollments: {
+            take: 20,
             include: {
               group: {
                 include: {

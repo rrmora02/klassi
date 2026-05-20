@@ -28,7 +28,8 @@ export const enrollmentsRouter = createTRPCRouter({
             }
          },
          select: { id: true, firstName: true, lastName: true },
-         orderBy: [{ lastName: "asc" }, { firstName: "asc" }]
+         orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+         take: 500
        });
 
        return {
@@ -62,7 +63,8 @@ export const enrollmentsRouter = createTRPCRouter({
             discipline: { select: { name: true } },
             _count: { select: { enrollments: { where: { status: "ACTIVE" } } } }
          },
-         orderBy: [{ discipline: { name: "asc" } }, { name: "asc" }]
+         orderBy: [{ discipline: { name: "asc" } }, { name: "asc" }],
+         take: 500
        });
 
        // Filtramos para enviar bandera visual de los que están llenos (opcional pero bueno que el frontend lo sepa)
