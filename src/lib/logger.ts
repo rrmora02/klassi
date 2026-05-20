@@ -3,22 +3,12 @@ import pino from "pino";
 const isDev = process.env.NODE_ENV === "development";
 
 export const logger = isDev
-  ? pino(
-      {
-        level: process.env.LOG_LEVEL || "info",
-        base: {
-          env: process.env.NODE_ENV,
-        },
+  ? pino({
+      level: process.env.LOG_LEVEL || "info",
+      base: {
+        env: process.env.NODE_ENV,
       },
-      pino.transport({
-        target: "pino-pretty",
-        options: {
-          colorize: true,
-          translateTime: "SYS:standard",
-          ignore: "pid,hostname",
-        },
-      })
-    )
+    })
   : pino({
       level: process.env.LOG_LEVEL || "info",
       base: {
