@@ -6,7 +6,10 @@ import { loggingService } from "@/server/logging/loggingService";
 export const attendanceRouter = createTRPCRouter({
 
   getGroups: tenantProcedure
-    .query(async ({ ctx }) => {
+    .input(z.object({
+       dateString: z.string().optional(), // "YYYY-MM-DD"
+    }))
+    .query(async ({ ctx, input }) => {
        // Obtener el rol del usuario en el tenant
        const tenantUser = await ctx.db.tenantUser.findFirst({
           where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id }
@@ -14,30 +17,35 @@ export const attendanceRouter = createTRPCRouter({
 
        const userRole = tenantUser?.role || "RECEPTIONIST";
 
-       // Si es INSTRUCTOR, solo mostrar sus grupos
-       if (userRole === "INSTRUCTOR") {
-          const instructor = await ctx.db.instructor.findFirst({
-             where: { userId: ctx.dbUser!.id, tenantId: ctx.tenantId }
-          });
+       // Determinar día de la semana si se proporciona fecha
+       let dayOfWeek: string | undefined;
+       if (input.dateString) {
+          const dateObj = new Date(input.dateString + "T00:00:00Z");
+          const dayMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+          dayOfWeek = dayMap[dateObj.getUTCDay()];
+       }
 
-          if (!instructor) {
-             throw new TRPCError({
-                code: "FORBIDDEN",
-                message: "No tienes grupos asignados como instructor"
-             });
-          }
+       // Obtener todos los grupos
+       let groups = await ctx.db.group.findMany({
+          where: {
+             tenantId: ctx.tenantId,
+             isActive: true,
+             ...(userRole === "INSTRUCTOR" && {
+                instructor: { userId: ctx.dbUser!.id }
+             })
+          },
+          orderBy: { name: "asc" },
+       });
 
-          return ctx.db.group.findMany({
-             where: { tenantId: ctx.tenantId, isActive: true, instructorId: instructor.id },
-             orderBy: { name: "asc" },
+       // Si se proporciona una fecha, filtrar solo grupos con clase ese día
+       if (dayOfWeek && Array.isArray(groups)) {
+          groups = groups.filter(group => {
+             const schedule = Array.isArray(group.schedule) ? group.schedule : [];
+             return schedule.some((slot: any) => slot.day === dayOfWeek);
           });
        }
 
-       // ADMIN y RECEPTIONIST ven todos los grupos
-       return ctx.db.group.findMany({
-          where: { tenantId: ctx.tenantId, isActive: true },
-          orderBy: { name: "asc" },
-       });
+       return groups;
     }),
 
   getSessionRoster: tenantProcedure

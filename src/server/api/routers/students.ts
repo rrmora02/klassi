@@ -125,7 +125,7 @@ export const studentsRouter = createTRPCRouter({
           where,
           skip,
           take: input.pageSize,
-          orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+          orderBy: [{ updatedAt: "desc" }, { lastName: "asc" }, { firstName: "asc" }],
           include: {
             enrollments: {
               where:   { status: "ACTIVE" },

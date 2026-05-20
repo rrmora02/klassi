@@ -9,7 +9,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
   const [dateStr, setDateStr] = useState<string>(today || "");
   const [groupId, setGroupId] = useState<string>(initialGroupId || "");
 
-  const { data: groups, isLoading: loadingGroups } = api.attendance.getGroups.useQuery();
+  const { data: groups, isLoading: loadingGroups } = api.attendance.getGroups.useQuery({ dateString: dateStr });
 
   const { data: rosterData, isLoading: loadingRoster, refetch } = api.attendance.getSessionRoster.useQuery(
     { groupId, dateString: dateStr },

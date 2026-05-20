@@ -117,7 +117,7 @@ export const groupsRouter = createTRPCRouter({
           where,
           skip,
           take:    input.pageSize,
-          orderBy: { name: "asc" },
+          orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
           include: {
             discipline: { select: { name: true, color: true } },
             instructor: { include: { user: { select: { name: true } } } },
