@@ -49,8 +49,8 @@ export function StudentEditFormClient({ student, studentId }: Props) {
       phone: data.phone || undefined,
       notes: data.notes || undefined,
     });
-    // Ir directo al perfil después de guardar
-    router.push(`/dashboard/alumnos/${studentId}`);
+    // Redirigir al listado de alumnos para ver el cambio
+    router.push("/dashboard/alumnos?updated=true");
     router.refresh();
   }
 
