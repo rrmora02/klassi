@@ -347,6 +347,7 @@ model Group {
   @@index([tenantId])
   @@index([disciplineId])
   @@index([tenantId, isActive])
+  @@index([tenantId, updatedAt])
 }
 
 // ─── Alumno ───────────────────────────────────────────────────────
@@ -381,6 +382,7 @@ model Student {
   @@index([tenantId, lastName])
   @@index([tenantId, status])
   @@index([tenantId, createdAt])
+  @@index([tenantId, updatedAt])
   // Covering index for student list queries (25-35% faster)
   @@index([tenantId, lastName, firstName, id, email, phone, status, createdAt])
 }

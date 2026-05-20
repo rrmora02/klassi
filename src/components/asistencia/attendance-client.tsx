@@ -16,10 +16,16 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
     { enabled: !!groupId && !!dateStr }
   );
 
+  // Memoize student IDs to prevent unnecessary re-fetches of belts
+  const memoizedStudentIds = useMemo(
+    () => rosterData?.enrollments?.map(e => e.student.id) || [],
+    [rosterData?.enrollments]
+  );
+
   // Obtener cintas de los estudiantes (solo si es Karate)
   const { data: studentBelts = {} } = api.students.getStudentBelts.useQuery(
-    { studentIds: rosterData?.enrollments?.map(e => e.student.id) || [] },
-    { enabled: !!rosterData?.isKarate && (rosterData?.enrollments?.length || 0) > 0 }
+    { studentIds: memoizedStudentIds },
+    { enabled: !!rosterData?.isKarate && memoizedStudentIds.length > 0 }
   );
 
   const markMutation = api.attendance.markAttendance.useMutation();

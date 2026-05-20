@@ -63,39 +63,16 @@ export const attendanceRouter = createTRPCRouter({
        // Generar Date objeto al medianoche UTC
        const dateObj = new Date(input.dateString + "T00:00:00Z");
 
-       let session = await ctx.db.classSession.findFirst({
+       const session = await ctx.db.classSession.findFirst({
           where: { groupId: input.groupId, date: dateObj }
        });
-
-       if (!session) {
-          const dayMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-          const dayEnum = dayMap[dateObj.getUTCDay()];
-
-          let st = "00:00", et = "00:00";
-          if (Array.isArray(group.schedule)) {
-             const slot = (group.schedule as any[]).find((s: any) => s.day === dayEnum);
-             if (slot) {
-                st = slot.startTime || "00:00";
-                et = slot.endTime || "00:00";
-             }
-          }
-
-          session = await ctx.db.classSession.create({
-             data: {
-               groupId: input.groupId,
-               date: dateObj,
-               startTime: st,
-               endTime: et,
-             }
-          });
-       }
 
        // Traer a los alumnos ACTIVOS
        const enrollments = await ctx.db.enrollment.findMany({
           where: { groupId: input.groupId, status: "ACTIVE" },
           include: {
             student: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-            attendances: { where: { sessionId: session.id } }
+            ...(session && { attendances: { where: { sessionId: session.id } } })
           },
           orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }]
        });
@@ -110,7 +87,7 @@ export const attendanceRouter = createTRPCRouter({
          enrollments: enrollments.map(e => ({
             enrollmentId: e.id,
             student: e.student,
-            attendance: e.attendances[0] || null
+            attendance: session ? (e.attendances[0] || null) : null
          }))
        };
     }),
@@ -138,11 +115,16 @@ export const attendanceRouter = createTRPCRouter({
          },
        });
 
-       // Obtener información de la sesión para contexto
-       const session = await ctx.db.classSession.findUnique({
+       // Obtener información de la sesión (debe existir para marcar asistencia)
+       let session = await ctx.db.classSession.findUnique({
          where: { id: input.sessionId },
-         include: { group: { select: { name: true } } },
+         include: { group: { select: { name: true, tenantId: true } } },
        });
+
+       // Verificar que la sesión pertenece al tenant correcto
+       if (session && session.group.tenantId !== ctx.tenantId) {
+         throw new TRPCError({ code: "FORBIDDEN" });
+       }
 
        const newAttendance = await ctx.db.attendance.upsert({
          where: {
