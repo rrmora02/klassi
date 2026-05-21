@@ -45,7 +45,6 @@ export function StudentEditForm({ student }: Props) {
       currentBeltColor: data.currentBeltColor || undefined,
     });
     router.push(`/dashboard/alumnos/${student.id}`);
-    router.refresh();
   }
 
   return (

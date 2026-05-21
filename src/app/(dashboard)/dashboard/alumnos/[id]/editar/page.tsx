@@ -1,21 +1,25 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { fullName } from "@/lib/utils";
 import Link from "next/link";
 import { StudentEditFormClient } from "@/components/alumnos/student-edit-form-client";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 
 export default async function EditarAlumnoPage({ params }: { params: { id: string } }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
-  if (!tenant) return null;
+  const { tenant } = await getDashboardContext();
 
   const student = await db.student.findFirst({
     where: { id: params.id, tenantId: tenant.id },
-    include: { parents: { include: { user: true } } }
+    include: {
+      parents: {
+        orderBy: { createdAt: "asc" },
+        take: 1,
+        select: {
+          relationship: true,
+          user: { select: { name: true, email: true, phone: true } },
+        },
+      },
+    },
   });
 
   if (!student) notFound();

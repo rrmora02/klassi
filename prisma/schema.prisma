@@ -381,6 +381,7 @@ model Student {
   eventPayments EventPayment[]
 
   @@index([tenantId])
+  @@index([tenantId, email])
   @@index([tenantId, lastName])
   @@index([tenantId, status])
   @@index([tenantId, createdAt])

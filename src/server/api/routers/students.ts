@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { StudentStatus } from "@prisma/client";
-import { canAddStudent } from "@/server/services/tenant.service";
+import { PLANS } from "@/config/plans";
 
 // ─── Schemas de validación ────────────────────────────────────────
 
@@ -199,6 +199,7 @@ export const studentsRouter = createTRPCRouter({
       if (input.email) {
         const existing = await db.student.findFirst({
           where: { tenantId, email: input.email, status: { not: "INACTIVE" } },
+          select: { id: true },
         });
         if (existing) {
           throw new TRPCError({
@@ -225,7 +226,14 @@ export const studentsRouter = createTRPCRouter({
       }
 
       // Verificar límite del plan
-      const allowed = await canAddStudent(tenantId);
+      const tenant = await db.tenant.findUnique({
+        where: { id: tenantId },
+        select: { plan: true },
+      });
+      const studentLimit = tenant ? PLANS[tenant.plan].maxStudents : 0;
+      const allowed =
+        studentLimit === Infinity ||
+        (await db.student.count({ where: { tenantId, status: "ACTIVE" } })) < studentLimit;
       if (!allowed) {
         throw new TRPCError({
           code:    "FORBIDDEN",
@@ -295,6 +303,7 @@ export const studentsRouter = createTRPCRouter({
 
       const existing = await db.student.findFirst({
         where: { id, tenantId },
+        select: { id: true, firstName: true, email: true },
       });
       if (!existing) {
         throw new TRPCError({
@@ -312,6 +321,7 @@ export const studentsRouter = createTRPCRouter({
             id:     { not: id },
             status: { not: "INACTIVE" },
           },
+          select: { id: true },
         });
         if (dup) {
           throw new TRPCError({
@@ -336,7 +346,11 @@ export const studentsRouter = createTRPCRouter({
       if (tutorName || tutorEmail || tutorPhone || tutorRelationship) {
         const existingParentLink = await db.parentStudent.findFirst({
           where: { studentId: id },
-          include: { user: true },
+          select: {
+            id: true,
+            userId: true,
+            user: { select: { name: true, email: true, phone: true } },
+          },
           orderBy: { createdAt: "asc" }
         });
 

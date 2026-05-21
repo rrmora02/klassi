@@ -17,3 +17,7 @@ CREATE INDEX IF NOT EXISTS "Event_tenantId_date_idx"
 -- Event revenue aggregations filter paid event payments by status and paid date.
 CREATE INDEX IF NOT EXISTS "EventPayment_status_paidAt_idx"
   ON "EventPayment"("status", "paidAt");
+
+-- Student create/update checks duplicates by tenant and email.
+CREATE INDEX IF NOT EXISTS "Student_tenantId_email_idx"
+  ON "Student"("tenantId", "email");

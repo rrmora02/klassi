@@ -44,13 +44,11 @@ export default function NuevoAlumnoPage() {
               studentId={newStudentId}
               onEnrollSuccess={() => {
                 router.push(`/dashboard/alumnos/${newStudentId}`);
-                router.refresh();
               }}
             />
             <button
               onClick={() => {
                 router.push("/dashboard/alumnos");
-                router.refresh();
               }}
               style={{
                 padding: "8px 20px",

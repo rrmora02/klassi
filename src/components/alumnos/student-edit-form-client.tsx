@@ -4,10 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/trpc";
 import { StudentForm } from "./student-form";
-import { EnrollToGroupModal } from "./enroll-to-group-modal";
 import type { StudentFormValues } from "@/lib/schemas/student.schema";
 import type { Student } from "@prisma/client";
-import Link from "next/link";
 import { fullName } from "@/lib/utils";
 
 interface Props {
@@ -49,9 +47,7 @@ export function StudentEditFormClient({ student, studentId }: Props) {
       phone: data.phone || undefined,
       notes: data.notes || undefined,
     });
-    // Redirigir al listado de alumnos para ver el cambio
     router.push("/dashboard/alumnos?updated=true");
-    router.refresh();
   }
 
   return (
