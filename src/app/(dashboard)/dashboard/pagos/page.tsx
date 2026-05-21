@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 import { formatCurrency, formatDate, fullName } from "@/lib/utils";
@@ -6,6 +5,7 @@ import { PaymentStatusBadge } from "@/components/pagos/payment-status-badge";
 import { PaymentsClient } from "@/components/pagos/payments-client";
 import Link from "next/link";
 import type { PaymentStatus } from "@prisma/client";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 
 interface PageProps {
   searchParams: { status?: string; q?: string; page?: string };
@@ -20,18 +20,8 @@ const STATUS_TABS: { label: string; value: PaymentStatus | undefined }[] = [
 ];
 
 export default async function PagosPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
-
-  // Solo ADMIN y RECEPTIONIST
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role === "INSTRUCTOR") {
+  const { tenant, userRole } = await getDashboardContext();
+  if (userRole === "INSTRUCTOR") {
     redirect("/dashboard");
   }
 

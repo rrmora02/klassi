@@ -1,4 +1,3 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -6,6 +5,7 @@ import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 import { formatBillingInfo } from "@/lib/utils";
 import type { ScheduleSlot } from "@/lib/schemas/group.schema";
 import type { GroupLevel } from "@prisma/client";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 
 // ─── Helper de formato de horario ─────────────────────────────────
 
@@ -33,18 +33,8 @@ interface PageProps {
 }
 
 export default async function GruposPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!user) return null;
-  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
-  if (!tenant) return null;
-
-  // Solo ADMIN y RECEPTIONIST
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role === "INSTRUCTOR") {
+  const { tenant, userRole } = await getDashboardContext();
+  if (userRole === "INSTRUCTOR") {
     redirect("/dashboard");
   }
 

@@ -1,32 +1,17 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Plus, Calendar, Users, ChevronLeft, ChevronRight } from "lucide-react";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 
 interface EventosPageProps {
   searchParams: Promise<{ page?: string }>;
 }
 
 export default async function EventosPage({ searchParams }: EventosPageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  const user = await db.user.findUnique({
-    where: { clerkId: userId },
-    include: { activeTenant: true },
-  });
-
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
-
-  // Solo ADMIN
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id },
-  });
-
-  if (tenantUser?.role !== "ADMIN") {
+  const { tenant, userRole } = await getDashboardContext();
+  if (userRole !== "ADMIN") {
     redirect("/dashboard");
   }
 
@@ -51,21 +36,32 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
     },
   });
 
-  // Obtener estadísticas para cada evento
-  const eventStats = await Promise.all(
-    events.map(async (event) => {
-      const payments = await db.eventPayment.findMany({
-        where: { eventId: event.id },
-      });
+  const payments = events.length > 0
+    ? await db.eventPayment.findMany({
+        where: { eventId: { in: events.map((event) => event.id) } },
+        select: { eventId: true, status: true, willAttend: true },
+      })
+    : [];
 
-      return {
-        eventId: event.id,
-        total: payments.length,
-        paid: payments.filter((p) => p.status === "PAID").length,
-        pending: payments.filter((p) => p.status === "PENDING").length,
-        willAttend: payments.filter((p) => p.willAttend === true).length,
+  const eventStatsMap = payments.reduce<Record<string, { eventId: string; total: number; paid: number; pending: number; willAttend: number }>>(
+    (stats, payment) => {
+      const current = stats[payment.eventId] ?? {
+        eventId: payment.eventId,
+        total: 0,
+        paid: 0,
+        pending: 0,
+        willAttend: 0,
       };
-    })
+
+      current.total += 1;
+      if (payment.status === "PAID") current.paid += 1;
+      if (payment.status === "PENDING") current.pending += 1;
+      if (payment.willAttend === true) current.willAttend += 1;
+      stats[payment.eventId] = current;
+
+      return stats;
+    },
+    {}
   );
 
   const pages = Math.ceil(totalEvents / pageSize);
@@ -105,10 +101,16 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
       ) : (
         <>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event, idx) => {
-              const stat = eventStats[idx]!;
+            {events.map((event) => {
+              const stat = eventStatsMap[event.id] ?? {
+                eventId: event.id,
+                total: 0,
+                paid: 0,
+                pending: 0,
+                willAttend: 0,
+              };
               const paidPercentage =
-                stat.total > 0
+                stat.willAttend > 0
                   ? Math.round((stat.paid / stat.willAttend) * 100)
                   : 0;
 

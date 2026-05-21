@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@prisma/client";
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -51,6 +52,12 @@ interface SidebarProps {
 
 export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    setPendingHref(null);
+  }, [pathname]);
 
   // Filtrar items según el rol
   const NAV_ITEMS = ALL_NAV_ITEMS.filter(item => item.roles.includes(userRole));
@@ -68,19 +75,27 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
           const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
+          const pending = pendingHref === href;
           return (
             <Link
               key={href}
               href={href}
               prefetch={false}
+              onMouseEnter={() => router.prefetch(href)}
+              onFocus={() => router.prefetch(href)}
+              onClick={() => {
+                if (!active) setPendingHref(href);
+              }}
+              aria-current={active ? "page" : undefined}
+              aria-busy={pending || undefined}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                active
+                active || pending
                   ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
                   : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
               )}
             >
-              <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
+              <Icon className={cn("h-4 w-4 flex-shrink-0", active || pending ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
               {label}
             </Link>
           );
@@ -93,19 +108,27 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
           </p>
           {CONFIG_ITEMS.map(({ label, href, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
+            const pending = pendingHref === href;
             return (
               <Link
                 key={href}
                 href={href}
                 prefetch={false}
+                onMouseEnter={() => router.prefetch(href)}
+                onFocus={() => router.prefetch(href)}
+                onClick={() => {
+                  if (!active) setPendingHref(href);
+                }}
+                aria-current={active ? "page" : undefined}
+                aria-busy={pending || undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                  active
+                  active || pending
                     ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
                     : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
                 )}
               >
-                <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
+                <Icon className={cn("h-4 w-4 flex-shrink-0", active || pending ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
                 {label}
               </Link>
             );
@@ -120,19 +143,27 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
             </p>
             {ADMIN_ITEMS.map(({ label, href, icon: Icon }) => {
               const active = pathname === href || pathname.startsWith(href + "/");
+              const pending = pendingHref === href;
               return (
                 <Link
                   key={href}
                   href={href}
                   prefetch={false}
+                  onMouseEnter={() => router.prefetch(href)}
+                  onFocus={() => router.prefetch(href)}
+                  onClick={() => {
+                    if (!active) setPendingHref(href);
+                  }}
+                  aria-current={active ? "page" : undefined}
+                  aria-busy={pending || undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                    active
+                    active || pending
                       ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
                       : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
+                  <Icon className={cn("h-4 w-4 flex-shrink-0", active || pending ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
                   {label}
                 </Link>
               );

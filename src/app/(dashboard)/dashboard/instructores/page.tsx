@@ -1,26 +1,17 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { AdminInstructorBanner } from "@/components/instructores/admin-instructor-banner";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 
 interface PageProps {
   searchParams: { q?: string; active?: string; page?: string; };
 }
 
 export default async function InstructoresPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
-
-  // Solo ADMIN o INSTRUCTOR
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role !== "ADMIN" && tenantUser?.role !== "INSTRUCTOR") {
+  const { tenant, user, userRole } = await getDashboardContext();
+  if (userRole !== "ADMIN" && userRole !== "INSTRUCTOR") {
     redirect("/dashboard");
   }
 
@@ -71,7 +62,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   return (
     <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
       <AdminInstructorBanner
-        isAdmin={tenantUser.role === "ADMIN"}
+        isAdmin={userRole === "ADMIN"}
         isAlreadyInstructor={!!currentUserInstructor}
       />
 

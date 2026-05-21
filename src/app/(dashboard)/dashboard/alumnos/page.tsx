@@ -1,26 +1,17 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { fullName, calcAge } from "@/lib/utils";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 
 interface PageProps {
   searchParams: { q?: string; status?: string; disc?: string; page?: string; };
 }
 
 export default async function AlumnosPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
-
-  // Proteger acceso: solo ADMIN y RECEPTIONIST
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role === "INSTRUCTOR") {
+  const { tenant, userRole } = await getDashboardContext();
+  if (userRole === "INSTRUCTOR") {
     redirect("/dashboard");
   }
 

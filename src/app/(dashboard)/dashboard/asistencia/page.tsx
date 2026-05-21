@@ -1,18 +1,12 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/server/db";
 import { AttendanceClient } from "@/components/asistencia/attendance-client";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 
 interface AsistenciaPageProps {
   searchParams: Promise<{ groupId?: string }>;
 }
 
 export default async function AsistenciaPage({ searchParams }: AsistenciaPageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  // Garantizamos acceso
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!user?.activeTenantId) return null;
+  await getDashboardContext();
 
   const params = await searchParams;
   const preselectedGroupId = params.groupId;

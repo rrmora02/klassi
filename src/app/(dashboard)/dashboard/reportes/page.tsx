@@ -1,24 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { DataExportsClient } from "./data-exports-client";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 
 const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 export default async function ReportesPage() {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
-
-  // Solo ADMIN
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role !== "ADMIN") {
+  const { tenant, userRole } = await getDashboardContext();
+  if (userRole !== "ADMIN") {
     redirect("/dashboard");
   }
 

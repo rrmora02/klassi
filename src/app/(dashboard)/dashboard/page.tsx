@@ -1,10 +1,10 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
 import { StatCard } from "@/components/shared";
 import { ClassAttendanceIndicator } from "@/components/dashboard/class-attendance-indicator";
 import { EventSummaryClient } from "@/components/dashboard/event-summary-client";
+import { getDashboardContext } from "@/server/auth/dashboard-context";
 import {
   Users,
   BookOpen,
@@ -141,15 +141,9 @@ function trialDaysLeft(trialEndsAt: Date): number {
 // ─── Page ────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  let user;
+  let context;
   try {
-    user = await db.user.findUnique({
-      where: { clerkId: userId },
-      select: { id: true, activeTenantId: true, activeTenant: true }
-    });
+    context = await getDashboardContext();
   } catch (err) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
@@ -161,18 +155,7 @@ export default async function DashboardPage() {
     );
   }
 
-  if (!user || !user.activeTenant) return null; // DashboardLayout redirects this to /onboarding
-
-  const tenant = user.activeTenant;
-
-  // Get user role
-  const tenantUser = await db.tenantUser.findFirst({
-    where: {
-      userId: user.id,
-      tenantId: user.activeTenantId!
-    },
-  });
-  const userRole = tenantUser?.role || "RECEPTIONIST";
+  const { tenant, user, userRole } = context;
 
   const { stats, overduePayments, recentStudents, groupsWithClassesToday } = await getDashboardData(tenant.id, userRole, user.id);
 
