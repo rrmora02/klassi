@@ -1,59 +1,31 @@
 import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/server/db";
 import { TenantSwitcher } from "./tenant-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { TourButton } from "./tour-button";
+import type { UserRole } from "@prisma/client";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-export async function TopBar() {
-  const { userId } = await auth();
-  let tenants: any[] = [];
-  let user = null;
-  let userRole = "RECEPTIONIST";
+interface TopBarProps {
+  tenants: Array<{ id: string; name: string }>;
+  activeTenantId: string | null;
+  userRole: UserRole;
+}
 
-  if (userId) {
-    user = await db.user.findUnique({
-      where: { clerkId: userId },
-      include: {
-        activeTenant: true,
-      },
-    });
-
-    if (user && user.activeTenantId) {
-      const memberships = await db.tenantUser.findMany({
-        where: { userId: user.id },
-        include: { tenant: true },
-      });
-
-      tenants = memberships.map((m) => ({
-        id: m.tenant.id,
-        name: m.tenant.name,
-      }));
-
-      const tenantUser = await db.tenantUser.findFirst({
-        where: {
-          userId: user.id,
-          tenantId: user.activeTenantId,
-        },
-      });
-
-      userRole = tenantUser?.role || "RECEPTIONIST";
-    }
-  }
-
+export async function TopBar({ tenants, activeTenantId, userRole }: TopBarProps) {
   const roleLabels: Record<string, string> = {
     ADMIN: "Administrador",
     RECEPTIONIST: "Recepcionista",
     INSTRUCTOR: "Instructor",
+    SUPER_ADMIN: "Super admin",
+    PARENT: "Tutor",
   };
 
   return (
     <div className="flex h-16 flex-1 items-center justify-between bg-white dark:bg-sb-uplift px-4 md:px-6">
       <div className="flex items-center gap-3">
-        {user && <TenantSwitcher tenants={tenants} activeTenantId={user.activeTenantId} userRole={userRole} />}
+        <TenantSwitcher tenants={tenants} activeTenantId={activeTenantId} userRole={userRole} />
       </div>
       <div className="flex items-center gap-2">
         <TourButton />

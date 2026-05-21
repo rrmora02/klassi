@@ -72,6 +72,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
             <Link
               key={href}
               href={href}
+              prefetch={false}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
@@ -96,6 +97,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
               <Link
                 key={href}
                 href={href}
+                prefetch={false}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                   active
@@ -122,6 +124,7 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
                 <Link
                   key={href}
                   href={href}
+                  prefetch={false}
                   className={cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                     active

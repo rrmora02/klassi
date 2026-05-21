@@ -25,7 +25,7 @@ export const attendanceRouter = createTRPCRouter({
           dayOfWeek = dayMap[dateObj.getUTCDay()];
        }
 
-       // Obtener todos los grupos
+       // Obtener solo los campos que usa el selector de asistencia.
        let groups = await ctx.db.group.findMany({
           where: {
              tenantId: ctx.tenantId,
@@ -35,6 +35,7 @@ export const attendanceRouter = createTRPCRouter({
              })
           },
           orderBy: { name: "asc" },
+          select: { id: true, name: true, schedule: true },
        });
 
        // Si se proporciona una fecha, filtrar solo grupos con clase ese día
@@ -56,7 +57,11 @@ export const attendanceRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
        const group = await ctx.db.group.findFirst({
          where: { id: input.groupId, tenantId: ctx.tenantId },
-         include: { discipline: true }
+         select: {
+           id: true,
+           name: true,
+           discipline: { select: { name: true } },
+         },
        });
        if (!group) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -64,7 +69,8 @@ export const attendanceRouter = createTRPCRouter({
        const dateObj = new Date(input.dateString + "T00:00:00Z");
 
        const session = await ctx.db.classSession.findFirst({
-          where: { groupId: input.groupId, date: dateObj }
+          where: { groupId: input.groupId, date: dateObj },
+          select: { id: true, groupId: true, date: true, startTime: true, endTime: true, notes: true, createdAt: true },
        });
 
        // Traer a los alumnos ACTIVOS
@@ -72,7 +78,12 @@ export const attendanceRouter = createTRPCRouter({
           where: { groupId: input.groupId, status: "ACTIVE" },
           include: {
             student: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-            ...(session && { attendances: { where: { sessionId: session.id } } })
+            ...(session && {
+              attendances: {
+                where: { sessionId: session.id },
+                select: { id: true, status: true, justification: true },
+              },
+            })
           },
           orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }]
        });

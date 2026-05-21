@@ -287,6 +287,7 @@ model Discipline {
 
   @@unique([tenantId, name])
   @@index([tenantId])
+  @@index([tenantId, isActive, sortOrder])
 }
 
 // ─── Instructor ───────────────────────────────────────────────────
@@ -347,6 +348,7 @@ model Group {
   @@index([tenantId])
   @@index([disciplineId])
   @@index([tenantId, isActive])
+  @@index([tenantId, isActive, name])
   @@index([tenantId, updatedAt])
 }
 
@@ -551,6 +553,7 @@ model Event {
   @@index([tenantId])
   @@index([date])
   @@index([tenantId, status])
+  @@index([tenantId, date])
 }
 
 // ─── Pago de Evento (Aparte de mensualidad) ───────────────────────
@@ -592,6 +595,7 @@ model EventPayment {
   @@index([studentId])
   @@index([status])
   @@index([eventId, status])
+  @@index([status, paidAt])
 }
 
 // ─── Auditoría de Cambios ────────────────────────────────────────

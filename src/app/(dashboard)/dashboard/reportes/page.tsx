@@ -36,12 +36,13 @@ export default async function ReportesPage() {
     Array.from({ length: 12 }, async (_, i) => {
       const from = new Date(year, i, 1);
       const to   = new Date(year, i + 1, 0, 23, 59, 59);
-      const payments = await db.payment.findMany({
+      const payments = await db.payment.aggregate({
         where: { tenantId: tenant.id, status: "PAID", paidAt: { gte: from, lte: to } },
-        select: { amount: true, discountAmount: true },
+        _sum: { amount: true, discountAmount: true },
+        _count: true,
       });
-      const total = payments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
-      return { month: i, total, count: payments.length };
+      const total = (payments._sum.amount ?? 0) - (payments._sum.discountAmount ?? 0);
+      return { month: i, total, count: payments._count };
     })
   );
 
@@ -54,7 +55,7 @@ export default async function ReportesPage() {
     include: {
       groups: {
         where: { tenantId: tenant.id, isActive: true },
-        include: { enrollments: { where: { status: "ACTIVE" } } },
+        select: { _count: { select: { enrollments: { where: { status: "ACTIVE" } } } } },
       },
     },
     orderBy: { sortOrder: "asc" },
@@ -63,31 +64,43 @@ export default async function ReportesPage() {
   const discStats = disciplines.map(d => ({
     name:     d.name,
     color:    d.color ?? "#6b7280",
-    students: d.groups.reduce((a, g) => a + g.enrollments.length, 0),
+    students: d.groups.reduce((a, g) => a + g._count.enrollments, 0),
   })).sort((a, b) => b.students - a.students);
 
   const totalStudents = discStats.reduce((a, d) => a + d.students, 0);
 
   // Pagos: resumen del mes actual
-  const [paidMonthPayments, pendingPayments, overduePayments, collectionPaid, collectionTotal] = await Promise.all([
-    db.payment.findMany({ where: { tenantId: tenant.id, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } }, select: { amount: true, discountAmount: true } }),
-    db.payment.findMany({ where: { tenantId: tenant.id, status: "PENDING" }, select: { amount: true } }),
-    db.payment.findMany({ where: { tenantId: tenant.id, status: "OVERDUE" }, select: { amount: true } }),
+  const [paidMonthAggregate, pendingAggregate, overdueAggregate, collectionPaid, collectionTotal] = await Promise.all([
+    db.payment.aggregate({
+      where: { tenantId: tenant.id, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } },
+      _sum: { amount: true, discountAmount: true },
+      _count: true,
+    }),
+    db.payment.aggregate({
+      where: { tenantId: tenant.id, status: "PENDING" },
+      _sum: { amount: true },
+      _count: true,
+    }),
+    db.payment.aggregate({
+      where: { tenantId: tenant.id, status: "OVERDUE" },
+      _sum: { amount: true },
+      _count: true,
+    }),
     db.payment.count({ where: { tenantId: tenant.id, status: "PAID",    paidAt:  { gte: monthStart, lte: monthEnd } } }),
     db.payment.count({ where: { tenantId: tenant.id, status: { in: ["PAID","PENDING","OVERDUE"] }, dueDate: { gte: monthStart, lte: monthEnd } } }),
   ]);
 
   const paidMonth = {
-    _sum: { amount: paidMonthPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0) },
-    _count: paidMonthPayments.length,
+    _sum: { amount: (paidMonthAggregate._sum.amount ?? 0) - (paidMonthAggregate._sum.discountAmount ?? 0) },
+    _count: paidMonthAggregate._count,
   };
   const pendingAll = {
-    _sum: { amount: pendingPayments.reduce((sum, p) => sum + p.amount, 0) },
-    _count: pendingPayments.length,
+    _sum: { amount: pendingAggregate._sum.amount ?? 0 },
+    _count: pendingAggregate._count,
   };
   const overdueAll = {
-    _sum: { amount: overduePayments.reduce((sum, p) => sum + p.amount, 0) },
-    _count: overduePayments.length,
+    _sum: { amount: overdueAggregate._sum.amount ?? 0 },
+    _count: overdueAggregate._count,
   };
 
   const collectionRate = collectionTotal > 0 ? Math.round((collectionPaid / collectionTotal) * 100) : 0;
@@ -105,9 +118,10 @@ export default async function ReportesPage() {
 
   // Eventos del mes
   const events = await db.event.findMany({
-    where: { tenantId: tenant.id },
+    where: { tenantId: tenant.id, date: { gte: monthStart, lte: monthEnd } },
     include: {
       eventPayments: {
+        where: { status: { in: ["PAID", "PENDING"] } },
         select: {
           id: true,
           amount: true,
@@ -120,21 +134,20 @@ export default async function ReportesPage() {
     },
   });
 
-  const monthEvents = events.filter(e => e.date >= monthStart && e.date < monthEnd);
-  const eventsPaid = monthEvents.reduce((sum, e) => {
+  const eventsPaid = events.reduce((sum, e) => {
     const paid = e.eventPayments.filter(p => p.status === "PAID" && p.paidAt !== null).reduce((s, p) => s + (p.amount - (p.discountAmount || 0)), 0);
     return sum + paid;
   }, 0);
-  const eventsExpected = monthEvents.reduce((sum, e) => {
+  const eventsExpected = events.reduce((sum, e) => {
     const paidPayments = e.eventPayments.filter(p => p.status === "PAID");
     const pendingPayments = e.eventPayments.filter(p => p.status === "PENDING");
     const paidAmount = paidPayments.reduce((s, p) => s + (p.amount - (p.discountAmount || 0)), 0);
     const pendingAmount = pendingPayments.reduce((s, p) => s + p.amount, 0);
     return sum + paidAmount + pendingAmount;
   }, 0);
-  const eventCount = monthEvents.length;
-  const eventPaymentsPaid = monthEvents.reduce((sum, e) => sum + e.eventPayments.filter(p => p.status === "PAID").length, 0);
-  const eventPaymentsPending = monthEvents.reduce((sum, e) => sum + e.eventPayments.filter(p => p.status === "PENDING").length, 0);
+  const eventCount = events.length;
+  const eventPaymentsPaid = events.reduce((sum, e) => sum + e.eventPayments.filter(p => p.status === "PAID").length, 0);
+  const eventPaymentsPending = events.reduce((sum, e) => sum + e.eventPayments.filter(p => p.status === "PENDING").length, 0);
 
   return (
     <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">

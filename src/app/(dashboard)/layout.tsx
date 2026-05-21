@@ -12,32 +12,47 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const user = await db.user.findUnique({
     where: { clerkId: userId },
-    select: { id: true, activeTenantId: true },
+    select: {
+      id: true,
+      activeTenantId: true,
+      memberships: {
+        select: {
+          role: true,
+          tenant: { select: { id: true, name: true } },
+        },
+        orderBy: { tenant: { name: "asc" } },
+      },
+    },
   });
 
   if (!user || !user.activeTenantId) {
     redirect("/onboarding");
   }
 
-  // Obtener el rol del usuario en el tenant
-  const tenantUser = await db.tenantUser.findFirst({
-    where: {
-      userId: user.id,
-      tenantId: user.activeTenantId
-    },
-  });
+  const activeMembership = user.memberships.find(
+    (membership) => membership.tenant.id === user.activeTenantId
+  );
+  const userRole = activeMembership?.role || "RECEPTIONIST";
+  const tenants = user.memberships.map((membership) => membership.tenant);
 
-  const userRole = tenantUser?.role || "RECEPTIONIST";
-
-  // Verificar si hay alumnos en el tenant
-  const studentCount = await db.student.count({
-    where: { tenantId: user.activeTenantId }
+  const firstStudent = await db.student.findFirst({
+    where: { tenantId: user.activeTenantId },
+    select: { id: true },
   });
 
   return (
     <>
-      <OnboardingTourWrapper hasStudents={studentCount > 0} />
-      <DashboardShell sidebar={<Sidebar userRole={userRole} />} topbar={<TopBar />}>
+      <OnboardingTourWrapper hasStudents={Boolean(firstStudent)} />
+      <DashboardShell
+        sidebar={<Sidebar userRole={userRole} />}
+        topbar={
+          <TopBar
+            tenants={tenants}
+            activeTenantId={user.activeTenantId}
+            userRole={userRole}
+          />
+        }
+      >
         {children}
       </DashboardShell>
     </>
