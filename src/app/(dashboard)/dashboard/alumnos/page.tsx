@@ -3,10 +3,35 @@ import { db } from "@/server/db";
 import { fullName, calcAge } from "@/lib/utils";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { StudentRow } from "@/components/alumnos/student-row";
+import { StudentTable } from "@/components/alumnos/student-table";
 
 interface PageProps {
   searchParams: { q?: string; status?: string; disc?: string; page?: string; };
+}
+
+async function StudentTableSection({ students, pages, page, pageSize, total, buildUrl }: any) {
+  return (
+    <>
+      {/* Tabla */}
+      <StudentTable students={students} StudentRow={StudentRow} />
+
+      {/* Paginación */}
+      {pages > 1 && (
+        <div style={{ marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
+          <p style={{ margin: "0 0 12px" }}>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</p>
+          <div style={{ display: "flex", gap: 4, overflowX: "auto" }} className="flex-wrap sm:flex-nowrap">
+            {page > 1 && <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>← Ant</Link>}
+            {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
+              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#006241" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{p}</Link>
+            ))}
+            {page < pages && <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>Sig →</Link>}
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default async function AlumnosPage({ searchParams }: PageProps) {
@@ -43,6 +68,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
     ...(discId && { enrollments: { some: { status: "ACTIVE", group: { disciplineId: discId } } } }),
   };
 
+  // Fetch data in parallel
   const [students, total, disciplines, counts] = await Promise.all([
     db.student.findMany({
       where, skip: (page - 1) * pageSize, take: pageSize,
@@ -136,40 +162,17 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      {/* Tabla */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              {["Alumno", "Edad", "Disciplinas", "Contacto", "Estado", ""].map(h => (
-                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {students.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: "center", padding: "48px 0", color: "var(--color-text-tertiary)", fontSize: 13 }}>No se encontraron alumnos</td></tr>
-            )}
-            {students.map(s => (
-              <StudentRow key={s.id} student={s} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Paginación */}
-      {pages > 1 && (
-        <div style={{ marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
-          <p style={{ margin: "0 0 12px" }}>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</p>
-          <div style={{ display: "flex", gap: 4, overflowX: "auto" }} className="flex-wrap sm:flex-nowrap">
-            {page > 1 && <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>← Ant</Link>}
-            {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
-              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#006241" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{p}</Link>
-            ))}
-            {page < pages && <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>Sig →</Link>}
-          </div>
-        </div>
-      )}
+      {/* Table with Suspense boundary */}
+      <Suspense fallback={<div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-secondary)" }}>Cargando tabla...</div>}>
+        <StudentTableSection 
+          students={students} 
+          pages={pages} 
+          page={page} 
+          pageSize={pageSize} 
+          total={total} 
+          buildUrl={buildUrl} 
+        />
+      </Suspense>
     </div>
   );
 }
