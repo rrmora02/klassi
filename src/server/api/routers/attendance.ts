@@ -118,12 +118,46 @@ export const attendanceRouter = createTRPCRouter({
        // Obtener información de la sesión (debe existir para marcar asistencia)
        let session = await ctx.db.classSession.findUnique({
          where: { id: input.sessionId },
-         include: { group: { select: { name: true, tenantId: true } } },
+         include: { group: { select: { name: true, tenantId: true, schedule: true } } },
        });
 
        // Verificar que la sesión pertenece al tenant correcto
        if (session && session.group.tenantId !== ctx.tenantId) {
          throw new TRPCError({ code: "FORBIDDEN" });
+       }
+
+       // Si la sesión no existe, crearla on-demand (lazy creation)
+       if (!session) {
+         const groupCheck = await ctx.db.group.findFirst({
+           where: { id: enrollment.groupId, tenantId: ctx.tenantId },
+           select: { schedule: true }
+         });
+         if (!groupCheck) throw new TRPCError({ code: "NOT_FOUND" });
+
+         // Obtener horarios de la sesión de la fecha
+         const dateObj = new Date(input.sessionId.slice(0, 10)); // Parse date from sessionId if possible
+         const dayMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+         const dayEnum = dayMap[dateObj.getUTCDay()];
+
+         let st = "00:00", et = "00:00";
+         if (Array.isArray(groupCheck.schedule)) {
+            const slot = (groupCheck.schedule as any[]).find((s: any) => s.day === dayEnum);
+            if (slot) {
+               st = slot.startTime || "00:00";
+               et = slot.endTime || "00:00";
+            }
+         }
+
+         session = await ctx.db.classSession.create({
+           data: {
+             id: input.sessionId,
+             groupId: enrollment.groupId,
+             date: dateObj,
+             startTime: st,
+             endTime: et,
+           },
+           include: { group: { select: { name: true, tenantId: true } } }
+         });
        }
 
        const newAttendance = await ctx.db.attendance.upsert({
@@ -143,41 +177,43 @@ export const attendanceRouter = createTRPCRouter({
          }
        });
 
-       // Registrar auditoría con información detallada
-       await loggingService.logAudit({
-         tenantId: ctx.tenantId,
-         userId: ctx.userId,
-         action: oldAttendance ? "UPDATE" : "CREATE",
-         entity: "Attendance",
-         entityId: newAttendance.id,
-         oldValues: oldAttendance ? {
-           status: oldAttendance.status,
-           studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
-           groupName: session?.group.name,
-         } : undefined,
-         newValues: {
-           status: newAttendance.status,
-           studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
-           groupName: session?.group.name,
-           sessionDate: session?.date,
-         } as any,
-       });
-
-       // Registrar evento de negocio
-       await loggingService.logBusinessEvent({
-         tenantId: ctx.tenantId,
-         userId: ctx.userId,
-         eventType: "ATTENDANCE_RECORDED",
-         entityType: "Attendance",
-         entityId: newAttendance.id,
-         metadata: {
-           studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
-           studentId: enrollment.student.id,
-           status: input.status,
-           groupName: session?.group.name,
-           sessionDate: session?.date,
-           enrollmentId: input.enrollmentId,
-         },
+       // Log asincronously in background (don't block response)
+       Promise.all([
+         loggingService.logAudit({
+           tenantId: ctx.tenantId,
+           userId: ctx.userId,
+           action: oldAttendance ? "UPDATE" : "CREATE",
+           entity: "Attendance",
+           entityId: newAttendance.id,
+           oldValues: oldAttendance ? {
+             status: oldAttendance.status,
+             studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+             groupName: session?.group.name,
+           } : undefined,
+           newValues: {
+             status: newAttendance.status,
+             studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+             groupName: session?.group.name,
+             sessionDate: session?.date,
+           } as any,
+         }),
+         loggingService.logBusinessEvent({
+           tenantId: ctx.tenantId,
+           userId: ctx.userId,
+           eventType: "ATTENDANCE_RECORDED",
+           entityType: "Attendance",
+           entityId: newAttendance.id,
+           metadata: {
+             studentName: `${enrollment.student.firstName} ${enrollment.student.lastName}`,
+             studentId: enrollment.student.id,
+             status: input.status,
+             groupName: session?.group.name,
+             sessionDate: session?.date,
+             enrollmentId: input.enrollmentId,
+           },
+         }),
+       ]).catch(err => {
+         console.error("Background logging failed:", err);
        });
 
        return newAttendance;

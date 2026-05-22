@@ -28,25 +28,52 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
     { enabled: !!rosterData?.isKarate && memoizedStudentIds.length > 0 }
   );
 
-  const markMutation = api.attendance.markAttendance.useMutation();
+  const queryClient = api.useUtils();
+  const markMutation = api.attendance.markAttendance.useMutation({
+    onMutate: async (variables) => {
+      // Optimistic update: update the UI immediately
+      const key = api.attendance.getSessionRoster.getQueryKey({ groupId, dateString: dateStr });
+      const oldData = queryClient.attendance.getSessionRoster.getData({ groupId, dateString: dateStr });
+
+      if (oldData) {
+        queryClient.attendance.getSessionRoster.setData(
+          { groupId, dateString: dateStr },
+          {
+            ...oldData,
+            enrollments: oldData.enrollments.map(e =>
+              e.enrollmentId === variables.enrollmentId
+                ? { ...e, attendance: { ...e.attendance, status: variables.status } }
+                : e
+            ),
+          }
+        );
+      }
+
+      return { oldData };
+    },
+    onError: (err, variables, context) => {
+      // Revert on error
+      if (context?.oldData) {
+        queryClient.attendance.getSessionRoster.setData(
+          { groupId, dateString: dateStr },
+          context.oldData
+        );
+      }
+      alert("Error registrando asistencia. Por favor intenta de nuevo.");
+    },
+  });
 
   const handleMark = async (enrollmentId: string, status: AttendanceStatus) => {
     if (!rosterData?.session?.id) return;
-    
-    // Optimizamos temporalmente local
-    const ogRoster = rosterData;
-    
+
     try {
         await markMutation.mutateAsync({
            sessionId: rosterData.session.id,
            enrollmentId,
            status,
         });
-        // Refrescamos en background tras éxito
-        refetch();
     } catch(err) {
-        // En caso de fallo
-        alert("Ocurrió un error al registrar la asistencia.");
+        console.error("Attendance error:", err);
     }
   };
 
