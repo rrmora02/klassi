@@ -48,6 +48,43 @@ export const attendanceRouter = createTRPCRouter({
        return groups;
     }),
 
+  createSession: tenantProcedure
+    .input(z.object({
+       groupId: z.string().cuid(),
+       dateString: z.string(), // "YYYY-MM-DD"
+    }))
+    .mutation(async ({ ctx, input }) => {
+       const group = await ctx.db.group.findFirst({
+         where: { id: input.groupId, tenantId: ctx.tenantId },
+         select: { schedule: true }
+       });
+       if (!group) throw new TRPCError({ code: "NOT_FOUND" });
+
+       const dateObj = new Date(input.dateString + "T00:00:00Z");
+       const dayMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+       const dayEnum = dayMap[dateObj.getUTCDay()];
+
+       let st = "00:00", et = "00:00";
+       if (Array.isArray(group.schedule)) {
+          const slot = (group.schedule as any[]).find((s: any) => s.day === dayEnum);
+          if (slot) {
+             st = slot.startTime || "00:00";
+             et = slot.endTime || "00:00";
+          }
+       }
+
+       const session = await ctx.db.classSession.create({
+          data: {
+            groupId: input.groupId,
+            date: dateObj,
+            startTime: st,
+            endTime: et,
+          }
+       });
+
+       return session;
+    }),
+
   getSessionRoster: tenantProcedure
     .input(z.object({
        groupId: z.string().cuid(),
@@ -116,48 +153,17 @@ export const attendanceRouter = createTRPCRouter({
        });
 
        // Obtener información de la sesión (debe existir para marcar asistencia)
-       let session = await ctx.db.classSession.findUnique({
+       const session = await ctx.db.classSession.findUnique({
          where: { id: input.sessionId },
-         include: { group: { select: { name: true, tenantId: true, schedule: true } } },
+         include: { group: { select: { name: true, tenantId: true } } },
        });
 
-       // Verificar que la sesión pertenece al tenant correcto
-       if (session && session.group.tenantId !== ctx.tenantId) {
-         throw new TRPCError({ code: "FORBIDDEN" });
-       }
-
-       // Si la sesión no existe, crearla on-demand (lazy creation)
+       // Verificar que la sesión existe y pertenece al tenant correcto
        if (!session) {
-         const groupCheck = await ctx.db.group.findFirst({
-           where: { id: enrollment.groupId, tenantId: ctx.tenantId },
-           select: { schedule: true }
-         });
-         if (!groupCheck) throw new TRPCError({ code: "NOT_FOUND" });
-
-         // Obtener horarios de la sesión de la fecha
-         const dateObj = new Date(input.sessionId.slice(0, 10)); // Parse date from sessionId if possible
-         const dayMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-         const dayEnum = dayMap[dateObj.getUTCDay()];
-
-         let st = "00:00", et = "00:00";
-         if (Array.isArray(groupCheck.schedule)) {
-            const slot = (groupCheck.schedule as any[]).find((s: any) => s.day === dayEnum);
-            if (slot) {
-               st = slot.startTime || "00:00";
-               et = slot.endTime || "00:00";
-            }
-         }
-
-         session = await ctx.db.classSession.create({
-           data: {
-             id: input.sessionId,
-             groupId: enrollment.groupId,
-             date: dateObj,
-             startTime: st,
-             endTime: et,
-           },
-           include: { group: { select: { name: true, tenantId: true } } }
-         });
+         throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
+       }
+       if (session.group.tenantId !== ctx.tenantId) {
+         throw new TRPCError({ code: "FORBIDDEN" });
        }
 
        const newAttendance = await ctx.db.attendance.upsert({

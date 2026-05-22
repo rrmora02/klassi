@@ -29,6 +29,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
   );
 
   const queryClient = api.useUtils();
+  const createSessionMutation = api.attendance.createSession.useMutation();
   const markMutation = api.attendance.markAttendance.useMutation({
     onMutate: async (variables) => {
       // Optimistic update: update the UI immediately
@@ -64,11 +65,32 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
   });
 
   const handleMark = async (enrollmentId: string, status: AttendanceStatus) => {
-    if (!rosterData?.session?.id) return;
+    if (!groupId || !dateStr) return;
+
+    // If session doesn't exist, create it first
+    let sessionId = rosterData?.session?.id;
+    if (!sessionId) {
+      try {
+        const newSession = await createSessionMutation.mutateAsync({
+          groupId,
+          dateString: dateStr,
+        });
+        sessionId = newSession.id;
+        // Update roster with new session
+        queryClient.attendance.getSessionRoster.setData(
+          { groupId, dateString: dateStr },
+          (old) => old ? { ...old, session: newSession } : undefined
+        );
+      } catch (err) {
+        console.error("Error creating session:", err);
+        alert("Error al crear la sesión.");
+        return;
+      }
+    }
 
     try {
         await markMutation.mutateAsync({
-           sessionId: rosterData.session.id,
+           sessionId,
            enrollmentId,
            status,
         });
