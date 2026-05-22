@@ -29,24 +29,18 @@ export const options = {
 
 // Helper function to make tRPC calls
 function callTRPC(endpoint, input) {
+  // tRPC format: POST /api/trpc/[procedure] with input in body
   const payload = JSON.stringify(input);
   const params = {
     headers: {
       'Content-Type': 'application/json',
     },
-    timeout: '30s',
   };
 
-  // tRPC URL format: /api/trpc/[router].[procedure]
+  // URL format: /api/trpc/[procedure]
   const url = `${API_BASE}/${endpoint}`;
-  console.log(`Calling: ${url}`);
 
   const response = http.post(url, payload, params);
-
-  if (response.status !== 200) {
-    console.log(`Response status: ${response.status}`);
-    console.log(`Response body: ${response.body.substring(0, 200)}`);
-  }
 
   return response;
 }
