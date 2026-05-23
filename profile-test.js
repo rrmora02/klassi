@@ -1,7 +1,7 @@
 import http from 'k6/http';
 import { check, group } from 'k6';
 
-const API_BASE = __ENV.API_BASE || 'http://localhost:3001/api-test-simple';
+const API_BASE = __ENV.API_BASE || 'http://localhost:3000/api-test-simple';
 const TENANT_ID = __ENV.TENANT_ID || '';
 const GROUP_ID = __ENV.GROUP_ID || '';
 
