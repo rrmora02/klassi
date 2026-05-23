@@ -3,7 +3,7 @@ import { type NextRequest } from "next/server";
 import { appRouter } from "@/server/api/root";
 import { db } from "@/server/db";
 
-async function handler(req: NextRequest) {
+const handler = async (req: NextRequest) => {
   const tenantId = req.headers.get('x-tenant-id');
 
   if (!tenantId) {
@@ -24,7 +24,6 @@ async function handler(req: NextRequest) {
     );
   }
 
-  // Get a user from the tenant for context (use the tenant owner or any user)
   const tenantUser = await db.tenantUser.findFirst({
     where: { tenantId },
     include: { user: true },
@@ -45,7 +44,7 @@ async function handler(req: NextRequest) {
       headers: req.headers,
       db,
       userId: tenantUser.user.clerkId,
-      tenantId: tenantId,
+      tenantId,
       dbUser: tenantUser.user,
     }),
     onError:
@@ -53,6 +52,6 @@ async function handler(req: NextRequest) {
         ? ({ path, error }) => console.error(`tRPC error on ${path}:`, error)
         : undefined,
   });
-}
+};
 
 export { handler as GET, handler as POST };

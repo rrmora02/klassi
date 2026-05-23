@@ -11,27 +11,25 @@ echo "API_BASE: $API_BASE"
 echo "TENANT_ID: $TENANT_ID"
 echo ""
 
-# Test 1: students.list query
-echo "📝 Test 1: students.list query (GET)"
+# Test 1: students.list query (POST)
+echo "📝 Test 1: students.list"
 echo "---"
-INPUT='{"search":"","status":"ACTIVE","page":1,"pageSize":10}'
-ENCODED_INPUT=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$INPUT'))")
-curl -X GET "$API_BASE/students.list?input=$ENCODED_INPUT" \
+curl -X POST "$API_BASE/students.list" \
   -H "Content-Type: application/json" \
-  -H "x-tenant-id: $TENANT_ID" 2>&1
+  -H "x-tenant-id: $TENANT_ID" \
+  -d '{"search":"","status":"ACTIVE","page":1,"pageSize":10}' 2>&1
 
 echo ""
 echo ""
 
-# Test 2: attendance.getGroups query
-echo "📝 Test 2: attendance.getGroups query (GET)"
+# Test 2: attendance.getGroups query (POST)
+echo "📝 Test 2: attendance.getGroups"
 echo "---"
 TODAY=$(date +%Y-%m-%d)
-INPUT="{\"dateString\":\"$TODAY\"}"
-ENCODED_INPUT=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$INPUT'))")
-curl -X GET "$API_BASE/attendance.getGroups?input=$ENCODED_INPUT" \
+curl -X POST "$API_BASE/attendance.getGroups" \
   -H "Content-Type: application/json" \
-  -H "x-tenant-id: $TENANT_ID" 2>&1
+  -H "x-tenant-id: $TENANT_ID" \
+  -d "{\"dateString\":\"$TODAY\"}" 2>&1
 
 echo ""
 echo ""
