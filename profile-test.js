@@ -34,12 +34,15 @@ export default function () {
     });
     const duration = new Date() - startTime;
 
+    const bodySize = response.body ? response.body.length : 0;
+
     console.log(`⏱️  getSessionRoster took ${duration}ms`);
     console.log(`📊 Status: ${response.status}`);
-    console.log(`📦 Response size: ${response.body.length} bytes`);
+    console.log(`📦 Response size: ${bodySize} bytes`);
 
     check(response, {
       'status is 200': (r) => r.status === 200,
     });
   });
 }
+
