@@ -17,31 +17,29 @@ export const attendanceRouter = createTRPCRouter({
 
        const userRole = tenantUser?.role || "RECEPTIONIST";
 
-       // Determinar día de la semana si se proporciona fecha
-       let dayOfWeek: string | undefined;
-       if (input.dateString) {
-          const dateObj = new Date(input.dateString + "T00:00:00Z");
-          const dayMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
-          dayOfWeek = dayMap[dateObj.getUTCDay()];
-       }
-
-       // Build the filter - if dayOfWeek is provided, filter by schedule in the WHERE clause
-       const scheduleFilter = dayOfWeek
-          ? { schedule: { hasSome: [dayOfWeek] } }
-          : undefined;
-
-       // Obtener grupos con filtro en la BD (no en memoria)
+       // Obtener todos los grupos (usar índice idx_group_tenant_active para rapidez)
        const groups = await ctx.db.group.findMany({
           where: {
              tenantId: ctx.tenantId,
              isActive: true,
              ...(userRole === "INSTRUCTOR" && {
                 instructor: { userId: ctx.dbUser!.id }
-             }),
-             ...scheduleFilter
+             })
           },
           orderBy: { name: "asc" },
        });
+
+       // Si se proporciona una fecha, filtrar solo grupos con clase ese día (en memoria es OK con índices en BD)
+       if (input.dateString) {
+          const dateObj = new Date(input.dateString + "T00:00:00Z");
+          const dayMap = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+          const dayOfWeek = dayMap[dateObj.getUTCDay()];
+
+          return groups.filter(group => {
+             const schedule = Array.isArray(group.schedule) ? group.schedule : [];
+             return schedule.some((slot: any) => slot.day === dayOfWeek);
+          });
+       }
 
        return groups;
     }),
