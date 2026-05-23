@@ -2,7 +2,7 @@
 
 # Simple test script to verify /api-test endpoint works
 
-API_BASE="${API_BASE:-http://localhost:3000/api-test}"
+API_BASE="${API_BASE:-http://localhost:3000/api-test-simple}"
 TENANT_ID="${TENANT_ID:-cmou5jp0v0001zcaw4bfkigy7}"
 
 echo "🧪 Testing /api-test endpoint"

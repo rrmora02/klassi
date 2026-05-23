@@ -1,7 +1,7 @@
 @echo off
 REM Simple test script to verify /api-test endpoint works
 
-set API_BASE=http://localhost:3000/api-test
+set API_BASE=http://localhost:3000/api-test-simple
 set TENANT_ID=cmou5jp0v0001zcaw4bfkigy7
 
 echo 🧪 Testing /api-test endpoint
