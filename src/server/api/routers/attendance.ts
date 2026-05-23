@@ -25,25 +25,23 @@ export const attendanceRouter = createTRPCRouter({
           dayOfWeek = dayMap[dateObj.getUTCDay()];
        }
 
-       // Obtener todos los grupos
-       let groups = await ctx.db.group.findMany({
+       // Build the filter - if dayOfWeek is provided, filter by schedule in the WHERE clause
+       const scheduleFilter = dayOfWeek
+          ? { schedule: { hasSome: [dayOfWeek] } }
+          : undefined;
+
+       // Obtener grupos con filtro en la BD (no en memoria)
+       const groups = await ctx.db.group.findMany({
           where: {
              tenantId: ctx.tenantId,
              isActive: true,
              ...(userRole === "INSTRUCTOR" && {
                 instructor: { userId: ctx.dbUser!.id }
-             })
+             }),
+             ...scheduleFilter
           },
           orderBy: { name: "asc" },
        });
-
-       // Si se proporciona una fecha, filtrar solo grupos con clase ese día
-       if (dayOfWeek && Array.isArray(groups)) {
-          groups = groups.filter(group => {
-             const schedule = Array.isArray(group.schedule) ? group.schedule : [];
-             return schedule.some((slot: any) => slot.day === dayOfWeek);
-          });
-       }
 
        return groups;
     }),
@@ -91,28 +89,46 @@ export const attendanceRouter = createTRPCRouter({
        dateString: z.string(), // "YYYY-MM-DD" originado del input local
     }))
     .query(async ({ ctx, input }) => {
-       const group = await ctx.db.group.findFirst({
-         where: { id: input.groupId, tenantId: ctx.tenantId },
-         include: { discipline: true }
-       });
-       if (!group) throw new TRPCError({ code: "NOT_FOUND" });
-
-       // Generar Date objeto al medianoche UTC
        const dateObj = new Date(input.dateString + "T00:00:00Z");
 
-       const session = await ctx.db.classSession.findFirst({
-          where: { groupId: input.groupId, date: dateObj }
-       });
+       // Parallelizar queries 1 y 3 (group + enrollments sin attendances primero)
+       const [group, enrollmentsBase, session] = await Promise.all([
+         ctx.db.group.findFirst({
+           where: { id: input.groupId, tenantId: ctx.tenantId },
+           include: { discipline: true }
+         }),
+         ctx.db.enrollment.findMany({
+           where: { groupId: input.groupId, status: "ACTIVE" },
+           include: {
+             student: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } }
+           },
+           orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }]
+         }),
+         ctx.db.classSession.findFirst({
+           where: { groupId: input.groupId, date: dateObj }
+         })
+       ]);
 
-       // Traer a los alumnos ACTIVOS
-       const enrollments = await ctx.db.enrollment.findMany({
-          where: { groupId: input.groupId, status: "ACTIVE" },
-          include: {
-            student: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-            ...(session && { attendances: { where: { sessionId: session.id } } })
-          },
-          orderBy: [{ student: { lastName: "asc" } }, { student: { firstName: "asc" } }]
-       });
+       if (!group) throw new TRPCError({ code: "NOT_FOUND" });
+
+       // Si hay session, obtener attendances para los enrollments
+       let enrollments = enrollmentsBase;
+       if (session) {
+         const attendancesMap = await ctx.db.attendance.findMany({
+           where: {
+             sessionId: session.id,
+             enrollmentId: { in: enrollmentsBase.map(e => e.id) }
+           },
+           select: { enrollmentId: true, status: true, createdAt: true }
+         }).then(attendances =>
+           Object.fromEntries(attendances.map(a => [a.enrollmentId, a]))
+         );
+
+         enrollments = enrollmentsBase.map(e => ({
+           ...e,
+           attendance: attendancesMap[e.id] || null
+         }));
+       }
 
        // Detectar si es Karate (case-insensitive)
        const isKarate = group.discipline?.name.toLowerCase().includes("karate") ?? false;
@@ -124,7 +140,7 @@ export const attendanceRouter = createTRPCRouter({
          enrollments: enrollments.map(e => ({
             enrollmentId: e.id,
             student: e.student,
-            attendance: session ? (e.attendances[0] || null) : null
+            attendance: (e as any).attendance || null
          }))
        };
     }),
