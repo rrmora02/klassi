@@ -43,16 +43,10 @@ function callTRPC(endpoint, input, method = 'POST') {
   let response;
 
   if (method === 'GET') {
-    // For queries: pass input as URL-encoded query params
-    const queryParts = [];
-    for (const [key, value] of Object.entries(input)) {
-      const encodedKey = encodeURIComponent(key);
-      // For GET requests, pass the actual value (not stringified)
-      const encodedValue = encodeURIComponent(String(value));
-      queryParts.push(`${encodedKey}=${encodedValue}`);
-    }
-    const queryStr = queryParts.join('&');
-    response = http.get(`${url}?${queryStr}`, params);
+    // For queries: pass input as JSON-encoded query parameter
+    const inputJSON = JSON.stringify(input);
+    const encodedInput = encodeURIComponent(inputJSON);
+    response = http.get(`${url}?input=${encodedInput}`, params);
   } else {
     // For mutations: pass input in body
     const payload = JSON.stringify(input);
