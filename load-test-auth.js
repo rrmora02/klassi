@@ -2,14 +2,9 @@ import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 
 // Configuration
-const API_BASE = __ENV.API_BASE || 'http://localhost:3000/api/trpc';
-const CLERK_API_KEY = __ENV.CLERK_API_KEY || '';
-const TEST_EMAIL = __ENV.TEST_EMAIL || 'test@example.com';
-const TEST_PASSWORD = __ENV.TEST_PASSWORD || 'password123';
+const API_BASE = __ENV.API_BASE || 'http://localhost:3000/api/test-trpc';
 const TENANT_ID = __ENV.TENANT_ID || '';
 const GROUP_ID = __ENV.GROUP_ID || '';
-
-let authToken = '';
 
 export const options = {
   stages: [
@@ -33,50 +28,21 @@ export const options = {
   }
 };
 
-// Setup: Authenticate once before test
-export function setup() {
-  console.log('🔐 Authenticating with Clerk...');
 
-  // Try to get auth token from Clerk
-  const authRes = http.post('http://localhost:3000/api/auth/callback/credentials', {
-    email: TEST_EMAIL,
-    password: TEST_PASSWORD,
-  });
-
-  if (authRes.status !== 200) {
-    console.warn('⚠️ Direct auth failed, will try Clerk session...');
-  }
-
-  // Get session cookie
-  const cookieJar = http.cookieJar();
-  cookieJar.set('localhost:3000', '__session', 'test_session', { path: '/' });
-
-  return { authenticated: true };
-}
-
-// Helper function to make authenticated tRPC calls
+// Helper function to make tRPC calls via test endpoint
 function callTRPC(endpoint, input) {
-  const payload = JSON.stringify(input);
-
-  // Get session cookie from environment
-  const sessionCookie = __ENV.SESSION_COOKIE || '';
+  const payload = JSON.stringify({ ...input, tenantId: TENANT_ID });
 
   const params = {
     headers: {
       'Content-Type': 'application/json',
-      ...(sessionCookie && { 'Cookie': `__session=${sessionCookie}` })
+      'x-tenant-id': TENANT_ID,
     },
     tags: { name: endpoint }
   };
 
   const url = `${API_BASE}/${endpoint}`;
-  console.log(`Calling: ${url}`);
-  if (sessionCookie) {
-    console.log(`With Cookie: __session=${sessionCookie.substring(0, 50)}...`);
-  }
-
   const response = http.post(url, payload, params);
-  console.log(`Response status: ${response.status}`);
 
   return response;
 }
