@@ -5,13 +5,12 @@ import { db } from "@/server/db";
 
 // Test endpoint - allows k6 load testing without Clerk auth
 export async function POST(req: NextRequest) {
-  // Get TENANT_ID from headers or body for testing
-  const tenantId = req.headers.get('x-tenant-id') ||
-                   (await req.json().catch(() => ({})))?.tenantId;
+  // Get TENANT_ID from headers
+  const tenantId = req.headers.get('x-tenant-id');
 
   if (!tenantId) {
     return NextResponse.json(
-      { error: 'TENANT_ID required in header or body' },
+      { error: 'TENANT_ID required in x-tenant-id header' },
       { status: 400 }
     );
   }
@@ -40,9 +39,9 @@ export async function POST(req: NextRequest) {
       headers: req.headers,
       session: {
         user: {
-          id: 'test-user',
-          email: 'test@example.com',
-          name: 'Test User',
+          id: 'test-user-k6',
+          email: 'k6@test.example.com',
+          name: 'k6 Test User',
         },
       },
       // Add tenantId for queries that need it
