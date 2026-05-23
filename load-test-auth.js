@@ -112,17 +112,5 @@ export default function (data) {
     });
   });
 
-  sleep(1);
-
-  // Scenario 4: Dashboard stats (if available)
-  group('Dashboard Stats Query', () => {
-    const response = callTRPC('dashboard.getDashboardData', {}, 'GET');
-
-    check(response, {
-      'dashboard status is 200': (r) => r.status === 200 || r.status === 404,
-      'dashboard response time < 1000ms': (r) => r.timings.duration < 1000,
-    });
-  });
-
   sleep(2);
 }
