@@ -3,7 +3,7 @@ import { type NextRequest } from "next/server";
 import { appRouter } from "@/server/api/root";
 import { db } from "@/server/db";
 
-export async function POST(req: NextRequest) {
+async function handler(req: NextRequest) {
   const tenantId = req.headers.get('x-tenant-id');
 
   if (!tenantId) {
@@ -44,3 +44,5 @@ export async function POST(req: NextRequest) {
         : undefined,
   });
 }
+
+export { handler as GET, handler as POST };
