@@ -29,10 +29,8 @@ export const options = {
 };
 
 
-// Helper function to make tRPC calls via test endpoint
-function callTRPC(endpoint, input) {
-  const payload = JSON.stringify({ ...input, tenantId: TENANT_ID });
-
+// Helper function to make tRPC calls - handles both queries and mutations
+function callTRPC(endpoint, input, method = 'POST') {
   const params = {
     headers: {
       'Content-Type': 'application/json',
@@ -42,7 +40,19 @@ function callTRPC(endpoint, input) {
   };
 
   const url = `${API_BASE}/${endpoint}`;
-  const response = http.post(url, payload, params);
+  let response;
+
+  if (method === 'GET') {
+    // For queries: pass input as query params
+    const queryStr = new URLSearchParams(
+      Object.entries(input).map(([k, v]) => [k, JSON.stringify(v)])
+    ).toString();
+    response = http.get(`${url}?${queryStr}`, params);
+  } else {
+    // For mutations: pass input in body
+    const payload = JSON.stringify(input);
+    response = http.post(url, payload, params);
+  }
 
   return response;
 }
@@ -55,7 +65,7 @@ export default function (data) {
       status: 'ACTIVE',
       page: 1,
       pageSize: 10,
-    });
+    }, 'GET');
 
     check(response, {
       'students.list status is 200': (r) => r.status === 200,
@@ -73,7 +83,7 @@ export default function (data) {
       const response = callTRPC('attendance.getSessionRoster', {
         groupId: GROUP_ID,
         dateString: today,
-      });
+      }, 'GET');
 
       check(response, {
         'getSessionRoster status is 200': (r) => r.status === 200,
@@ -90,7 +100,7 @@ export default function (data) {
     const today = new Date().toISOString().split('T')[0];
     const response = callTRPC('attendance.getGroups', {
       dateString: today,
-    });
+    }, 'GET');
 
     check(response, {
       'getGroups status is 200': (r) => r.status === 200,
@@ -102,7 +112,7 @@ export default function (data) {
 
   // Scenario 4: Dashboard stats (if available)
   group('Dashboard Stats Query', () => {
-    const response = callTRPC('dashboard.getDashboardData', {});
+    const response = callTRPC('dashboard.getDashboardData', {}, 'GET');
 
     check(response, {
       'dashboard status is 200': (r) => r.status === 200 || r.status === 404,
