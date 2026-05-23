@@ -24,19 +24,29 @@ async function handler(req: NextRequest) {
     );
   }
 
+  // Get a user from the tenant for context (use the tenant owner or any user)
+  const tenantUser = await db.tenantUser.findFirst({
+    where: { tenantId },
+    include: { user: true },
+  });
+
+  if (!tenantUser) {
+    return Response.json(
+      { error: 'No users found in tenant' },
+      { status: 403 }
+    );
+  }
+
   return fetchRequestHandler({
     endpoint: "/api-test",
     req,
     router: appRouter,
     createContext: async () => ({
       headers: req.headers,
-      session: {
-        user: {
-          id: 'load-test-user',
-          email: 'load-test@example.com',
-          name: 'Load Test User',
-        },
-      },
+      db,
+      userId: tenantUser.user.clerkId,
+      tenantId: tenantId,
+      dbUser: tenantUser.user,
     }),
     onError:
       process.env.NODE_ENV === "development"
