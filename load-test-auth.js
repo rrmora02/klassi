@@ -2,7 +2,7 @@ import http from 'k6/http';
 import { check, group, sleep } from 'k6';
 
 // Configuration
-const API_BASE = __ENV.API_BASE || 'http://localhost:3000/load-test-trpc';
+const API_BASE = __ENV.API_BASE || 'http://localhost:3000/api-test';
 const TENANT_ID = __ENV.TENANT_ID || '';
 const GROUP_ID = __ENV.GROUP_ID || '';
 
