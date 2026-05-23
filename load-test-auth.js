@@ -55,20 +55,29 @@ export function setup() {
 }
 
 // Helper function to make authenticated tRPC calls
-function callTRPC(endpoint, input, sessionToken = '') {
+function callTRPC(endpoint, input) {
   const payload = JSON.stringify(input);
+
+  // Get session cookie from environment
+  const sessionCookie = __ENV.SESSION_COOKIE || '';
+
   const params = {
     headers: {
       'Content-Type': 'application/json',
-      ...(sessionToken && { 'Authorization': `Bearer ${sessionToken}` })
+      ...(sessionCookie && { 'Cookie': `__session=${sessionCookie}` })
     },
-    cookies: {
-      '__session': sessionToken || 'test_session'
-    },
+    tags: { name: endpoint }
   };
 
   const url = `${API_BASE}/${endpoint}`;
+  console.log(`Calling: ${url}`);
+  if (sessionCookie) {
+    console.log(`With Cookie: __session=${sessionCookie.substring(0, 50)}...`);
+  }
+
   const response = http.post(url, payload, params);
+  console.log(`Response status: ${response.status}`);
+
   return response;
 }
 
