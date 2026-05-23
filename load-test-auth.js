@@ -47,7 +47,8 @@ function callTRPC(endpoint, input, method = 'POST') {
     const queryParts = [];
     for (const [key, value] of Object.entries(input)) {
       const encodedKey = encodeURIComponent(key);
-      const encodedValue = encodeURIComponent(JSON.stringify(value));
+      // For GET requests, pass the actual value (not stringified)
+      const encodedValue = encodeURIComponent(String(value));
       queryParts.push(`${encodedKey}=${encodedValue}`);
     }
     const queryStr = queryParts.join('&');
