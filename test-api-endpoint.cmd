@@ -11,25 +11,30 @@ echo TENANT_ID: %TENANT_ID%
 echo.
 
 REM Test 1: students.list query
-echo 📝 Test 1: students.list query (POST)
+echo 📝 Test 1: students.list query (GET)
 echo ---
-curl -X POST "%API_BASE%/students.list" ^
+set INPUT={"search":"","status":"ACTIVE","page":1,"pageSize":10}
+REM URL encode the input (basic encoding for common chars)
+setlocal enabledelayedexpansion
+set "INPUT=!INPUT:"=\"!"
+curl -X GET "%API_BASE%/students.list?input=%s:=!INPUT!%" ^
   -H "Content-Type: application/json" ^
-  -H "x-tenant-id: %TENANT_ID%" ^
-  -d "{\"search\": \"\", \"status\": \"ACTIVE\", \"page\": 1, \"pageSize\": 10}"
+  -H "x-tenant-id: %TENANT_ID%"
 
 echo.
 echo.
 
 REM Test 2: attendance.getGroups query
-echo 📝 Test 2: attendance.getGroups query (POST)
+echo 📝 Test 2: attendance.getGroups query (GET)
 echo ---
 for /f "tokens=1-3 delims=/ " %%a in ('date /t') do (set TODAY=%%c-%%a-%%b)
-
-curl -X POST "%API_BASE%/attendance.getGroups" ^
+set INPUT={"dateString":"%TODAY%"}
+REM URL encode the input
+setlocal enabledelayedexpansion
+set "INPUT=!INPUT:"=\"!"
+curl -X GET "%API_BASE%/attendance.getGroups?input=%s:=!INPUT!%" ^
   -H "Content-Type: application/json" ^
-  -H "x-tenant-id: %TENANT_ID%" ^
-  -d "{\"dateString\": \"%TODAY%\"}"
+  -H "x-tenant-id: %TENANT_ID%"
 
 echo.
 echo.

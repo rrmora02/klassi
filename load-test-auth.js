@@ -29,8 +29,8 @@ export const options = {
 };
 
 
-// Helper function to make tRPC calls - uses POST for both queries and mutations
-function callTRPC(endpoint, input) {
+// Helper function to make tRPC calls - handles queries (GET) and mutations (POST)
+function callTRPC(endpoint, input, isQuery = true) {
   const params = {
     headers: {
       'Content-Type': 'application/json',
@@ -40,8 +40,18 @@ function callTRPC(endpoint, input) {
   };
 
   const url = `${API_BASE}/${endpoint}`;
-  const payload = JSON.stringify(input);
-  const response = http.post(url, payload, params);
+  let response;
+
+  if (isQuery) {
+    // For queries: pass input as JSON-encoded query parameter
+    const inputJSON = JSON.stringify(input);
+    const encodedInput = encodeURIComponent(inputJSON);
+    response = http.get(`${url}?input=${encodedInput}`, params);
+  } else {
+    // For mutations: pass input in body as JSON
+    const payload = JSON.stringify(input);
+    response = http.post(url, payload, params);
+  }
 
   return response;
 }
@@ -54,7 +64,7 @@ export default function (data) {
       status: 'ACTIVE',
       page: 1,
       pageSize: 10,
-    });
+    }, true);
 
     check(response, {
       'students.list status is 200': (r) => r.status === 200,
@@ -72,7 +82,7 @@ export default function (data) {
       const response = callTRPC('attendance.getSessionRoster', {
         groupId: GROUP_ID,
         dateString: today,
-      });
+      }, true);
 
       check(response, {
         'getSessionRoster status is 200': (r) => r.status === 200,
@@ -89,7 +99,7 @@ export default function (data) {
     const today = new Date().toISOString().split('T')[0];
     const response = callTRPC('attendance.getGroups', {
       dateString: today,
-    });
+    }, true);
 
     check(response, {
       'getGroups status is 200': (r) => r.status === 200,
