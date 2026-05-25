@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@clerk/localizations": "^4.5.5",
-    "@clerk/nextjs": "^5.0.0",
+    "@clerk/nextjs": "^5.7.6",
     "@hookform/resolvers": "^3.3.0",
     "@prisma/client": "^5.7.0",
     "@sentry/nextjs": "^10.53.1",
