@@ -672,32 +672,19 @@ export const eventsRouter = createTRPCRouter({
           return { created: 0, message: "No hay alumnos nuevos sin pago" };
         }
 
-        // Create missing payments using idempotence check
-        let createdCount = 0;
-        for (const studentId of missingStudentIds) {
-          // Check if payment already exists
-          const existingPayment = await tx.eventPayment.findFirst({
-            where: {
-              eventId: input.eventId,
-              studentId,
-            },
-          });
+        // missingStudentIds already excludes existing payments — batch create
+        const { count } = await tx.eventPayment.createMany({
+          data: missingStudentIds.map((studentId) => ({
+            eventId: input.eventId,
+            studentId,
+            amount: event.amount,
+            status: "PENDING" as const,
+            dueDate: event.paymentDueDate || event.date,
+          })),
+          skipDuplicates: true,
+        });
 
-          if (!existingPayment) {
-            await tx.eventPayment.create({
-              data: {
-                eventId: input.eventId,
-                studentId,
-                amount: event.amount,
-                status: "PENDING",
-                dueDate: event.paymentDueDate || event.date,
-              },
-            });
-            createdCount++;
-          }
-        }
-
-        return { created: createdCount, message: `Se crearon ${createdCount} pago(s) para nuevo(s) alumno(s)` };
+        return { created: count, message: `Se crearon ${count} pago(s) para nuevo(s) alumno(s)` };
       });
     }),
 

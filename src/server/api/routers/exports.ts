@@ -67,7 +67,7 @@ export const exportsRouter = createTRPCRouter({
         where: { tenantId },
         include: {
           enrollments: {
-            include: { group: true }
+            include: { group: { select: { name: true } } }
           }
         },
         orderBy: { firstName: "asc" }
@@ -101,8 +101,8 @@ export const exportsRouter = createTRPCRouter({
       const instructors = await db.instructor.findMany({
         where: { tenantId },
         include: {
-          user: true,
-          groups: true
+          user: { select: { name: true, email: true } },
+          groups: { select: { name: true } }
         },
         orderBy: { user: { name: "asc" } }
       });
@@ -135,10 +135,10 @@ export const exportsRouter = createTRPCRouter({
         where: { tenantId },
         include: {
           instructor: {
-            include: { user: true }
+            include: { user: { select: { name: true } } }
           },
-          discipline: true,
-          enrollments: true
+          discipline: { select: { name: true } },
+          _count: { select: { enrollments: true } }
         },
         orderBy: { name: "asc" }
       });
@@ -147,7 +147,7 @@ export const exportsRouter = createTRPCRouter({
         "Nombre": g.name,
         "Instructor": g.instructor?.user.name || "Sin asignar",
         "Disciplina": g.discipline?.name || "",
-        "Cantidad Alumnos": g.enrollments.length,
+        "Cantidad Alumnos": g._count.enrollments,
         "Nivel": g.level || "",
         "Estado": g.isActive ? "Activo" : "Inactivo",
         "Fecha Creación": g.createdAt.toISOString().split("T")[0],
@@ -182,7 +182,7 @@ export const exportsRouter = createTRPCRouter({
           }
         },
         include: {
-          student: true
+          student: { select: { firstName: true, lastName: true } }
         },
         orderBy: { createdAt: "desc" }
       });
@@ -229,9 +229,11 @@ export const exportsRouter = createTRPCRouter({
         },
         include: {
           enrollment: {
-            include: { student: true, group: true }
+            include: {
+              student: { select: { firstName: true, lastName: true } },
+              group: { select: { name: true } }
+            }
           },
-          session: true
         },
         orderBy: { createdAt: "desc" }
       });

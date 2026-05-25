@@ -137,14 +137,15 @@ export const enrollmentsRouter = createTRPCRouter({
        newGroupId: z.string().cuid(),
     }))
     .mutation(async ({ ctx, input }) => {
-       // Validate ownership
-       const prevEnrollment = await ctx.db.enrollment.findFirst({
-         where: { id: input.currentEnrollmentId, studentId: input.studentId, group: { tenantId: ctx.tenantId } }
-       });
-
-       const newGroup = await ctx.db.group.findFirst({
-         where: { id: input.newGroupId, tenantId: ctx.tenantId }
-       });
+       // Validate ownership — both queries are independent, run in parallel
+       const [prevEnrollment, newGroup] = await Promise.all([
+         ctx.db.enrollment.findFirst({
+           where: { id: input.currentEnrollmentId, studentId: input.studentId, group: { tenantId: ctx.tenantId } }
+         }),
+         ctx.db.group.findFirst({
+           where: { id: input.newGroupId, tenantId: ctx.tenantId }
+         }),
+       ]);
 
        if (!prevEnrollment || !newGroup) throw new TRPCError({ code: "NOT_FOUND" });
 
