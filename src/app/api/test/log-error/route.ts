@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 
 export async function POST() {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
   console.log("🧪 [TEST-ERROR] Capturando error de prueba para Sentry...");
 
   const error = new Error(

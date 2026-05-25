@@ -3,6 +3,9 @@ import { db } from "@/server/db";
 import { generateEventInvitationPDFBuffer } from "@/server/services/event-pdf-lib.service";
 import { NextRequest, NextResponse } from "next/server";
 
+// CUID v1 pattern — validates the eventId before touching the DB
+const CUID_RE = /^c[a-z0-9]{24}$/i;
+
 interface RouteParams {
   params: { eventId: string };
 }
@@ -11,33 +14,42 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { userId } = await auth();
     if (!userId) {
-      console.error("No userId found in auth");
       return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Validate route param before using it in a DB query
+    if (!CUID_RE.test(params.eventId)) {
+      return new NextResponse("Bad Request", { status: 400 });
     }
 
     const user = await db.user.findUnique({
       where: { clerkId: userId },
-      include: { activeTenant: true },
+      select: { id: true, activeTenantId: true },
     });
 
-    const tenant = user?.activeTenant;
-    if (!tenant) {
-      console.error("No tenant found for user:", userId);
+    const tenantId = user?.activeTenantId;
+    if (!tenantId) {
       return new NextResponse("No tenant found", { status: 404 });
     }
 
-    // Obtener evento
+    // Only ADMIN users can generate PDFs
+    const membership = await db.tenantUser.findFirst({
+      where: { userId: user!.id, tenantId },
+      select: { role: true },
+    });
+    if (!membership || membership.role !== "ADMIN") {
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
     const event = await db.event.findFirst({
-      where: { id: params.eventId, tenantId: tenant.id },
+      where: { id: params.eventId, tenantId },
       include: { groups: { select: { id: true, name: true } } },
     });
 
     if (!event) {
-      console.error("Event not found:", params.eventId);
       return new NextResponse("Event not found", { status: 404 });
     }
 
-    // Generar PDF
     let pdfBuffer: Buffer;
     try {
       pdfBuffer = await generateEventInvitationPDFBuffer({
@@ -48,31 +60,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           ? ["Toda la escuela"]
           : event.groups.map((g) => g.name),
         amount: event.amount,
-        dueDate: new Date(), // TODO: guardar dueDate en modelo Event
+        dueDate: new Date(),
       });
     } catch (pdfError) {
-      console.error("PDF generation error:", pdfError);
-      return new NextResponse(
-        `PDF Error: ${pdfError instanceof Error ? pdfError.message : String(pdfError)}`,
-        { status: 500 }
-      );
+      console.error("[pdf] generation error:", pdfError);
+      return new NextResponse("Error generating PDF", { status: 500 });
     }
 
     if (!pdfBuffer || pdfBuffer.length === 0) {
-      console.error("Generated PDF buffer is empty");
-      return new NextResponse("Generated PDF is empty", { status: 500 });
+      console.error("[pdf] buffer vacío para evento:", params.eventId);
+      return new NextResponse("Error generating PDF", { status: 500 });
     }
 
+    const safeName = event.name.replace(/[^a-z0-9\-_. ]/gi, "_");
     return new NextResponse(new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" }), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${event.name}.pdf"`,
+        "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
         "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });
   } catch (error) {
-    console.error("Error in PDF route:", error);
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return new NextResponse(`Server Error: ${errorMessage}`, { status: 500 });
+    console.error("[pdf] unexpected error:", error);
+    return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
