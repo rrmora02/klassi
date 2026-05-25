@@ -3,10 +3,12 @@ import { type NextRequest } from "next/server";
 import { appRouter } from "@/server/api/root";
 import { db } from "@/server/db";
 
-// Test endpoint - allows k6 load testing without Clerk auth
-// Handles: POST /api/test-trpc/students.list, /api/test-trpc/attendance.getGroups, etc.
+// Only available outside production — used for k6 load testing
 export async function POST(req: NextRequest) {
-  // Get TENANT_ID from x-tenant-id header
+  if (process.env.NODE_ENV === "production") {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
   const tenantId = req.headers.get('x-tenant-id');
 
   if (!tenantId) {
@@ -16,7 +18,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Verify tenant exists
   const tenant = await db.tenant.findUnique({
     where: { id: tenantId }
   });
@@ -28,7 +29,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Call tRPC with mock context (no Clerk auth required for testing)
   return fetchRequestHandler({
     endpoint: "/api/test-trpc",
     req,
@@ -43,9 +43,6 @@ export async function POST(req: NextRequest) {
         },
       },
     }),
-    onError:
-      process.env.NODE_ENV === "development"
-        ? ({ path, error }) => console.error(`tRPC error on ${path}:`, error)
-        : undefined,
+    onError: ({ path, error }) => console.error(`tRPC error on ${path}:`, error),
   });
 }

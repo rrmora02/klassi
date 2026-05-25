@@ -23,7 +23,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const format = request.nextUrl.searchParams.get("format") || "json";
+  const rawFormat = request.nextUrl.searchParams.get("format");
+  const format = rawFormat === "html" ? "html" : "json";
 
   if (format === "html") {
     return new NextResponse(getMetricsHTML(), {
