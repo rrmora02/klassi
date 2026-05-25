@@ -4,6 +4,33 @@ import { db } from "@/server/db";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
+// Authoritative mapping: Stripe price IDs → internal plan names (set via env vars)
+const PRICE_PLAN_MAP: Record<string, "STARTER" | "PRO" | "ENTERPRISE"> = {
+  ...(process.env.STRIPE_PRICE_STARTER   ? { [process.env.STRIPE_PRICE_STARTER]:   "STARTER"    } : {}),
+  ...(process.env.STRIPE_PRICE_PRO       ? { [process.env.STRIPE_PRICE_PRO]:       "PRO"        } : {}),
+  ...(process.env.STRIPE_PRICE_ENTERPRISE? { [process.env.STRIPE_PRICE_ENTERPRISE]: "ENTERPRISE" } : {}),
+};
+
+async function resolvePlanFromSubscription(
+  subscriptionId: string,
+  metadataPlan: string | undefined
+): Promise<"STARTER" | "PRO" | "ENTERPRISE" | null> {
+  const validPlans = new Set(["STARTER", "PRO", "ENTERPRISE"]);
+  try {
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const priceId = subscription.items.data[0]?.price.id ?? "";
+    if (PRICE_PLAN_MAP[priceId]) return PRICE_PLAN_MAP[priceId];
+  } catch (err) {
+    console.error("[stripe-webhook] Could not retrieve subscription for plan resolution:", err);
+  }
+  // Fall back to metadata only if value is a known plan
+  if (metadataPlan && validPlans.has(metadataPlan)) {
+    console.warn("[stripe-webhook] Falling back to metadata plan — configure STRIPE_PRICE_* env vars to avoid this.");
+    return metadataPlan as "STARTER" | "PRO" | "ENTERPRISE";
+  }
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig  = req.headers.get("stripe-signature")!;
@@ -19,11 +46,18 @@ export async function POST(req: NextRequest) {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const tenantId = session.metadata?.tenantId;
-      const plan     = session.metadata?.plan as "STARTER" | "PRO" | "ENTERPRISE";
-      if (tenantId && plan) {
+      if (tenantId && session.subscription) {
+        const plan = await resolvePlanFromSubscription(
+          session.subscription as string,
+          session.metadata?.plan
+        );
+        if (!plan) {
+          console.error("[stripe-webhook] Could not resolve plan for tenant", tenantId);
+          break;
+        }
         await db.tenant.update({
           where: { id: tenantId },
-          data:  {
+          data: {
             stripeCustomerId: session.customer as string,
             stripeSubId:      session.subscription as string,
             plan,

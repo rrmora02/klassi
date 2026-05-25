@@ -3,6 +3,7 @@ import { createTRPCRouter, tenantProcedure, publicProcedure } from "@/server/api
 import { TRPCError } from "@trpc/server";
 import { type Prisma } from "@prisma/client";
 import { loggingService } from "@/server/logging/loggingService";
+import { validateAttendanceToken } from "@/server/utils/attendanceToken";
 
 // ─── Validación ───────────────────────────────────────────────────
 
@@ -471,9 +472,9 @@ export const eventsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const db = ctx.db;
 
-      // TODO: Validar token (implementar después)
-      // const isValid = await validateToken(input.token, input.eventPaymentId);
-      // if (!isValid) throw new TRPCError({ code: "FORBIDDEN", message: "Token inválido" });
+      if (!validateAttendanceToken(input.token, input.eventPaymentId)) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Token inválido o expirado" });
+      }
 
       const payment = await db.eventPayment.findUnique({
         where: { id: input.eventPaymentId },

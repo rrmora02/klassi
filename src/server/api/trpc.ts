@@ -50,6 +50,21 @@ const t = initTRPC.context<TRPCContext>().create({
   },
 });
 
+// ─── Helpers ─────────────────────────────────────────────────────
+
+const SENSITIVE_KEYS = new Set(["password", "token", "secret", "cardNumber", "cvv", "pin", "authorization"]);
+
+function sanitizeForLogging(input: unknown): unknown {
+  if (!input || typeof input !== "object") return input;
+  if (Array.isArray(input)) return input.map(sanitizeForLogging);
+  return Object.fromEntries(
+    Object.entries(input as Record<string, unknown>).map(([k, v]) => [
+      k,
+      SENSITIVE_KEYS.has(k.toLowerCase()) ? "[REDACTED]" : sanitizeForLogging(v),
+    ])
+  );
+}
+
 // ─── Middlewares ─────────────────────────────────────────────────
 
 const errorHandler = t.middleware(async ({ next, ctx, path, type, rawInput }) => {
@@ -83,7 +98,7 @@ const errorHandler = t.middleware(async ({ next, ctx, path, type, rawInput }) =>
             trpc: {
               path,
               type,
-              rawInput: rawInput ? JSON.stringify(rawInput).substring(0, 1000) : undefined,
+              rawInput: rawInput ? JSON.stringify(sanitizeForLogging(rawInput)).substring(0, 1000) : undefined,
             },
             user: {
               id: ctx.userId,

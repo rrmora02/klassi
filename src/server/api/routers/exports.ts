@@ -1,4 +1,5 @@
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { TRPCError } from "@trpc/server";
 import { db } from "@/server/db";
 import { z } from "zod";
 
@@ -52,16 +53,15 @@ function convertToCSV(data: any[]): string {
 
 export const exportsRouter = createTRPCRouter({
 
-  exportStudents: protectedProcedure
+  exportStudents: tenantProcedure
     .input(z.object({ month: z.number(), year: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
-      const tenantId = ctx.dbUser.activeTenantId;
+      const { tenantId } = ctx;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.dbUser.id }
+        where: { tenantId, userId: ctx.dbUser!.id }
       });
-      if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
+      if (tenantUser?.role !== "ADMIN") throw new TRPCError({ code: "FORBIDDEN", message: "Solo administradores pueden exportar datos." });
 
       const students = await db.student.findMany({
         where: { tenantId },
@@ -88,15 +88,14 @@ export const exportsRouter = createTRPCRouter({
       };
     }),
 
-  exportInstructors: protectedProcedure
+  exportInstructors: tenantProcedure
     .mutation(async ({ ctx }) => {
-      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
-      const tenantId = ctx.dbUser.activeTenantId;
+      const { tenantId } = ctx;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.dbUser.id }
+        where: { tenantId, userId: ctx.dbUser!.id }
       });
-      if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
+      if (tenantUser?.role !== "ADMIN") throw new TRPCError({ code: "FORBIDDEN", message: "Solo administradores pueden exportar datos." });
 
       const instructors = await db.instructor.findMany({
         where: { tenantId },
@@ -121,15 +120,14 @@ export const exportsRouter = createTRPCRouter({
       };
     }),
 
-  exportGroups: protectedProcedure
+  exportGroups: tenantProcedure
     .mutation(async ({ ctx }) => {
-      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
-      const tenantId = ctx.dbUser.activeTenantId;
+      const { tenantId } = ctx;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.dbUser.id }
+        where: { tenantId, userId: ctx.dbUser!.id }
       });
-      if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
+      if (tenantUser?.role !== "ADMIN") throw new TRPCError({ code: "FORBIDDEN", message: "Solo administradores pueden exportar datos." });
 
       const groups = await db.group.findMany({
         where: { tenantId },
@@ -159,16 +157,15 @@ export const exportsRouter = createTRPCRouter({
       };
     }),
 
-  exportPayments: protectedProcedure
+  exportPayments: tenantProcedure
     .input(z.object({ month: z.number(), year: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
-      const tenantId = ctx.dbUser.activeTenantId;
+      const { tenantId } = ctx;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.dbUser.id }
+        where: { tenantId, userId: ctx.dbUser!.id }
       });
-      if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
+      if (tenantUser?.role !== "ADMIN") throw new TRPCError({ code: "FORBIDDEN", message: "Solo administradores pueden exportar datos." });
 
       const startDate = new Date(input.year, input.month - 1, 1);
       const endDate = new Date(input.year, input.month, 0);
@@ -203,16 +200,15 @@ export const exportsRouter = createTRPCRouter({
       };
     }),
 
-  exportAttendance: protectedProcedure
+  exportAttendance: tenantProcedure
     .input(z.object({ month: z.number(), year: z.number() }))
     .mutation(async ({ ctx, input }) => {
-      if (!ctx.dbUser?.activeTenantId) throw new Error("No tenant");
-      const tenantId = ctx.dbUser.activeTenantId;
+      const { tenantId } = ctx;
 
       const tenantUser = await db.tenantUser.findFirst({
-        where: { tenantId, userId: ctx.dbUser.id }
+        where: { tenantId, userId: ctx.dbUser!.id }
       });
-      if (tenantUser?.role !== "ADMIN") throw new Error("No permiso");
+      if (tenantUser?.role !== "ADMIN") throw new TRPCError({ code: "FORBIDDEN", message: "Solo administradores pueden exportar datos." });
 
       const startDate = new Date(input.year, input.month - 1, 1);
       const endDate = new Date(input.year, input.month, 0);
