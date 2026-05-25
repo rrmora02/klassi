@@ -14,7 +14,7 @@ export const instructorsRouter = createTRPCRouter({
   // ── Listar Instructores (Paginación + Buscador) ─────────────────
   list: tenantProcedure
     .input(z.object({
-      search:   z.string().optional(),
+      search:   z.string().max(100).optional(),
       isActive: z.boolean().optional(),
       page:     z.number().int().min(1).default(1),
       pageSize: z.number().int().min(1).max(100).default(20),

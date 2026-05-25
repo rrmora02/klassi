@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { escapeHtml } from "@/server/utils/escapeHtml";
 
 let resend: Resend | null = null;
 
@@ -16,7 +17,6 @@ const APP    = process.env.NEXT_PUBLIC_APP_URL ?? "https://klassi.io";
 
 async function send(opts: { to: string | string[]; subject: string; html: string }) {
   if (!resend) {
-    // Development mode - log email instead of sending
     console.log(`[EMAIL-DEV] To: ${Array.isArray(opts.to) ? opts.to.join(", ") : opts.to}`);
     console.log(`[EMAIL-DEV] Subject: ${opts.subject}`);
     console.log(`[EMAIL-DEV] Body: ${opts.html.substring(0, 200)}...`);
@@ -27,26 +27,28 @@ async function send(opts: { to: string | string[]; subject: string; html: string
 }
 
 export async function sendWelcomeEmail(to: string, schoolName: string) {
+  const name = escapeHtml(schoolName);
   return send({
     to,
     subject: `Bienvenido a Klassi, ${schoolName}`,
     html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
       <h2 style="color:#1D3557;">Bienvenido a Klassi</h2>
-      <p>Tu escuela <strong>${schoolName}</strong> está lista. Tienes <strong>14 días de prueba gratuita</strong>.</p>
+      <p>Tu escuela <strong>${name}</strong> está lista. Tienes <strong>14 días de prueba gratuita</strong>.</p>
       <a href="${APP}/dashboard" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Ir al dashboard</a>
     </div>`,
   });
 }
 
 export async function sendTrialExpiredEmail(to: string, schoolName: string, expired: boolean) {
+  const name    = escapeHtml(schoolName);
   const subject = expired ? "Tu período de prueba en Klassi ha terminado" : "Tu período de prueba termina mañana";
   const body    = expired
-    ? `El trial de <strong>${schoolName}</strong> ha terminado. Tu acceso está suspendido.`
-    : `El trial de <strong>${schoolName}</strong> termina mañana.`;
+    ? `El trial de <strong>${name}</strong> ha terminado. Tu acceso está suspendido.`
+    : `El trial de <strong>${name}</strong> termina mañana.`;
   return send({
     to, subject,
     html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
-      <h2 style="color:#1D3557;">${subject}</h2>
+      <h2 style="color:#1D3557;">${escapeHtml(subject)}</h2>
       <p>${body}</p>
       <a href="${APP}/precios" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Ver planes</a>
     </div>`,
@@ -61,8 +63,8 @@ export async function sendPaymentReminder(opts: {
     subject: `Recordatorio de pago — ${opts.schoolName}`,
     html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
       <h2 style="color:#1D3557;">Recordatorio de pago</h2>
-      <p>Pago pendiente en <strong>${opts.schoolName}</strong> para <strong>${opts.studentName}</strong>.</p>
-      <p><strong>${opts.concept}</strong> · ${opts.amount} · vence ${opts.dueDate}</p>
+      <p>Pago pendiente en <strong>${escapeHtml(opts.schoolName)}</strong> para <strong>${escapeHtml(opts.studentName)}</strong>.</p>
+      <p><strong>${escapeHtml(opts.concept)}</strong> · ${escapeHtml(opts.amount)} · vence ${escapeHtml(opts.dueDate)}</p>
     </div>`,
   });
 }
@@ -74,9 +76,9 @@ export async function sendAnnouncement(opts: {
     to: opts.to,
     subject: `${opts.schoolName} — ${opts.subject}`,
     html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
-      <h2 style="color:#1D3557;">${opts.subject}</h2>
-      <p>${opts.body.replace(/\n/g, "<br>")}</p>
-      <p style="font-size:12px;color:#999;margin-top:32px;">${opts.schoolName} · Klassi</p>
+      <h2 style="color:#1D3557;">${escapeHtml(opts.subject)}</h2>
+      <p>${escapeHtml(opts.body).replace(/\n/g, "<br>")}</p>
+      <p style="font-size:12px;color:#999;margin-top:32px;">${escapeHtml(opts.schoolName)} · Klassi</p>
     </div>`,
   });
 }
@@ -88,9 +90,9 @@ export async function sendParentInvitation(opts: {
     to: opts.to,
     subject: `Invitación al portal de ${opts.schoolName}`,
     html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
-      <h2 style="color:#1D3557;">Hola${opts.parentName ? `, ${opts.parentName}` : ""}!</h2>
-      <p><strong>${opts.schoolName}</strong> te invita al portal de Klassi para seguir el progreso de <strong>${opts.studentName}</strong>.</p>
-      <a href="${opts.inviteUrl}" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Aceptar invitación</a>
+      <h2 style="color:#1D3557;">Hola${opts.parentName ? `, ${escapeHtml(opts.parentName)}` : ""}!</h2>
+      <p><strong>${escapeHtml(opts.schoolName)}</strong> te invita al portal de Klassi para seguir el progreso de <strong>${escapeHtml(opts.studentName)}</strong>.</p>
+      <a href="${escapeHtml(opts.inviteUrl)}" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Aceptar invitación</a>
       <p style="font-size:12px;color:#999;margin-top:16px;">Este enlace expira en 7 días.</p>
     </div>`,
   });
@@ -103,10 +105,10 @@ export async function sendInstructorInvitation(opts: {
     to: opts.to,
     subject: `Invitación como instructor en ${opts.schoolName}`,
     html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
-      <h2 style="color:#1D3557;">¡Bienvenido, ${opts.instructorName}!</h2>
-      <p>Has sido invitado como instructor en <strong>${opts.schoolName}</strong> en Klassi.</p>
+      <h2 style="color:#1D3557;">¡Bienvenido, ${escapeHtml(opts.instructorName)}!</h2>
+      <p>Has sido invitado como instructor en <strong>${escapeHtml(opts.schoolName)}</strong> en Klassi.</p>
       <p>Haz clic en el botón de abajo para crear tu cuenta y acceder al sistema.</p>
-      <a href="${opts.inviteUrl}" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Aceptar invitación y crear cuenta</a>
+      <a href="${escapeHtml(opts.inviteUrl)}" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Aceptar invitación y crear cuenta</a>
       <p style="font-size:12px;color:#999;margin-top:16px;">Este enlace expira en 30 días.</p>
     </div>`,
   });
