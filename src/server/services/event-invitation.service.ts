@@ -1,3 +1,5 @@
+import { escapeHtml } from "@/server/utils/escapeHtml";
+
 interface EventInvitationData {
   eventName: string;
   description?: string;
@@ -28,7 +30,7 @@ export function generateEventInvitationHTML(data: EventInvitationData): string {
     currency: "MXN",
   }).format(data.amount / 100);
 
-  const groupsStr = data.groupNames.join(", ");
+  const groupsStr = data.groupNames.map(escapeHtml).join(", ");
 
   return `
 <div style="max-width: 600px; margin: 0 auto; padding: 24px; background: #f8f9fa; border-radius: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
@@ -40,7 +42,7 @@ export function generateEventInvitationHTML(data: EventInvitationData): string {
 
     <!-- Título evento -->
     <div style="text-align: center; margin-bottom: 24px;">
-      <h2 style="font-size: 24px; margin: 0; color: #1f2937; font-weight: 600;">${data.eventName}</h2>
+      <h2 style="font-size: 24px; margin: 0; color: #1f2937; font-weight: 600;">${escapeHtml(data.eventName)}</h2>
     </div>
 
     <!-- Línea separadora -->
@@ -72,7 +74,7 @@ export function generateEventInvitationHTML(data: EventInvitationData): string {
       ${data.description ? `
       <div style="margin-bottom: 16px;">
         <div style="font-weight: 500; color: #4b5563; font-size: 14px;">📝 Descripción:</div>
-        <div style="font-size: 14px; color: #1f2937; margin-top: 4px;">${data.description}</div>
+        <div style="font-size: 14px; color: #1f2937; margin-top: 4px;">${escapeHtml(data.description)}</div>
       </div>
       ` : ""}
 

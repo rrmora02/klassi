@@ -25,10 +25,10 @@ export const announcementsRouter = createTRPCRouter({
 
   create: tenantProcedure
     .input(z.object({
-      title:        z.string().min(1, "El título es requerido"),
-      body:         z.string().min(1, "El cuerpo es requerido"),
+      title:        z.string().min(1, "El título es requerido").max(200),
+      body:         z.string().min(1, "El cuerpo es requerido").max(5000),
       targetAll:    z.boolean().default(true),
-      targetGroups: z.array(z.string()).default([]),
+      targetGroups: z.array(z.string().cuid()).default([]),
     }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.announcement.create({
@@ -43,7 +43,7 @@ export const announcementsRouter = createTRPCRouter({
     }),
 
   send: tenantProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const announcement = await ctx.db.announcement.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
@@ -58,7 +58,7 @@ export const announcementsRouter = createTRPCRouter({
     }),
 
   delete: tenantProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const announcement = await ctx.db.announcement.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },

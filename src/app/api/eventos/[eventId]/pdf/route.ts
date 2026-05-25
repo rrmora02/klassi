@@ -72,11 +72,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return new NextResponse("Error generating PDF", { status: 500 });
     }
 
-    const safeName = event.name.replace(/[^a-z0-9\-_. ]/gi, "_");
+    const encodedName = encodeURIComponent(event.name.substring(0, 80));
     return new NextResponse(new Blob([new Uint8Array(pdfBuffer)], { type: "application/pdf" }), {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${safeName}.pdf"`,
+        "Content-Disposition": `attachment; filename*=UTF-8''${encodedName}.pdf`,
         "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });

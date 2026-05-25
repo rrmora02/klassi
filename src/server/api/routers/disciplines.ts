@@ -55,7 +55,7 @@ export const disciplinesRouter = createTRPCRouter({
 
   update: tenantProcedure
     .input(z.object({
-      id:             z.string(),
+      id:             z.string().cuid(),
       name:           z.string().min(1).optional(),
       description:    z.string().optional(),
       color:          z.string().optional(),
@@ -71,7 +71,7 @@ export const disciplinesRouter = createTRPCRouter({
     }),
 
   delete: tenantProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const groupCount = await ctx.db.group.count({
         where: { disciplineId: input.id, tenantId: ctx.tenantId },

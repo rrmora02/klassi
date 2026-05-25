@@ -91,8 +91,8 @@ export const groupsRouter = createTRPCRouter({
 
   list: tenantProcedure
     .input(z.object({
-      search:       z.string().optional(),
-      disciplineId: z.string().optional(),
+      search:       z.string().max(100).optional(),
+      disciplineId: z.string().cuid().optional(),
       level:        z.nativeEnum(GroupLevel).optional(),
       isActive:     z.boolean().optional(),
       page:         z.number().int().min(1).default(1),

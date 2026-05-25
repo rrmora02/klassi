@@ -74,9 +74,9 @@ export const paymentsRouter = createTRPCRouter({
   create: tenantProcedure
     .input(z.object({
       studentId: z.string(),
-      concept:   z.string().min(1),
+      concept:   z.string().min(1).max(200),
       amount:    z.number().int().positive(), // en centavos
-      currency:  z.string().default("MXN"),
+      currency:  z.enum(["MXN", "USD"]).default("MXN"),
       method:    z.nativeEnum(PaymentMethod).default("CASH"),
       dueDate:   z.date(),
       force:     z.boolean().default(false), // ignorar validación de duplicados

@@ -7,7 +7,7 @@ export const attendanceRouter = createTRPCRouter({
 
   getGroups: tenantProcedure
     .input(z.object({
-       dateString: z.string().optional(), // "YYYY-MM-DD"
+       dateString: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     }))
     .query(async ({ ctx, input }) => {
        // Obtener el rol del usuario en el tenant
@@ -47,7 +47,7 @@ export const attendanceRouter = createTRPCRouter({
   createSession: tenantProcedure
     .input(z.object({
        groupId: z.string().cuid(),
-       dateString: z.string(), // "YYYY-MM-DD"
+       dateString: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     }))
     .mutation(async ({ ctx, input }) => {
        const group = await ctx.db.group.findFirst({
@@ -84,7 +84,7 @@ export const attendanceRouter = createTRPCRouter({
   getSessionRoster: tenantProcedure
     .input(z.object({
        groupId: z.string().cuid(),
-       dateString: z.string(), // "YYYY-MM-DD" originado del input local
+       dateString: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     }))
     .query(async ({ ctx, input }) => {
        const dateObj = new Date(input.dateString + "T00:00:00Z");

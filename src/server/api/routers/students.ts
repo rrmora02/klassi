@@ -88,9 +88,9 @@ export const studentsRouter = createTRPCRouter({
 
   list: tenantProcedure
     .input(z.object({
-      search:       z.string().optional(),
+      search:       z.string().max(100).optional(),
       status:       z.nativeEnum(StudentStatus).optional(),
-      disciplineId: z.string().optional(),
+      disciplineId: z.string().cuid().optional(),
       page:         z.number().int().min(1).default(1),
       pageSize:     z.number().int().min(1).max(100).default(20),
     }))
