@@ -2,6 +2,10 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 
 export async function GET() {
+  if (process.env.NODE_ENV === "production") {
+    return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
   const { userId } = await auth();
 
   if (!userId) {

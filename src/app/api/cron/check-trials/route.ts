@@ -20,6 +20,13 @@ export async function GET(req: NextRequest) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  if (process.env.NODE_ENV === "production") {
+    const vercelEnv = req.headers.get("x-vercel-deployment-url");
+    const userAgent = req.headers.get("user-agent") ?? "";
+    if (!vercelEnv && !userAgent.includes("vercel-cron")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
 
   const now = new Date();
 

@@ -61,6 +61,14 @@ export async function GET(req: Request) {
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  // In production, only accept requests from Vercel's cron infrastructure
+  if (process.env.NODE_ENV === "production") {
+    const vercelEnv = (req as Request & { headers: Headers }).headers.get("x-vercel-deployment-url");
+    const userAgent = (req as Request & { headers: Headers }).headers.get("user-agent") ?? "";
+    if (!vercelEnv && !userAgent.includes("vercel-cron")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
 
   const today = new Date();
   let paymentsGenerated = 0;

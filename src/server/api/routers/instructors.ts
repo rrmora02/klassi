@@ -42,7 +42,7 @@ export const instructorsRouter = createTRPCRouter({
           take: input.pageSize,
           orderBy: { user: { name: "asc" } },
           include: {
-            user: true,
+            user: { select: { id: true, name: true, email: true, avatar: true } },
             _count: {
               select: { groups: { where: { isActive: true } } },
             },
@@ -66,10 +66,10 @@ export const instructorsRouter = createTRPCRouter({
       const instructor = await ctx.db.instructor.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
         include: {
-          user: true,
+          user: { select: { id: true, name: true, email: true, avatar: true } },
           groups: {
             include: {
-              discipline: true,
+              discipline: { select: { name: true, color: true } },
               _count: { select: { enrollments: { where: { status: "ACTIVE" } } } }
             },
             orderBy: { name: "asc" },

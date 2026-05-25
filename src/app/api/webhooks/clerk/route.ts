@@ -1,22 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
+import { z } from "zod";
 import { db } from "@/server/db";
 
-// ─── Tipos de eventos de Clerk ────────────────────────────────────
+// ─── Schemas de validación ────────────────────────────────────────
 
-interface ClerkUserData {
-  id:                  string;
-  email_addresses:     { email_address: string; id: string }[];
-  primary_email_address_id: string;
-  first_name:          string | null;
-  last_name:           string | null;
-  image_url?:          string;
-}
+const clerkUserDataSchema = z.object({
+  id: z.string(),
+  email_addresses: z.array(z.object({ email_address: z.string(), id: z.string() })),
+  primary_email_address_id: z.string(),
+  first_name: z.string().nullable().optional(),
+  last_name: z.string().nullable().optional(),
+  image_url: z.string().optional(),
+});
 
-interface ClerkEvent {
-  type: string;
-  data: ClerkUserData;
-}
+const clerkEventSchema = z.object({
+  type: z.string(),
+  data: z.record(z.unknown()),
+});
+
+type ClerkUserData = z.infer<typeof clerkUserDataSchema>;
+type ClerkEvent = z.infer<typeof clerkEventSchema>;
 
 // ─── Manejadores de eventos ───────────────────────────────────────
 
@@ -99,11 +103,17 @@ export async function POST(req: NextRequest) {
   let event: ClerkEvent;
 
   try {
-    event = wh.verify(payload, {
+    const raw = wh.verify(payload, {
       "svix-id":        svixId,
       "svix-timestamp": svixTimestamp,
       "svix-signature": svixSignature,
-    }) as ClerkEvent;
+    });
+    const parsed = clerkEventSchema.safeParse(raw);
+    if (!parsed.success) {
+      console.error("[clerk-webhook] Payload inesperado:", parsed.error.flatten());
+      return NextResponse.json({ error: "Invalid payload structure" }, { status: 400 });
+    }
+    event = parsed.data;
   } catch (err) {
     console.error("[clerk-webhook] Firma inválida:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
@@ -112,14 +122,25 @@ export async function POST(req: NextRequest) {
   try {
     switch (event.type) {
       case "user.created":
-        await handleUserCreated(event.data as ClerkUserData);
+      case "user.updated": {
+        const userData = clerkUserDataSchema.safeParse(event.data);
+        if (!userData.success) {
+          console.error(`[clerk-webhook] Datos de usuario inválidos en ${event.type}:`, userData.error.flatten());
+          return NextResponse.json({ error: "Invalid user data" }, { status: 400 });
+        }
+        if (event.type === "user.created") await handleUserCreated(userData.data);
+        else await handleUserUpdated(userData.data);
         break;
-      case "user.updated":
-        await handleUserUpdated(event.data as ClerkUserData);
+      }
+      case "user.deleted": {
+        const id = (event.data as Record<string, unknown>).id;
+        if (typeof id !== "string") {
+          console.error("[clerk-webhook] user.deleted sin id válido");
+          return NextResponse.json({ error: "Invalid user id" }, { status: 400 });
+        }
+        await handleUserDeleted({ id });
         break;
-      case "user.deleted":
-        await handleUserDeleted(event.data as any);
-        break;
+      }
       default:
         console.log(`[clerk-webhook] Evento ignorado: ${event.type}`);
     }
