@@ -3,6 +3,7 @@ import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { instructorFormSchema } from "@/lib/schemas/instructor.schema";
 import { sendInstructorInvitation } from "@/server/services/email.service";
+import { canAddInstructor } from "@/server/services/tenant.service";
 import { randomBytes } from "crypto";
 
 export const instructorsUpdateSchema = instructorFormSchema.partial().extend({
@@ -92,6 +93,15 @@ export const instructorsRouter = createTRPCRouter({
     .input(instructorFormSchema)
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
+
+      // Verificar límite de plan
+      const allowed = await canAddInstructor(tenantId);
+      if (!allowed) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: "Has alcanzado el límite de instructores de tu plan. Actualiza tu suscripción para agregar más.",
+        });
+      }
 
       // Idempotence: Check if instructor already exists by email in this tenant
       const existingInstructorByEmail = await db.instructor.findFirst({

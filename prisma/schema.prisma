@@ -162,6 +162,8 @@ model Tenant {
   stripeSubId      String?          @unique // Stripe subscription ID
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
+  pendingPlan      SubscriptionPlan?              // plan que entra al siguiente período (downgrade)
+  pendingPlanAt    DateTime?                      // fecha en que aplica el pendingPlan
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
