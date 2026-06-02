@@ -4,6 +4,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { TopBar } from "@/components/layout/topbar";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { OnboardingTourWrapper } from "@/components/onboarding/onboarding-tour-wrapper";
+import { SubscriptionBanner } from "@/components/billing/subscription-banner";
 import { db } from "@/server/db";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -19,25 +20,33 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/onboarding");
   }
 
-  // Obtener el rol del usuario en el tenant
-  const tenantUser = await db.tenantUser.findFirst({
-    where: {
-      userId: user.id,
-      tenantId: user.activeTenantId
-    },
-  });
+  const [tenantUser, tenant, studentCount] = await Promise.all([
+    db.tenantUser.findFirst({
+      where: { userId: user.id, tenantId: user.activeTenantId },
+    }),
+    db.tenant.findUnique({
+      where:  { id: user.activeTenantId },
+      select: { status: true, trialEndsAt: true, pendingPlan: true, pendingPlanAt: true },
+    }),
+    db.student.count({ where: { tenantId: user.activeTenantId } }),
+  ]);
 
-  const userRole = tenantUser?.role || "RECEPTIONIST";
-
-  // Verificar si hay alumnos en el tenant
-  const studentCount = await db.student.count({
-    where: { tenantId: user.activeTenantId }
-  });
+  const userRole = tenantUser?.role ?? "RECEPTIONIST";
 
   return (
     <>
       <OnboardingTourWrapper hasStudents={studentCount > 0} />
       <DashboardShell sidebar={<Sidebar userRole={userRole} />} topbar={<TopBar />}>
+        {userRole === "ADMIN" && tenant && (
+          <div className="px-6 pt-4">
+            <SubscriptionBanner
+              status={tenant.status}
+              trialEndsAt={tenant.trialEndsAt}
+              pendingPlan={tenant.pendingPlan}
+              pendingPlanAt={tenant.pendingPlanAt}
+            />
+          </div>
+        )}
         {children}
       </DashboardShell>
     </>

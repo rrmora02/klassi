@@ -113,3 +113,82 @@ export async function sendInstructorInvitation(opts: {
     </div>`,
   });
 }
+
+// ── Emails de billing/suscripción ────────────────────────────────────────────
+
+export async function sendTrialEndingEmail(
+  to: string,
+  opts: { schoolName: string; daysLeft: number; billingUrl: string }
+) {
+  const name = escapeHtml(opts.schoolName);
+  const url  = escapeHtml(opts.billingUrl);
+  return send({
+    to,
+    subject: `Tu prueba de Klassi termina en ${opts.daysLeft} día${opts.daysLeft === 1 ? "" : "s"}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+      <h2 style="color:#1D3557;">Tu prueba gratuita está por terminar</h2>
+      <p>La prueba de <strong>${name}</strong> vence en <strong>${opts.daysLeft} día${opts.daysLeft === 1 ? "" : "s"}</strong>.</p>
+      <p>Elige un plan para seguir usando Klassi sin interrupciones.</p>
+      <a href="${url}" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Ver planes y suscribirme</a>
+      <p style="font-size:12px;color:#999;margin-top:32px;">Klassi · Gestión de academias deportivas</p>
+    </div>`,
+  });
+}
+
+export async function sendSubscriptionUpdatedEmail(
+  to: string,
+  opts: { schoolName: string; newPlan: string; billingUrl: string }
+) {
+  const name = escapeHtml(opts.schoolName);
+  const plan = escapeHtml(opts.newPlan);
+  const url  = escapeHtml(opts.billingUrl);
+  return send({
+    to,
+    subject: `Tu suscripción de Klassi fue actualizada a ${opts.newPlan}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+      <h2 style="color:#1D3557;">Suscripción actualizada</h2>
+      <p>La suscripción de <strong>${name}</strong> fue cambiada al plan <strong>${plan}</strong>.</p>
+      <a href="${url}" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Ver mi suscripción</a>
+      <p style="font-size:12px;color:#999;margin-top:32px;">Klassi · Si no reconoces este cambio, contáctanos.</p>
+    </div>`,
+  });
+}
+
+export async function sendPaymentFailedEmail(
+  to: string,
+  opts: { schoolName: string; billingUrl: string }
+) {
+  const name = escapeHtml(opts.schoolName);
+  const url  = escapeHtml(opts.billingUrl);
+  return send({
+    to,
+    subject: "Problema con el pago de tu suscripción Klassi",
+    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+      <h2 style="color:#c0392b;">No pudimos procesar tu pago</h2>
+      <p>El cobro de la suscripción de <strong>${name}</strong> falló. Tu acceso estará suspendido hasta regularizar el pago.</p>
+      <a href="${url}" style="background:#c0392b;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Actualizar método de pago</a>
+      <p style="font-size:12px;color:#999;margin-top:32px;">Klassi · Gestión de academias deportivas</p>
+    </div>`,
+  });
+}
+
+export async function sendDowngradeScheduledEmail(
+  to: string,
+  opts: { schoolName: string; newPlan: string; effectiveDate: string; billingUrl: string }
+) {
+  const name = escapeHtml(opts.schoolName);
+  const plan = escapeHtml(opts.newPlan);
+  const date = escapeHtml(opts.effectiveDate);
+  const url  = escapeHtml(opts.billingUrl);
+  return send({
+    to,
+    subject: `Tu plan de Klassi cambiará a ${opts.newPlan} el ${opts.effectiveDate}`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;">
+      <h2 style="color:#1D3557;">Cambio de plan programado</h2>
+      <p>La cuenta <strong>${name}</strong> cambiará al plan <strong>${plan}</strong> el <strong>${date}</strong>.</p>
+      <p>Si tienes datos que excedan los límites del nuevo plan (alumnos, grupos, instructores), tendrás <strong>7 días de gracia</strong> para organizarlos antes de que se suspendan.</p>
+      <a href="${url}" style="background:#1D3557;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:16px;">Ver mi suscripción</a>
+      <p style="font-size:12px;color:#999;margin-top:32px;">Klassi · ¿Cambiaste de opinión? Puedes cancelar el cambio desde tu portal de suscripción.</p>
+    </div>`,
+  });
+}
