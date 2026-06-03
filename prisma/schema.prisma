@@ -162,28 +162,35 @@ model Tenant {
   stripeSubId      String?          @unique // Stripe subscription ID
   trialEndsAt      DateTime?
   currentPeriodEnd DateTime?
-  pendingPlan      SubscriptionPlan?              // plan que entra al siguiente período (downgrade)
-  pendingPlanAt    DateTime?                      // fecha en que aplica el pendingPlan
+  pendingPlan      SubscriptionPlan?
+  pendingPlanAt    DateTime?
+  parentTenantId   String?                        // escuela padre (Enterprise multi-escuela)
+  parentTenant     Tenant?          @relation("TenantChildren", fields: [parentTenantId], references: [id])
+  childTenants     Tenant[]         @relation("TenantChildren")
+  createdByUserId  String?                        // usuario que creó esta escuela
+  createdByUser    User?            @relation("CreatedTenants", fields: [createdByUserId], references: [id])
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
 
   // Relaciones
-  members       TenantUser[]
-  activeUsers   User[]           @relation("ActiveTenant")
-  invitations   TeamInvitation[]
-  disciplines   Discipline[]
-  students      Student[]
-  instructors   Instructor[]
-  groups        Group[]
-  payments      Payment[]
-  announcements Announcement[]
-  subscription  Subscription[]
-  events        Event[]
-  auditLogs     AuditLog[]
-  errorLogs     ErrorLog[]
+  members        TenantUser[]
+  activeUsers    User[]           @relation("ActiveTenant")
+  invitations    TeamInvitation[]
+  disciplines    Discipline[]
+  students       Student[]
+  instructors    Instructor[]
+  groups         Group[]
+  payments       Payment[]
+  announcements  Announcement[]
+  subscription   Subscription[]
+  events         Event[]
+  auditLogs      AuditLog[]
+  errorLogs      ErrorLog[]
   businessEvents BusinessEvent[]
 
   @@index([slug])
+  @@index([parentTenantId])
+  @@index([createdByUserId])
 }
 
 // ─── Suscripción (historial de pagos al SaaS) ─────────────────────
@@ -220,12 +227,13 @@ model User {
   updatedAt      DateTime @updatedAt
 
   // Relaciones
-  memberships     TenantUser[]
-  instructors     Instructor[]
-  parentOf        ParentStudent[]
-  attendanceLogs  Attendance[]
-  invitationsSent TeamInvitation[] @relation("SentInvitations")
-  auditLogs       AuditLog[]
+  memberships      TenantUser[]
+  instructors      Instructor[]
+  parentOf         ParentStudent[]
+  attendanceLogs   Attendance[]
+  invitationsSent  TeamInvitation[] @relation("SentInvitations")
+  auditLogs        AuditLog[]
+  createdTenants   Tenant[]         @relation("CreatedTenants")
 
   @@index([clerkId])
   @@index([email])

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import type { UserRole } from "@prisma/client";
+import type { UserRole, SubscriptionPlan } from "@prisma/client";
 import {
   LayoutDashboard,
   Users,
@@ -49,13 +49,13 @@ const SUPER_ADMIN_ITEMS = [
 
 interface SidebarProps {
   userRole?: UserRole;
+  plan?: SubscriptionPlan;
 }
 
-export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
+export function Sidebar({ userRole = "RECEPTIONIST", plan }: SidebarProps) {
   const pathname = usePathname();
 
-  // Filtrar items según el rol
-  const NAV_ITEMS = ALL_NAV_ITEMS.filter(item => item.roles.includes(userRole));
+  const NAV_ITEMS    = ALL_NAV_ITEMS.filter(item => item.roles.includes(userRole));
   const CONFIG_ITEMS = ALL_CONFIG_ITEMS.filter(item => item.roles.includes(userRole));
   const ADMIN_ITEMS = SUPER_ADMIN_ITEMS.filter(item => item.roles.includes(userRole));
 
@@ -111,6 +111,33 @@ export function Sidebar({ userRole = "RECEPTIONIST" }: SidebarProps) {
             );
           })}
         </div>
+
+        {/* Enterprise */}
+        {plan === "ENTERPRISE" && userRole === "ADMIN" && (
+          <div className="pt-4">
+            <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-sb-light/50">
+              Enterprise
+            </p>
+            {(() => {
+              const href   = "/dashboard/enterprise";
+              const active = pathname === href || pathname.startsWith(href + "/");
+              return (
+                <Link
+                  href={href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-sb-light/60 dark:bg-sb-depth text-sb-green dark:text-sb-light"
+                      : "text-gray-600 dark:text-sb-light/70 hover:bg-gray-100 dark:hover:bg-sb-uplift hover:text-gray-900 dark:hover:text-white"
+                  )}
+                >
+                  <Building2 className={cn("h-4 w-4 flex-shrink-0", active ? "text-sb-accent dark:text-sb-light" : "text-gray-400 dark:text-sb-light/50")} />
+                  Mis escuelas
+                </Link>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Super Admin */}
         {ADMIN_ITEMS.length > 0 && (

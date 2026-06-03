@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     }),
     db.tenant.findUnique({
       where:  { id: user.activeTenantId },
-      select: { status: true, trialEndsAt: true, pendingPlan: true, pendingPlanAt: true },
+      select: { plan: true, status: true, trialEndsAt: true, pendingPlan: true, pendingPlanAt: true },
     }),
     db.student.count({ where: { tenantId: user.activeTenantId } }),
   ]);
@@ -36,7 +36,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <>
       <OnboardingTourWrapper hasStudents={studentCount > 0} />
-      <DashboardShell sidebar={<Sidebar userRole={userRole} />} topbar={<TopBar />}>
+      <DashboardShell sidebar={<Sidebar userRole={userRole} plan={tenant?.plan} />} topbar={<TopBar />}>
         {userRole === "ADMIN" && tenant && (
           <div className="px-6 pt-4">
             <SubscriptionBanner
