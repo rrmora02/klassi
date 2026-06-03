@@ -13,11 +13,13 @@ interface Tenant {
 export function TenantSwitcher({
   tenants,
   activeTenantId,
-  userRole = "RECEPTIONIST"
+  userRole = "RECEPTIONIST",
+  canAddSchool = false,
 }: {
   tenants: Tenant[];
   activeTenantId: string | null;
   userRole?: string;
+  canAddSchool?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -79,12 +81,22 @@ export function TenantSwitcher({
           {userRole === "ADMIN" && (
             <>
               <div className="my-1 h-px bg-gray-100 dark:bg-[rgba(255,255,255,0.10)]" />
-              <button
-                onClick={() => router.push("/onboarding")}
-                className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg"
-              >
-                + Agregar otra escuela
-              </button>
+              {canAddSchool ? (
+                <button
+                  onClick={() => router.push("/onboarding")}
+                  className="flex items-center px-3 py-2 text-left text-sm text-sb-accent dark:text-sb-light hover:bg-sb-light/30 dark:hover:bg-sb-house hover:text-sb-accent rounded-lg"
+                >
+                  + Agregar otra escuela
+                </button>
+              ) : (
+                <div
+                  title="Tu plan no permite más escuelas. Actualiza a Enterprise para agregar hasta 5."
+                  className="flex items-center justify-between px-3 py-2 text-sm text-gray-400 dark:text-gray-600 cursor-not-allowed rounded-lg"
+                >
+                  <span>+ Agregar otra escuela</span>
+                  <span className="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">Plan</span>
+                </div>
+              )}
             </>
           )}
         </div>
