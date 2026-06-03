@@ -37,6 +37,45 @@ export async function canAddDiscipline(tenantId: string): Promise<boolean> {
   return count < limit;
 }
 
+export async function canAddSchool(userId: string): Promise<{
+  allowed: boolean;
+  reason?: string;
+  currentCount: number;
+  limit: number;
+}> {
+  // Buscar el tenant activo del usuario
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { activeTenantId: true },
+  });
+  if (!user?.activeTenantId) return { allowed: false, reason: "Sin tenant activo", currentCount: 0, limit: 0 };
+
+  const tenant = await db.tenant.findUnique({
+    where:  { id: user.activeTenantId },
+    select: { plan: true, status: true },
+  });
+  if (!tenant) return { allowed: false, reason: "Tenant no encontrado", currentCount: 0, limit: 0 };
+
+  if (tenant.plan !== "ENTERPRISE") {
+    return {
+      allowed:      false,
+      reason:       "Solo el plan Enterprise permite múltiples escuelas",
+      currentCount: 1,
+      limit:        PLANS[tenant.plan].schools,
+    };
+  }
+
+  if (tenant.status !== "ACTIVE") {
+    return { allowed: false, reason: "La suscripción no está activa", currentCount: 0, limit: 0 };
+  }
+
+  // Contar escuelas creadas por este usuario
+  const count = await db.tenant.count({ where: { createdByUserId: userId } });
+  const limit = PLANS.ENTERPRISE.schools;
+
+  return { allowed: count < limit, currentCount: count, limit };
+}
+
 export async function getTenantLimits(tenantId: string) {
   const tenant = await db.tenant.findFirst({ where: { id: tenantId } });
   if (!tenant) throw new Error("Tenant no encontrado");

@@ -4,42 +4,45 @@ import { db } from "@/server/db";
 import { TenantSwitcher } from "./tenant-switcher";
 import { ThemeToggle } from "./theme-toggle";
 import { TourButton } from "./tour-button";
-import { PLANS } from "@/config/plans";
+import { canAddSchool as checkCanAddSchool } from "@/server/services/tenant.service";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 export async function TopBar() {
   const { userId } = await auth();
-  let tenants: any[] = [];
-  let user = null;
+  let tenants: { id: string; name: string; isOwned: boolean; isChild: boolean }[] = [];
+  let user     = null;
   let userRole = "RECEPTIONIST";
   let canAddSchool = false;
 
   if (userId) {
     user = await db.user.findUnique({
-      where: { clerkId: userId },
+      where:  { clerkId: userId },
       include: { activeTenant: true },
     });
 
     if (user && user.activeTenantId) {
       const memberships = await db.tenantUser.findMany({
-        where: { userId: user.id },
-        include: { tenant: true },
+        where:   { userId: user.id },
+        include: { tenant: { select: { id: true, name: true, parentTenantId: true, createdByUserId: true } } },
       });
 
-      tenants = memberships.map((m) => ({ id: m.tenant.id, name: m.tenant.name }));
+      tenants = memberships.map(m => ({
+        id:      m.tenant.id,
+        name:    m.tenant.name,
+        isOwned: m.tenant.createdByUserId === user!.id,
+        isChild: m.tenant.parentTenantId !== null,
+      }));
 
       const tenantUser = await db.tenantUser.findFirst({
         where: { userId: user.id, tenantId: user.activeTenantId },
       });
       userRole = tenantUser?.role ?? "RECEPTIONIST";
 
-      // Verificar si el plan permite agregar más escuelas
-      if (userRole === "ADMIN" && user.activeTenant) {
-        const plan      = user.activeTenant.plan;
-        const maxSchools = PLANS[plan].schools;
-        canAddSchool    = tenants.length < maxSchools;
+      if (userRole === "ADMIN") {
+        const check  = await checkCanAddSchool(user.id);
+        canAddSchool = check.allowed;
       }
     }
   }
