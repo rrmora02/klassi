@@ -17,13 +17,9 @@ export default function EditarInstructorPage({ params }: PageProps) {
   const update = api.instructors.update.useMutation();
 
   async function handleSubmit(data: InstructorFormValues) {
-    try {
-        await update.mutateAsync({ ...data, id: params.id });
-        router.push(`/dashboard/instructores/${params.id}`);
-        router.refresh();
-    } catch (error: any) {
-        console.error(error.message || "Error al actualizar instructor.");
-    }
+    await update.mutateAsync({ ...data, id: params.id });
+    router.push(`/dashboard/instructores/${params.id}`);
+    router.refresh();
   }
 
   if (isLoading) {

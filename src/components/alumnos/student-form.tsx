@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { studentFormSchema, studentFormDefaults, type StudentFormValues } from "@/lib/schemas/student.schema";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const sanitizePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
   e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -88,6 +89,7 @@ export function StudentForm({
   submitLabel = "Guardar alumno",
   isEdit = false,
 }: StudentFormProps) {
+  const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -113,6 +115,7 @@ export function StudentForm({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error inesperado";
       setServerError(msg);
+      toast({ title: "Error", description: msg, variant: "destructive" });
       setIsSubmitting(false);
     }
   }
