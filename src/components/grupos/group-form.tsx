@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { groupFormSchema, groupFormDefaults, type GroupFormValues } from "@/lib/schemas/group.schema";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
 const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
@@ -107,6 +108,7 @@ export function GroupForm({
   disciplines,
   instructors,
 }: GroupFormProps) {
+  const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -128,8 +130,10 @@ export function GroupForm({
     try {
       await onSubmit(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error inesperado a guardar.";
+      const msg = err instanceof Error ? err.message : "Error inesperado al guardar.";
       setServerError(msg);
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      setIsSubmitting(false);
     }
   }
 

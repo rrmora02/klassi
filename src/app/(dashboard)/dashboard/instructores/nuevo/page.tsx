@@ -11,14 +11,9 @@ export default function NuevoInstructorPage() {
   const create = api.instructors.create.useMutation();
 
   async function handleSubmit(data: InstructorFormValues) {
-    try {
-        await create.mutateAsync(data);
-        router.push("/dashboard/instructores");
-        router.refresh();
-    } catch (error: any) {
-        // Podríamos manejar el error visualmente, pero se alinea con el resto de CRUDs
-        console.error(error.message || "Ocurrió un error al crear el instructor.");
-    }
+    await create.mutateAsync(data);
+    router.push("/dashboard/instructores");
+    router.refresh();
   }
 
   return (
