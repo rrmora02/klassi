@@ -36,9 +36,10 @@ const dateCls = `${inputCls} [color-scheme:light] dark:[color-scheme:dark]`;
 
 export function NewPaymentModal({ students, onClose }: Props) {
   const router  = useRouter();
+  const utils   = api.useUtils();
   const create  = api.payments.create.useMutation();
   const markPaid = api.payments.markAsPaid.useMutation();
-  const checkMonthly = (api.payments.checkMonthlyPaymentExists as any).useMutation?.() || { mutateAsync: async () => ({ exists: false, payment: null }) };
+  const [isCheckingMonthly, setIsCheckingMonthly] = useState(false);
 
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
   const [studentError,    setStudentError]    = useState("");
@@ -155,12 +156,13 @@ export function NewPaymentModal({ students, onClose }: Props) {
     }
     setStudentError("");
 
+    setIsCheckingMonthly(true);
     try {
       const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
       const month = paymentDate.getMonth() + 1;
       const year = paymentDate.getFullYear();
 
-      const result = await checkMonthly.mutateAsync({
+      const result = await utils.payments.checkMonthlyPaymentExists.fetch({
         studentId: selectedStudent.id,
         month,
         year,
@@ -173,6 +175,8 @@ export function NewPaymentModal({ students, onClose }: Props) {
       }
     } catch (error) {
       console.error("Error checking payment:", error);
+    } finally {
+      setIsCheckingMonthly(false);
     }
 
     await createPayment(data);
@@ -377,7 +381,7 @@ export function NewPaymentModal({ students, onClose }: Props) {
                   setShowConfirmation(false);
                   setPendingPaymentData(null);
                 }}
-                disabled={checkMonthly.isLoading || create.isLoading}
+                disabled={isCheckingMonthly || create.isLoading}
                 style={{
                   padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
                   background: "transparent", fontSize: 13, cursor: "pointer",
@@ -392,15 +396,15 @@ export function NewPaymentModal({ students, onClose }: Props) {
                   setShowConfirmation(false);
                   setPendingPaymentData(null);
                 }}
-                disabled={checkMonthly.isLoading || create.isLoading}
+                disabled={isCheckingMonthly || create.isLoading}
                 style={{
                   padding: "8px 18px", borderRadius: 8, border: "none",
                   background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
-                  cursor: (checkMonthly.isLoading || create.isLoading) ? "not-allowed" : "pointer",
-                  opacity: (checkMonthly.isLoading || create.isLoading) ? 0.6 : 1,
+                  cursor: (isCheckingMonthly || create.isLoading) ? "not-allowed" : "pointer",
+                  opacity: (isCheckingMonthly || create.isLoading) ? 0.6 : 1,
                 }}
               >
-                {checkMonthly.isLoading ? "Verificando..." : create.isLoading ? "Creando..." : "Continuar de todas formas"}
+                {isCheckingMonthly ? "Verificando..." : create.isLoading ? "Creando..." : "Continuar de todas formas"}
               </button>
             </div>
           </div>
