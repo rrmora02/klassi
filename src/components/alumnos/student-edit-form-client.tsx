@@ -13,9 +13,10 @@ import { fullName } from "@/lib/utils";
 interface Props {
   student: Student & { parents?: { relationship: string | null; user: { name: string; email: string; phone: string | null; } }[] };
   studentId: string;
+  hasActiveKarateGroup?: boolean;
 }
 
-export function StudentEditFormClient({ student, studentId }: Props) {
+export function StudentEditFormClient({ student, studentId, hasActiveKarateGroup = false }: Props) {
   const router = useRouter();
   const update = api.students.update.useMutation();
 
@@ -61,6 +62,7 @@ export function StudentEditFormClient({ student, studentId }: Props) {
       onCancel={() => router.push(`/dashboard/alumnos/${studentId}`)}
       submitLabel="Guardar cambios"
       isEdit
+      showKarateSection={hasActiveKarateGroup}
     />
   );
 }

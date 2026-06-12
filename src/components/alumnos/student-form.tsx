@@ -78,6 +78,7 @@ interface StudentFormProps {
   onCancel:       () => void;
   submitLabel?:   string;
   isEdit?:        boolean;
+  showKarateSection?: boolean;
 }
 
 // ─── Componente principal ─────────────────────────────────────────
@@ -88,6 +89,7 @@ export function StudentForm({
   onCancel,
   submitLabel = "Guardar alumno",
   isEdit = false,
+  showKarateSection = false,
 }: StudentFormProps) {
   const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -271,7 +273,7 @@ export function StudentForm({
       </div>
 
       {/* ── Sistema de Karate ────────────────────────── */}
-      {isEdit && (
+      {isEdit && showKarateSection && (
         <>
           <SectionTitle>🥋 Sistema de Karate</SectionTitle>
           <div style={{ marginBottom: 28 }}>
