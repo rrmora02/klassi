@@ -8,6 +8,47 @@ import type { SubscriptionPlan } from "@prisma/client";
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 const APP    = process.env.NEXT_PUBLIC_APP_URL ?? "https://klassi.io";
 
+// Configuración del Customer Portal que permite cambiar de plan (no solo cancelar).
+// Se crea una vez y se reutiliza (identificada por metadata.klassi_managed).
+let portalConfigurationId: string | null = null;
+
+async function getPortalConfigurationId(): Promise<string> {
+  if (portalConfigurationId) return portalConfigurationId;
+
+  const existing = await stripe.billingPortal.configurations.list({ limit: 100 });
+  const found = existing.data.find(c => c.metadata?.klassi_managed === "true" && c.active);
+  if (found) {
+    portalConfigurationId = found.id;
+    return found.id;
+  }
+
+  const priceIds = Object.values(STRIPE_PRICE_IDS).filter(Boolean);
+  const prices = await Promise.all(priceIds.map(id => stripe.prices.retrieve(id)));
+  const products = prices.map(p => ({
+    product: typeof p.product === "string" ? p.product : p.product.id,
+    prices:  [p.id],
+  }));
+
+  const config = await stripe.billingPortal.configurations.create({
+    business_profile: { headline: "Klassi - Gestiona tu suscripción" },
+    features: {
+      subscription_update: {
+        enabled: true,
+        default_allowed_updates: ["price"],
+        proration_behavior: "create_prorations",
+        products,
+      },
+      subscription_cancel:   { enabled: true, mode: "at_period_end" },
+      payment_method_update: { enabled: true },
+      invoice_history:       { enabled: true },
+    },
+    metadata: { klassi_managed: "true" },
+  });
+
+  portalConfigurationId = config.id;
+  return config.id;
+}
+
 export const billingRouter = createTRPCRouter({
 
   getSubscription: tenantProcedure
@@ -99,8 +140,9 @@ export const billingRouter = createTRPCRouter({
       }
 
       const session = await stripe.billingPortal.sessions.create({
-        customer:   tenant.stripeCustomerId,
-        return_url: `${APP}/dashboard/billing`,
+        customer:      tenant.stripeCustomerId,
+        return_url:    `${APP}/dashboard/billing`,
+        configuration: await getPortalConfigurationId(),
       });
       return { url: session.url };
     }),

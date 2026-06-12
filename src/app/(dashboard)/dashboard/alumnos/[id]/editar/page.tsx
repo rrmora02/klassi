@@ -15,10 +15,20 @@ export default async function EditarAlumnoPage({ params }: { params: { id: strin
 
   const student = await db.student.findFirst({
     where: { id: params.id, tenantId: tenant.id },
-    include: { parents: { include: { user: true } } }
+    include: {
+      parents: { include: { user: true } },
+      enrollments: {
+        where: { status: "ACTIVE" },
+        include: { group: { include: { discipline: true } } },
+      },
+    },
   });
 
   if (!student) notFound();
+
+  const hasActiveKarateGroup = student.enrollments.some(
+    e => e.group.discipline?.name.toLowerCase().includes("karate")
+  );
 
   const name = fullName(student.firstName, student.lastName);
 
@@ -38,7 +48,7 @@ export default async function EditarAlumnoPage({ params }: { params: { id: strin
       </h1>
 
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 28 }}>
-        <StudentEditFormClient student={student} studentId={params.id} />
+        <StudentEditFormClient student={student} studentId={params.id} hasActiveKarateGroup={hasActiveKarateGroup} />
       </div>
     </div>
   );
