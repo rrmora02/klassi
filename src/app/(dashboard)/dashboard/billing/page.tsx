@@ -12,8 +12,8 @@ const PLAN_FEATURES: Record<SubscriptionPlan, string[]> = {
 };
 
 export default function BillingPage() {
-  const { data: sub,   isLoading: loadingSub   } = api.billing.getSubscription.useQuery();
-  const { data: usage, isLoading: loadingUsage } = api.billing.getPlanUsage.useQuery();
+  const { data: sub,   isLoading: loadingSub   } = api.billing.getSubscription.useQuery(undefined, { staleTime: 0 });
+  const { data: usage, isLoading: loadingUsage } = api.billing.getPlanUsage.useQuery(undefined, { staleTime: 0 });
   const { data: plans, isLoading: loadingPlans } = api.billing.getPlans.useQuery();
 
   const checkoutMutation = api.billing.createCheckoutSession.useMutation({
