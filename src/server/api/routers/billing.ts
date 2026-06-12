@@ -2,7 +2,7 @@ import { z } from "zod";
 import Stripe from "stripe";
 import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { PLAN_LIMITS, PLAN_LABELS, PLAN_PRICES, STRIPE_PRICE_IDS, isDowngrade } from "@/lib/plan-limits";
+import { PLAN_LIMITS, PLAN_LABELS, PLAN_PRICES, STRIPE_PRICE_IDS, PRICE_TO_PLAN, isDowngrade } from "@/lib/plan-limits";
 import type { SubscriptionPlan } from "@prisma/client";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -53,16 +53,33 @@ export const billingRouter = createTRPCRouter({
 
   getSubscription: tenantProcedure
     .query(async ({ ctx }) => {
-      const tenant = await ctx.db.tenant.findUnique({
-        where:  { id: ctx.tenantId },
-        select: {
-          plan: true, status: true,
-          trialEndsAt: true, currentPeriodEnd: true,
-          pendingPlan: true, pendingPlanAt: true,
-          stripeCustomerId: true, stripeSubId: true,
-        },
-      });
+      const select = {
+        id: true,
+        plan: true, status: true,
+        trialEndsAt: true, currentPeriodEnd: true,
+        pendingPlan: true, pendingPlanAt: true,
+        stripeCustomerId: true, stripeSubId: true,
+      } as const;
+
+      let tenant = await ctx.db.tenant.findUnique({ where: { id: ctx.tenantId }, select });
       if (!tenant) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Reconciliación: si Stripe quedó con un plan distinto al de la BD
+      // (p. ej. por un webhook que no llegó), sincronizamos al consultar.
+      // No tocamos `plan` si coincide con un downgrade ya programado (pendingPlan),
+      // ya que ese cambio se aplica intencionalmente hasta el fin del período.
+      if (tenant.stripeSubId && tenant.status === "ACTIVE") {
+        try {
+          const sub      = await stripe.subscriptions.retrieve(tenant.stripeSubId);
+          const livePlan = PRICE_TO_PLAN[sub.items.data[0]?.price.id ?? ""];
+          if (livePlan && livePlan !== tenant.plan && livePlan !== tenant.pendingPlan) {
+            tenant = await ctx.db.tenant.update({ where: { id: tenant.id }, data: { plan: livePlan }, select });
+          }
+        } catch (err) {
+          console.error("[billing] Reconciliación con Stripe falló:", err);
+        }
+      }
+
       return {
         ...tenant,
         planLabel:    PLAN_LABELS[tenant.plan],

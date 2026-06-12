@@ -30,6 +30,12 @@ export const STRIPE_PRICE_IDS: Record<SubscriptionPlan, string> = {
   ENTERPRISE: process.env.STRIPE_PRICE_ENTERPRISE ?? "",
 };
 
+export const PRICE_TO_PLAN: Record<string, SubscriptionPlan> = Object.fromEntries(
+  Object.entries(STRIPE_PRICE_IDS)
+    .filter(([, priceId]) => priceId)
+    .map(([plan, priceId]) => [priceId, plan as SubscriptionPlan])
+);
+
 export function getLimits(plan: SubscriptionPlan) {
   return PLAN_LIMITS[plan];
 }
