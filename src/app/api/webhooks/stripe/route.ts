@@ -74,16 +74,19 @@ export async function POST(req: NextRequest) {
       const tenant  = await db.tenant.findFirst({ where: { stripeCustomerId: invoice.customer as string } });
       if (!tenant) break;
 
-      // Si había un downgrade pendiente que ya entró en vigor, aplicarlo
-      const newPlan = tenant.pendingPlan && tenant.pendingPlanAt && tenant.pendingPlanAt <= new Date()
-        ? tenant.pendingPlan
-        : tenant.plan;
+      // Solo tocar `plan` si hay un downgrade pendiente cuyo período ya terminó.
+      // Para altas/renovaciones normales NO se reescribe `plan` aquí: ese campo
+      // ya lo mantiene actualizado el webhook customer.subscription.updated, y
+      // releerlo de la BD en este handler puede generar una condición de carrera
+      // (este evento e invoice.paid llegan casi al mismo tiempo).
+      const pendingDowngradeDue = !!(tenant.pendingPlan && tenant.pendingPlanAt && tenant.pendingPlanAt <= new Date());
+      const recordPlan = pendingDowngradeDue ? tenant.pendingPlan! : tenant.plan;
 
       await Promise.all([
         db.subscription.create({
           data: {
             tenantId:        tenant.id,
-            plan:            newPlan,
+            plan:            recordPlan,
             stripeInvoiceId: invoice.id,
             amount:          invoice.amount_paid,
             currency:        invoice.currency,
@@ -95,11 +98,9 @@ export async function POST(req: NextRequest) {
         db.tenant.update({
           where: { id: tenant.id },
           data: {
-            plan:            newPlan,
-            status:          "ACTIVE",
+            ...(pendingDowngradeDue ? { plan: tenant.pendingPlan!, pendingPlan: null, pendingPlanAt: null } : {}),
+            status:           "ACTIVE",
             currentPeriodEnd: new Date(invoice.period_end * 1000),
-            pendingPlan:     null,
-            pendingPlanAt:   null,
           },
         }),
       ]);
