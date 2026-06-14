@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export async function TopBar() {
   const { userId } = await auth();
-  let tenants: { id: string; name: string; isOwned: boolean; isChild: boolean }[] = [];
+  let tenants: { id: string; name: string; isOwned: boolean; isChild: boolean; isBlocked?: boolean; blockReason?: string; parentName?: string }[] = [];
   let user     = null;
   let userRole = "RECEPTIONIST";
   let canAddSchool = false;
@@ -25,7 +25,19 @@ export async function TopBar() {
     if (user && user.activeTenantId) {
       const memberships = await db.tenantUser.findMany({
         where:   { userId: user.id },
-        include: { tenant: { select: { id: true, name: true, parentTenantId: true, createdByUserId: true } } },
+        include: {
+          tenant: {
+            select: {
+              id: true,
+              name: true,
+              parentTenantId: true,
+              createdByUserId: true,
+              blockChildWrites: true,
+              blockChildWritesReason: true,
+              parentTenant: { select: { name: true } },
+            },
+          },
+        },
       });
 
       tenants = memberships.map(m => ({
@@ -33,6 +45,9 @@ export async function TopBar() {
         name:    m.tenant.name,
         isOwned: m.tenant.createdByUserId === user!.id,
         isChild: m.tenant.parentTenantId !== null,
+        isBlocked: m.tenant.blockChildWrites ?? false,
+        blockReason: m.tenant.blockChildWritesReason || undefined,
+        parentName: m.tenant.parentTenant?.name || undefined,
       }));
 
       const tenantUser = await db.tenantUser.findFirst({
