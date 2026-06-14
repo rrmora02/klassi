@@ -94,6 +94,19 @@ export const instructorsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
 
+      // Check if this tenant is a blocked child tenant
+      const tenant = await db.tenant.findUnique({
+        where: { id: tenantId },
+        select: { blockChildWrites: true, blockChildWritesReason: true, name: true },
+      });
+
+      if (tenant?.blockChildWrites) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: tenant.blockChildWritesReason || `No puedes agregar instructores a "${tenant?.name}" porque su plan no soporta múltiples escuelas. Cambia a tu escuela principal o actualiza el plan a Enterprise.`,
+        });
+      }
+
       // Verificar límite de plan
       const allowed = await canAddInstructor(tenantId);
       if (!allowed) {
