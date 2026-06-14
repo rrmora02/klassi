@@ -50,13 +50,16 @@ const SUPER_ADMIN_ITEMS = [
 interface SidebarProps {
   userRole?: UserRole;
   plan?: SubscriptionPlan;
+  isChild?: boolean;
 }
 
-export function Sidebar({ userRole = "RECEPTIONIST", plan }: SidebarProps) {
+export function Sidebar({ userRole = "RECEPTIONIST", plan, isChild = false }: SidebarProps) {
   const pathname = usePathname();
 
   const NAV_ITEMS    = ALL_NAV_ITEMS.filter(item => item.roles.includes(userRole));
-  const CONFIG_ITEMS = ALL_CONFIG_ITEMS.filter(item => item.roles.includes(userRole));
+  const CONFIG_ITEMS = ALL_CONFIG_ITEMS.filter(item =>
+    item.roles.includes(userRole) && (item.href !== "/dashboard/billing" || !isChild)
+  );
   const ADMIN_ITEMS = SUPER_ADMIN_ITEMS.filter(item => item.roles.includes(userRole));
 
   return (
@@ -113,7 +116,7 @@ export function Sidebar({ userRole = "RECEPTIONIST", plan }: SidebarProps) {
         </div>
 
         {/* Enterprise */}
-        {plan === "ENTERPRISE" && userRole === "ADMIN" && (
+        {plan === "ENTERPRISE" && userRole === "ADMIN" && !isChild && (
           <div className="pt-4">
             <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-sb-light/50">
               Enterprise
