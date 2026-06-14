@@ -31,7 +31,7 @@ export default function BillingPage() {
     );
   }
 
-  const hasActiveSubscription = sub?.status === "ACTIVE" || sub?.status === "SUSPENDED";
+  const hasActiveSubscription = (sub?.status === "ACTIVE" || sub?.status === "SUSPENDED") && !!sub?.stripeCustomerId;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 p-6">
