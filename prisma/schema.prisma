@@ -164,6 +164,10 @@ model Tenant {
   currentPeriodEnd DateTime?
   pendingPlan      SubscriptionPlan?
   pendingPlanAt    DateTime?
+  effectivePlanCache    SubscriptionPlan?         // Cache del plan efectivo (parent.plan si existe), TTL 5 min
+  effectivePlanCacheAt  DateTime?                 // Timestamp del cache, invalida si > 5 min
+  blockChildWrites      Boolean @default(false)   // Si true, bloquea inserts en este child tenant
+  blockChildWritesReason String?                  // Motivo del bloqueo (ej: "Parent downgraded to PRO")
   parentTenantId   String?                        // escuela padre (Enterprise multi-escuela)
   parentTenant     Tenant?          @relation("TenantChildren", fields: [parentTenantId], references: [id])
   childTenants     Tenant[]         @relation("TenantChildren")

@@ -71,7 +71,10 @@ export async function POST(req: NextRequest) {
 
     case "invoice.paid": {
       const invoice = event.data.object as Stripe.Invoice;
-      const tenant  = await db.tenant.findFirst({ where: { stripeCustomerId: invoice.customer as string } });
+      const tenant  = await db.tenant.findFirst({
+        where: { stripeCustomerId: invoice.customer as string },
+        include: { childTenants: { select: { id: true } } },
+      });
       if (!tenant) break;
 
       // Solo tocar `plan` si hay un downgrade pendiente cuyo período ya terminó.
@@ -82,7 +85,7 @@ export async function POST(req: NextRequest) {
       const pendingDowngradeDue = !!(tenant.pendingPlan && tenant.pendingPlanAt && tenant.pendingPlanAt <= new Date());
       const recordPlan = pendingDowngradeDue ? tenant.pendingPlan! : tenant.plan;
 
-      await Promise.all([
+      const updates: Array<Promise<unknown>> = [
         db.subscription.create({
           data: {
             tenantId:        tenant.id,
@@ -103,7 +106,24 @@ export async function POST(req: NextRequest) {
             currentPeriodEnd: new Date(invoice.period_end * 1000),
           },
         }),
-      ]);
+      ];
+
+      // Si se aplicó un downgrade a plan < ENTERPRISE, sincronizar a children
+      if (pendingDowngradeDue && tenant.pendingPlan !== "ENTERPRISE" && tenant.childTenants?.length > 0) {
+        updates.push(
+          db.tenant.updateMany({
+            where: { parentTenantId: tenant.id },
+            data: {
+              blockChildWrites: true,
+              blockChildWritesReason: `Plan de escuela principal es ${PLAN_LABELS[tenant.pendingPlan!]}. Las escuelas adicionales solo están disponibles en Enterprise.`,
+              effectivePlanCache: tenant.pendingPlan,
+              effectivePlanCacheAt: new Date(),
+            },
+          })
+        );
+      }
+
+      await Promise.all(updates);
       break;
     }
 
@@ -127,17 +147,35 @@ export async function POST(req: NextRequest) {
 
     case "customer.subscription.updated": {
       const sub    = event.data.object as Stripe.Subscription;
-      const tenant = await db.tenant.findFirst({ where: { stripeSubId: sub.id } });
+      const tenant = await db.tenant.findFirst({
+        where: { stripeSubId: sub.id },
+        include: { childTenants: { select: { id: true } } },
+      });
       if (!tenant) break;
 
       const newPlan = PRICE_PLAN_MAP[sub.items.data[0]?.price.id ?? ""];
       if (!newPlan || newPlan === tenant.plan) break;
 
       const adminEmail = await getTenantAdminEmail(tenant.id);
+      const hasChildren = tenant.childTenants && tenant.childTenants.length > 0;
 
       if (isDowngrade(tenant.plan, newPlan)) {
         // Programar el downgrade para el fin del período (plan B)
         const effectiveDate = new Date(sub.current_period_end * 1000);
+
+        // Si hay child tenants y el nuevo plan < ENTERPRISE, bloquearlos inmediatamente
+        if (hasChildren && newPlan !== "ENTERPRISE") {
+          await db.tenant.updateMany({
+            where: { parentTenantId: tenant.id },
+            data: {
+              blockChildWrites: true,
+              blockChildWritesReason: `Plan de escuela principal bajará a ${PLAN_LABELS[newPlan]} el ${effectiveDate.toLocaleDateString("es-MX")}. Las escuelas adicionales solo están disponibles en Enterprise.`,
+              effectivePlanCache: newPlan,
+              effectivePlanCacheAt: new Date(),
+            },
+          });
+        }
+
         await db.tenant.update({
           where: { id: tenant.id },
           data: { pendingPlan: newPlan, pendingPlanAt: effectiveDate },
@@ -152,7 +190,19 @@ export async function POST(req: NextRequest) {
           }).catch(err => console.error("[stripe-webhook] Notification failed:", err));
         }
       } else {
-        // Upgrade — aplica de inmediato
+        // Upgrade — aplica de inmediato y desbloquea child tenants
+        if (hasChildren && newPlan === "ENTERPRISE") {
+          await db.tenant.updateMany({
+            where: { parentTenantId: tenant.id },
+            data: {
+              blockChildWrites: false,
+              blockChildWritesReason: null,
+              effectivePlanCache: newPlan,
+              effectivePlanCacheAt: new Date(),
+            },
+          });
+        }
+
         await db.tenant.update({
           where: { id: tenant.id },
           data: { plan: newPlan, pendingPlan: null, pendingPlanAt: null },
