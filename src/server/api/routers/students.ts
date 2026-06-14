@@ -195,6 +195,19 @@ export const studentsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
 
+      // Check if this tenant is a blocked child tenant (parent downgraded below ENTERPRISE)
+      const tenant = await db.tenant.findUnique({
+        where: { id: tenantId },
+        select: { blockChildWrites: true, blockChildWritesReason: true, name: true, parentTenantId: true },
+      });
+
+      if (tenant?.blockChildWrites) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: tenant.blockChildWritesReason || `No puedes agregar alumnos a "${tenant?.name}" porque su plan no soporta múltiples escuelas. Cambia a tu escuela principal o actualiza el plan a Enterprise.`,
+        });
+      }
+
       // Idempotence: Check if student already exists by email
       if (input.email) {
         const existing = await db.student.findFirst({
