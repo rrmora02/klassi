@@ -4,6 +4,7 @@ import { api } from "@/lib/trpc";
 import { PlanUsageBar } from "@/components/billing/plan-usage-bar";
 import { PLAN_LABELS, PLAN_PRICES, PLAN_LIMITS } from "@/lib/plan-limits";
 import type { SubscriptionPlan } from "@prisma/client";
+import { AlertTriangle } from "lucide-react";
 
 const PLAN_FEATURES: Record<SubscriptionPlan, string[]> = {
   STARTER:    ["100 alumnos activos", "5 grupos", "5 instructores", "Todas las funciones incluidas"],
@@ -15,6 +16,7 @@ export default function BillingPage() {
   const { data: sub,   isLoading: loadingSub   } = api.billing.getSubscription.useQuery(undefined, { staleTime: 0 });
   const { data: usage, isLoading: loadingUsage } = api.billing.getPlanUsage.useQuery(undefined, { staleTime: 0 });
   const { data: plans, isLoading: loadingPlans } = api.billing.getPlans.useQuery();
+  const { data: allTenants, isLoading: loadingTenants } = api.tenants.getAllTenants.useQuery();
 
   const checkoutMutation = api.billing.createCheckoutSession.useMutation({
     onSuccess: ({ url }) => { if (url) window.location.href = url; },
@@ -23,7 +25,7 @@ export default function BillingPage() {
     onSuccess: ({ url }) => { window.location.href = url; },
   });
 
-  if (loadingSub || loadingUsage || loadingPlans) {
+  if (loadingSub || loadingUsage || loadingPlans || loadingTenants) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sb-accent" />
@@ -32,6 +34,10 @@ export default function BillingPage() {
   }
 
   const hasActiveSubscription = (sub?.status === "ACTIVE" || sub?.status === "SUSPENDED") && !!sub?.stripeCustomerId;
+  
+  // Contar child tenants bloqueados si hay downgrade programado
+  const blockedChildTenants = allTenants?.filter(t => t.isBlocked && t.isChild) || [];
+  const willAffectChildren = sub?.pendingPlan && sub.pendingPlan !== "ENTERPRISE" && blockedChildTenants.length > 0;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -89,6 +95,14 @@ export default function BillingPage() {
             <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4 text-sm text-blue-800 dark:text-blue-200">
               Tu plan cambiará a <strong>{sub.pendingLabel}</strong> el{" "}
               {new Date(sub.pendingPlanAt).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}.
+              {willAffectChildren && (
+                <div className="mt-2 flex items-start gap-2 text-xs">
+                  <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span>
+                    Esta acción deshabilitará {blockedChildTenants.length} escuela{blockedChildTenants.length > 1 ? "s" : ""} secundaria{blockedChildTenants.length > 1 ? "s" : ""}. No podrás agregar datos ahí hasta que actualices a Enterprise.
+                  </span>
+                </div>
+              )}
             </div>
           )}
 

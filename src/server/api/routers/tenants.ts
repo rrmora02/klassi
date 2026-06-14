@@ -97,5 +97,39 @@ export const tenantsRouter = createTRPCRouter({
           address:      input.address || null,
         }
       });
-    })
+    }),
+
+  getAllTenants: protectedProcedure
+    .query(async ({ ctx }) => {
+      const memberships = await ctx.db.tenantUser.findMany({
+        where: { userId: ctx.dbUser!.id },
+        include: {
+          tenant: {
+            select: {
+              id: true,
+              name: true,
+              plan: true,
+              blockChildWrites: true,
+              blockChildWritesReason: true,
+              parentTenantId: true,
+              parentTenant: { select: { name: true } },
+            },
+          },
+        },
+        orderBy: [
+          { tenant: { parentTenantId: "asc" } },
+          { tenant: { name: "asc" } },
+        ],
+      });
+
+      return memberships.map(m => ({
+        tenantId: m.tenant.id,
+        name: m.tenant.name,
+        plan: m.tenant.plan,
+        isBlocked: m.tenant.blockChildWrites,
+        blockReason: m.tenant.blockChildWritesReason,
+        isChild: !!m.tenant.parentTenantId,
+        parentName: m.tenant.parentTenant?.name || null,
+      }));
+    }),
 });
