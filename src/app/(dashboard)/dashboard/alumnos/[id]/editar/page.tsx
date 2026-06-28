@@ -33,12 +33,12 @@ export default async function EditarAlumnoPage({ params }: { params: { id: strin
   const name = fullName(student.firstName, student.lastName);
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
+    <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 12, paddingRight: 12 }} className="sm:px-4 lg:px-0">
       {/* Breadcrumb */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)", flexWrap: "wrap" }}>
         <Link href="/dashboard/alumnos" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>Alumnos</Link>
         <span>/</span>
-        <Link href={`/dashboard/alumnos/${student.id}`} style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>{name}</Link>
+        <Link href={`/dashboard/alumnos/${student.id}`} style={{ color: "var(--color-text-secondary)", textDecoration: "none", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{name}</Link>
         <span>/</span>
         <span style={{ color: "var(--color-text-primary)" }}>Editar</span>
       </div>
