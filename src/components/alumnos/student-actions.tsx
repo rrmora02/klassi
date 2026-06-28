@@ -50,17 +50,18 @@ export function StudentActions({ studentId, studentName, status }: Props) {
 
   return (
     <>
-      <div ref={menuRef} style={{ display: "flex", gap: 8, alignItems: "center", position: "relative" }}>
+      <div ref={menuRef} style={{ display: "flex", gap: 6, alignItems: "center", position: "relative" }}>
         <Link
           href={`/dashboard/alumnos/${studentId}/editar`}
-          style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "7px 16px", fontSize: 13, color: "var(--color-text-secondary)", textDecoration: "none", background: "var(--color-background-primary)" }}
+          style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "var(--color-text-secondary)", textDecoration: "none", background: "var(--color-background-primary)", whiteSpace: "nowrap" }}
+          className="sm:text-sm sm:px-4"
         >
           Editar
         </Link>
 
         <button
           onClick={() => setShowMenu(m => !m)}
-          style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "7px 12px", fontSize: 13, color: "var(--color-text-secondary)", background: "var(--color-background-primary)", cursor: "pointer" }}
+          style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "6px 8px", fontSize: 13, color: "var(--color-text-secondary)", background: "var(--color-background-primary)", cursor: "pointer", flexShrink: 0 }}
         >
           ···
         </button>

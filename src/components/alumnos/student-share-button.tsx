@@ -36,6 +36,7 @@ export function StudentShareButton({ studentId }: Props) {
     <>
       <button
         onClick={handleOpen}
+        title="Compartir historial"
         style={{
           display: "flex", alignItems: "center", gap: 6,
           padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500,
@@ -43,9 +44,10 @@ export function StudentShareButton({ studentId }: Props) {
           background: "transparent", color: "var(--color-text-secondary)",
           cursor: "pointer",
         }}
+        className="sm:flex"
       >
         <Share2 size={14} />
-        Compartir historial
+        <span className="hidden sm:inline">Compartir historial</span>
       </button>
 
       {open && (
