@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, adminProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { instructorFormSchema } from "@/lib/schemas/instructor.schema";
 import { sendInstructorInvitation } from "@/server/services/email.service";
@@ -89,7 +89,7 @@ export const instructorsRouter = createTRPCRouter({
     }),
 
   // ── Crear Instructor ─────────────────────────────────────────────
-  create: tenantProcedure
+  create: adminProcedure
     .input(instructorFormSchema)
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
@@ -211,7 +211,7 @@ export const instructorsRouter = createTRPCRouter({
     }),
 
   // ── Actualizar Instructor ────────────────────────────────────────
-  update: tenantProcedure
+  update: adminProcedure
     .input(instructorsUpdateSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, name, email, ...data } = input;
@@ -271,7 +271,7 @@ export const instructorsRouter = createTRPCRouter({
     }),
 
   // ── Modificar Status Rápidamente ─────────────────────────────────
-  setStatus: tenantProcedure
+  setStatus: adminProcedure
     .input(z.object({
       id: z.string().cuid("ID inválido"),
       isActive: z.boolean(),
@@ -292,7 +292,7 @@ export const instructorsRouter = createTRPCRouter({
     }),
 
   // ── Eliminar Instructor ──────────────────────────────────────────
-  delete: tenantProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string().cuid("ID inválido") }))
     .mutation(async ({ ctx, input }) => {
       const instructor = await ctx.db.instructor.findFirst({
@@ -323,7 +323,7 @@ export const instructorsRouter = createTRPCRouter({
     }),
 
   // ── Admin se registra como Instructor ────────────────────────────
-  registerAdminAsInstructor: tenantProcedure
+  registerAdminAsInstructor: adminProcedure
     .mutation(async ({ ctx }) => {
       // Verify user is ADMIN
       const adminUser = await ctx.db.tenantUser.findFirst({

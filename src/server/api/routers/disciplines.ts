@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, adminProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
 // Definición de un campo extendido de disciplina
@@ -32,7 +32,7 @@ export const disciplinesRouter = createTRPCRouter({
       return resp;
     }),
 
-  create: tenantProcedure
+  create: adminProcedure
     .input(z.object({
       name:           z.string().min(1),
       description:    z.string().optional(),
@@ -53,7 +53,7 @@ export const disciplinesRouter = createTRPCRouter({
       });
     }),
 
-  update: tenantProcedure
+  update: adminProcedure
     .input(z.object({
       id:             z.string().cuid(),
       name:           z.string().min(1).optional(),
@@ -70,7 +70,7 @@ export const disciplinesRouter = createTRPCRouter({
       return ctx.db.discipline.update({ where: { id }, data });
     }),
 
-  delete: tenantProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const groupCount = await ctx.db.group.count({

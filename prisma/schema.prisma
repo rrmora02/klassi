@@ -204,7 +204,7 @@ model Subscription {
   tenantId        String
   tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   plan            SubscriptionPlan
-  stripeInvoiceId String?
+  stripeInvoiceId String?          @unique
   amount          Int // en centavos
   currency        String           @default("usd")
   status          String // paid | unpaid | void
@@ -213,6 +213,13 @@ model Subscription {
   createdAt       DateTime         @default(now())
 
   @@index([tenantId])
+}
+
+// Registro de eventos de Stripe ya procesados (idempotencia del webhook)
+model StripeEvent {
+  id          String   @id // event.id de Stripe (evt_...)
+  type        String
+  processedAt DateTime @default(now())
 }
 
 // ─── Usuario ──────────────────────────────────────────────────────
@@ -383,6 +390,9 @@ model Student {
   // 🥋 Karate belt system
   currentBeltColor BeltColor?  // ⚪ Blanca, 🟡 Amarilla, etc (solo si es Karate)
   beltUpdatedAt    DateTime?   // Cuándo cambió de cinta
+
+  // Token opaco para el link público de historial (revocable; null = sin link)
+  shareToken String? @unique
 
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt

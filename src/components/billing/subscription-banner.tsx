@@ -15,6 +15,18 @@ export function SubscriptionBanner({ status, trialEndsAt, pendingPlan, pendingPl
   if (status === "TRIAL" && trialEndsAt) {
     const daysLeft = Math.ceil((trialEndsAt.getTime() - Date.now()) / 86_400_000);
     if (daysLeft > 7) return null;
+    if (daysLeft <= 0) {
+      return (
+        <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 flex items-center justify-between gap-4">
+          <p className="text-sm text-red-800 dark:text-red-200">
+            Tu prueba gratuita <strong>terminó</strong>. Elige un plan para seguir haciendo cambios.
+          </p>
+          <Link href="/dashboard/billing" className="text-sm font-medium text-red-900 dark:text-red-100 underline whitespace-nowrap">
+            Elegir plan
+          </Link>
+        </div>
+      );
+    }
     return (
       <div className="bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3 flex items-center justify-between gap-4">
         <p className="text-sm text-amber-800 dark:text-amber-200">
@@ -27,14 +39,16 @@ export function SubscriptionBanner({ status, trialEndsAt, pendingPlan, pendingPl
     );
   }
 
-  if (status === "SUSPENDED") {
+  if (status === "SUSPENDED" || status === "CANCELLED") {
     return (
       <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg px-4 py-3 flex items-center justify-between gap-4">
         <p className="text-sm text-red-800 dark:text-red-200">
-          Tu suscripción está suspendida. Actualiza tu método de pago para recuperar el acceso completo.
+          {status === "SUSPENDED"
+            ? "Tu suscripción está suspendida. Actualiza tu método de pago para recuperar el acceso completo."
+            : "Tu suscripción fue cancelada. Reactívala para seguir haciendo cambios."}
         </p>
         <Link href="/dashboard/billing" className="text-sm font-medium text-red-900 dark:text-red-100 underline whitespace-nowrap">
-          Ir a billing
+          Ir a Suscripción
         </Link>
       </div>
     );

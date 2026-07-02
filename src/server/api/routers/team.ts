@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, adminProcedure, publicProcedure, protectedProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { invalidateUserCache } from "@/server/cache/userAuthCache";
 
 export const teamRouter = createTRPCRouter({
   
-  getMembers: tenantProcedure
+  getMembers: adminProcedure
     .query(async ({ ctx }) => {
       return ctx.db.tenantUser.findMany({
         where: { tenantId: ctx.tenantId },
@@ -16,7 +16,7 @@ export const teamRouter = createTRPCRouter({
       });
     }),
 
-  getInvitations: tenantProcedure
+  getInvitations: adminProcedure
     .query(async ({ ctx }) => {
       return ctx.db.teamInvitation.findMany({
         where: { tenantId: ctx.tenantId, status: "PENDING" },
@@ -24,7 +24,7 @@ export const teamRouter = createTRPCRouter({
       });
     }),
 
-  inviteMember: tenantProcedure
+  inviteMember: adminProcedure
     .input(z.object({
        email: z.string().email("Correo inválido"),
        role:  z.enum(["ADMIN", "RECEPTIONIST", "INSTRUCTOR"]),
@@ -78,7 +78,7 @@ export const teamRouter = createTRPCRouter({
        });
     }),
 
-  revokeInvitation: tenantProcedure
+  revokeInvitation: adminProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
        const invite = await ctx.db.teamInvitation.findFirst({
@@ -91,7 +91,7 @@ export const teamRouter = createTRPCRouter({
        });
     }),
 
-  removeMember: tenantProcedure
+  removeMember: adminProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
        // Cannot remove yourself basically
@@ -168,12 +168,9 @@ export const teamRouter = createTRPCRouter({
        };
     }),
 
-  acceptInvitation: publicProcedure
+  acceptInvitation: protectedProcedure
     .input(z.object({
-      token: z.string(),
-      clerkId: z.string(),
-      email: z.string().email(),
-      name: z.string()
+      token: z.string()
     }))
     .mutation(async ({ ctx, input }) => {
        const invitation = await ctx.db.teamInvitation.findFirst({
@@ -188,27 +185,47 @@ export const teamRouter = createTRPCRouter({
          throw new TRPCError({ code: "BAD_REQUEST", message: "La invitación ha expirado." });
        }
 
-       // Validate that the email matches the invitation (case-insensitive, trimmed)
-       const invitationEmail = invitation.email.toLowerCase().trim();
-       const inputEmail = input.email.toLowerCase().trim();
+       // Identidad SIEMPRE derivada de la sesión de Clerk, nunca del input:
+       // quien posea el link no puede aceptar la invitación a nombre de otro.
+       const clerkId = ctx.userId;
+       let email = ctx.dbUser?.email ?? null;
+       let name  = ctx.dbUser?.name ?? null;
 
-       if (invitationEmail !== inputEmail) {
+       if (!email) {
+         const { clerkClient } = await import("@clerk/nextjs/server");
+         const client    = await clerkClient();
+         const clerkUser = await client.users.getUser(clerkId);
+         email = clerkUser.emailAddresses.find(e => e.id === clerkUser.primaryEmailAddressId)?.emailAddress
+              ?? clerkUser.emailAddresses[0]?.emailAddress
+              ?? null;
+         name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || email;
+       }
+
+       if (!email) {
+         throw new TRPCError({ code: "BAD_REQUEST", message: "Tu cuenta no tiene un correo verificado." });
+       }
+
+       // Validate that the session email matches the invitation (case-insensitive, trimmed)
+       const invitationEmail = invitation.email.toLowerCase().trim();
+       const sessionEmail    = email.toLowerCase().trim();
+
+       if (invitationEmail !== sessionEmail) {
          throw new TRPCError({
            code: "FORBIDDEN",
-           message: "El correo no coincide con el de la invitación."
+           message: "El correo de tu sesión no coincide con el de la invitación."
          });
        }
 
        // Get or create user
        // First, try to find by clerkId (already registered)
        let user = await ctx.db.user.findUnique({
-         where: { clerkId: input.clerkId }
+         where: { clerkId }
        });
 
        if (!user) {
          // If not found by clerkId, search by email (might be pending instructor)
          const userByEmail = await ctx.db.user.findFirst({
-           where: { email: input.email }
+           where: { email }
          });
 
          if (userByEmail) {
@@ -216,16 +233,16 @@ export const teamRouter = createTRPCRouter({
            const oldClerkId = userByEmail.clerkId;
            user = await ctx.db.user.update({
              where: { id: userByEmail.id },
-             data: { clerkId: input.clerkId, name: input.name }
+             data: { clerkId, name: name ?? userByEmail.name }
            });
            invalidateUserCache(oldClerkId);
          } else {
            // Create new user
            user = await ctx.db.user.create({
              data: {
-               clerkId: input.clerkId,
-               email: input.email,
-               name: input.name
+               clerkId,
+               email,
+               name: name ?? email
              }
            });
          }
@@ -272,7 +289,7 @@ export const teamRouter = createTRPCRouter({
 
        // El contexto tRPC cachea el usuario (TTL 10 min); sin esto el recién
        // invitado seguiría viendo "No perteneces a ninguna escuela".
-       invalidateUserCache(input.clerkId);
+       invalidateUserCache(clerkId);
 
        // Mark invitation as accepted
        await ctx.db.teamInvitation.update({

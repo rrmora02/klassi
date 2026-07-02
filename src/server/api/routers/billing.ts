@@ -1,8 +1,9 @@
 import { z } from "zod";
 import Stripe from "stripe";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, adminProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
-import { PLAN_LIMITS, PLAN_LABELS, PLAN_PRICES, STRIPE_PRICE_IDS, PRICE_TO_PLAN, isDowngrade } from "@/lib/plan-limits";
+import { PLAN_LIMITS, PLAN_LABELS, PLAN_PRICES, STRIPE_PRICE_IDS, PRICE_TO_PLAN } from "@/lib/plan-limits";
+import { applyPlanChange, syncChildTenants, revertPendingDowngrade } from "@/server/services/subscription.service";
 import type { SubscriptionPlan } from "@prisma/client";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
@@ -64,17 +65,44 @@ export const billingRouter = createTRPCRouter({
       let tenant = await ctx.db.tenant.findUnique({ where: { id: ctx.tenantId }, select });
       if (!tenant) throw new TRPCError({ code: "NOT_FOUND" });
 
-      // Reconciliación: si Stripe quedó con un plan distinto al de la BD
-      // (p. ej. por un webhook que no llegó), sincronizamos al consultar.
+      // Reconciliación: si Stripe quedó con un plan o status distinto al de la
+      // BD (p. ej. por un webhook que no llegó), sincronizamos al consultar,
+      // usando la misma lógica que los webhooks (incluye escuelas hijas).
       // No tocamos `plan` si coincide con un downgrade ya programado (pendingPlan),
       // ya que ese cambio se aplica intencionalmente hasta el fin del período.
-      if (tenant.stripeSubId && tenant.status === "ACTIVE") {
+      if (tenant.stripeSubId && (tenant.status === "ACTIVE" || tenant.status === "SUSPENDED")) {
         try {
           const sub      = await stripe.subscriptions.retrieve(tenant.stripeSubId);
           const livePlan = PRICE_TO_PLAN[sub.items.data[0]?.price.id ?? ""];
-          if (livePlan && livePlan !== tenant.plan && livePlan !== tenant.pendingPlan) {
-            tenant = await ctx.db.tenant.update({ where: { id: tenant.id }, data: { plan: livePlan }, select });
+
+          if (sub.status === "canceled") {
+            // Se perdió el webhook subscription.deleted
+            await ctx.db.tenant.update({
+              where: { id: tenant.id },
+              data:  { status: "CANCELLED", stripeSubId: null, pendingPlan: null, pendingPlanAt: null },
+            });
+            await syncChildTenants(ctx.db, tenant.id, "STARTER", {
+              reason: "La suscripción de la escuela principal fue cancelada. Las escuelas adicionales solo están disponibles en Enterprise.",
+            });
+          } else {
+            if (livePlan && livePlan !== tenant.plan && livePlan !== tenant.pendingPlan) {
+              // Se perdió un webhook de cambio de plan
+              await applyPlanChange(ctx.db, tenant.id, livePlan);
+            } else if (livePlan && livePlan === tenant.plan && tenant.pendingPlan) {
+              // El cliente revirtió el downgrade en Stripe y el webhook se perdió
+              await revertPendingDowngrade(ctx.db, tenant.id, tenant.plan);
+            }
+
+            const liveStatus =
+              sub.status === "past_due" || sub.status === "unpaid" ? "SUSPENDED" :
+              sub.status === "active"                              ? "ACTIVE"    : null;
+            if (liveStatus && liveStatus !== tenant.status) {
+              await ctx.db.tenant.update({ where: { id: tenant.id }, data: { status: liveStatus } });
+            }
           }
+
+          const refreshed = await ctx.db.tenant.findUnique({ where: { id: tenant.id }, select });
+          if (refreshed) tenant = refreshed;
         } catch (err) {
           console.error("[billing] Reconciliación con Stripe falló:", err);
         }
@@ -108,7 +136,7 @@ export const billingRouter = createTRPCRouter({
       };
     }),
 
-  createCheckoutSession: tenantProcedure
+  createCheckoutSession: adminProcedure
     .input(z.object({ plan: z.enum(["STARTER", "PRO", "ENTERPRISE"]) }))
     .mutation(async ({ ctx, input }) => {
       const tenant = await ctx.db.tenant.findUnique({
@@ -146,7 +174,7 @@ export const billingRouter = createTRPCRouter({
       return { url: session.url };
     }),
 
-  getPortalUrl: tenantProcedure
+  getPortalUrl: adminProcedure
     .mutation(async ({ ctx }) => {
       const tenant = await ctx.db.tenant.findUnique({
         where:  { id: ctx.tenantId },

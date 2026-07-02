@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, adminProcedure } from "@/server/api/trpc";
 
 export const reportsRouter = createTRPCRouter({
 
-  monthlyRevenue: tenantProcedure
+  monthlyRevenue: adminProcedure
     .input(z.object({ year: z.number() }))
     .query(async ({ ctx, input }) => {
       const results = await Promise.all(
@@ -23,7 +23,7 @@ export const reportsRouter = createTRPCRouter({
       return results;
     }),
 
-  byDiscipline: tenantProcedure
+  byDiscipline: adminProcedure
     .input(z.object({ year: z.number(), month: z.number().min(1).max(12).optional() }))
     .query(async ({ ctx, input }) => {
       const from = input.month
@@ -57,7 +57,7 @@ export const reportsRouter = createTRPCRouter({
       }));
     }),
 
-  attendanceSummary: tenantProcedure
+  attendanceSummary: adminProcedure
     .input(z.object({ from: z.date(), to: z.date() }))
     .query(async ({ ctx, input }) => {
       const [present, absent, justified, late] = await Promise.all([
@@ -70,7 +70,7 @@ export const reportsRouter = createTRPCRouter({
       return { present, absent, justified, late, total, rate: total > 0 ? Math.round((present / total) * 100) : 0 };
     }),
 
-  paymentCollectionRate: tenantProcedure
+  paymentCollectionRate: adminProcedure
     .input(z.object({ year: z.number(), month: z.number().min(1).max(12) }))
     .query(async ({ ctx, input }) => {
       const from = new Date(input.year, input.month - 1, 1);

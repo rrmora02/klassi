@@ -31,13 +31,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
     db.student.count({ where: { tenantId: user.activeTenantId } }),
   ]);
 
-  const userRole = tenantUser?.role ?? "RECEPTIONIST";
+  // Sin membresía real en la escuela activa (p. ej. fue removido del equipo)
+  // no hay acceso al dashboard.
+  if (!tenantUser) {
+    redirect("/onboarding");
+  }
+
+  const userRole = tenantUser.role;
 
   return (
     <>
       <OnboardingTourWrapper hasStudents={studentCount > 0} />
       <DashboardShell sidebar={<Sidebar userRole={userRole} plan={tenant?.plan} isChild={!!tenant?.parentTenantId} />} topbar={<TopBar />}>
-        {userRole === "ADMIN" && tenant && (
+        {tenant && (
           <div className="px-6 pt-4">
             <SubscriptionBanner
               status={tenant.status}

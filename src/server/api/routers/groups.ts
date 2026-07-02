@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { GroupLevel, type Prisma } from "@prisma/client";
 
@@ -178,7 +178,7 @@ export const groupsRouter = createTRPCRouter({
 
   // ── Crear grupo ───────────────────────────────────────────────
 
-  create: tenantProcedure
+  create: staffProcedure
     .input(groupCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
@@ -244,7 +244,7 @@ export const groupsRouter = createTRPCRouter({
 
   // ── Actualizar grupo ──────────────────────────────────────────
 
-  update: tenantProcedure
+  update: staffProcedure
     .input(groupUpdateSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -301,7 +301,7 @@ export const groupsRouter = createTRPCRouter({
 
   // ── Activar / Desactivar grupo ────────────────────────────────
 
-  setActive: tenantProcedure
+  setActive: staffProcedure
     .input(z.object({
       id:       z.string().cuid("ID inválido"),
       isActive: z.boolean(),
@@ -325,7 +325,7 @@ export const groupsRouter = createTRPCRouter({
 
   // ── Eliminar grupo (solo sin inscripciones) ───────────────────
 
-  delete: tenantProcedure
+  delete: staffProcedure
     .input(z.object({ id: z.string().cuid("ID inválido") }))
     .mutation(async ({ ctx, input }) => {
       const group = await ctx.db.group.findFirst({

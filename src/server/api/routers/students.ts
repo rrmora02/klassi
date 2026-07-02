@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { StudentStatus } from "@prisma/client";
 import { canAddStudent } from "@/server/services/tenant.service";
@@ -190,7 +190,7 @@ export const studentsRouter = createTRPCRouter({
 
   // ── Crear alumno ──────────────────────────────────────────────
 
-  create: tenantProcedure
+  create: staffProcedure
     .input(studentCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
@@ -300,7 +300,7 @@ export const studentsRouter = createTRPCRouter({
 
   // ── Actualizar alumno ─────────────────────────────────────────
 
-  update: tenantProcedure
+  update: staffProcedure
     .input(studentUpdateSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, tutorName, tutorPhone, tutorEmail, tutorRelationship, currentBeltColor, ...data } = input;
@@ -401,7 +401,7 @@ export const studentsRouter = createTRPCRouter({
 
   // ── Cambiar estado (activar / desactivar / suspender) ─────────
 
-  setStatus: tenantProcedure
+  setStatus: staffProcedure
     .input(z.object({
       id:     z.string().cuid("ID inválido"),
       status: z.nativeEnum(StudentStatus),
@@ -433,7 +433,7 @@ export const studentsRouter = createTRPCRouter({
 
   // ── Eliminar permanentemente (solo sin historial) ─────────────
 
-  delete: tenantProcedure
+  delete: staffProcedure
     .input(z.object({ id: z.string().cuid("ID inválido") }))
     .mutation(async ({ ctx, input }) => {
       const student = await ctx.db.student.findFirst({
@@ -497,7 +497,32 @@ export const studentsRouter = createTRPCRouter({
     }),
 
   // ── Generar enlace público compartible ───────────────────────────
-  generateShareLink: tenantProcedure
+  generateShareLink: staffProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { db, tenantId } = ctx;
+
+      const student = await db.student.findFirst({
+        where: { id: input.id, tenantId },
+        select: { id: true, shareToken: true },
+      });
+      if (!student) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Token opaco dedicado (NO el id del alumno, que aparece en URLs internas
+      // y respuestas de la API). Revocable poniéndolo en null.
+      if (student.shareToken) return { shareToken: student.shareToken };
+
+      const { randomBytes } = await import("crypto");
+      const token = randomBytes(32).toString("hex");
+      await db.student.update({
+        where: { id: student.id },
+        data:  { shareToken: token },
+      });
+      return { shareToken: token };
+    }),
+
+  // ── Revocar enlace público (invalida el link compartido) ─────────
+  revokeShareLink: staffProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const { db, tenantId } = ctx;
@@ -508,8 +533,11 @@ export const studentsRouter = createTRPCRouter({
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-      // El CUID del alumno es el token — 25 chars aleatorios, imposible de adivinar
-      return { shareToken: student.id };
+      await db.student.update({
+        where: { id: student.id },
+        data:  { shareToken: null },
+      });
+      return { success: true };
     }),
 
   // ── Obtener cintas de estudiantes (para asistencia) ───────────────────────────

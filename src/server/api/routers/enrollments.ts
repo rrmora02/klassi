@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
 export const enrollmentsRouter = createTRPCRouter({
 
-  getStudentsAvailableForGroup: tenantProcedure
+  getStudentsAvailableForGroup: staffProcedure
     .input(z.object({ groupId: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
        const group = await ctx.db.group.findFirst({
@@ -41,7 +41,7 @@ export const enrollmentsRouter = createTRPCRouter({
        };
     }),
 
-  getGroupsAvailableForStudent: tenantProcedure
+  getGroupsAvailableForStudent: staffProcedure
     .input(z.object({ studentId: z.string().cuid() }))
     .query(async ({ ctx, input }) => {
        const student = await ctx.db.student.findFirst({
@@ -74,7 +74,7 @@ export const enrollmentsRouter = createTRPCRouter({
        }));
     }),
 
-  enroll: tenantProcedure
+  enroll: staffProcedure
     .input(z.object({
        studentId: z.string().cuid(),
        groupId: z.string().cuid(),
@@ -130,7 +130,7 @@ export const enrollmentsRouter = createTRPCRouter({
        return { ...enrollment, _isIdempotent: false };
     }),
 
-  transfer: tenantProcedure
+  transfer: staffProcedure
     .input(z.object({
        currentEnrollmentId: z.string().cuid(),
        studentId: z.string().cuid(),

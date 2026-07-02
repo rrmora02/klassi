@@ -55,20 +55,8 @@ export default function AceptarInvitacionPage() {
     }
 
     try {
-      const userResponse = await fetch("/api/auth/user");
-      if (!userResponse.ok) {
-        throw new Error("Error al obtener información del usuario");
-      }
-      const user = await userResponse.json();
-
-      console.log("Aceptando invitación con email:", user.email);
-
-      await acceptInvitation.mutateAsync({
-        token: token || "",
-        clerkId: userId,
-        email: user.email,
-        name: user.name || user.email
-      });
+      // La identidad (clerkId/email) la deriva el servidor de la sesión.
+      await acceptInvitation.mutateAsync({ token: token || "" });
 
       setAccepted(true);
       setToast({ message: "¡Invitación aceptada! Redirigiendo...", type: "success" });

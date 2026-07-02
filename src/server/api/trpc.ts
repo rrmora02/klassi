@@ -2,6 +2,7 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { auth } from "@clerk/nextjs/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import type { UserRole } from "@prisma/client";
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/server/db";
 import { loggingService } from "@/server/logging/loggingService";
@@ -121,22 +122,43 @@ const isAuthenticated = t.middleware(({ ctx, next }) => {
   return next({ ctx: { ...ctx, userId: ctx.userId, dbUser: ctx.dbUser } });
 });
 
-const hasTenant = t.middleware(async ({ ctx, next }) => {
-  if (!ctx.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
-  if (!ctx.tenantId || !ctx.dbUser) throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
+const hasTenantRole = (allowedRoles?: UserRole[]) =>
+  t.middleware(async ({ ctx, next, path, type }) => {
+    if (!ctx.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
+    if (!ctx.tenantId || !ctx.dbUser) throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
 
-  // Verificar la membresía real, no solo activeTenantId: al remover a un
-  // usuario del equipo su activeTenantId puede seguir apuntando a la escuela.
-  const membership = await ctx.db.tenantUser.findUnique({
-    where:  { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.dbUser.id } },
-    select: { role: true },
+    // Verificar la membresía real, no solo activeTenantId: al remover a un
+    // usuario del equipo su activeTenantId puede seguir apuntando a la escuela.
+    const membership = await ctx.db.tenantUser.findUnique({
+      where:  { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.dbUser.id } },
+      select: { role: true, tenant: { select: { status: true, trialEndsAt: true } } },
+    });
+    if (!membership) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
+    }
+    if (allowedRoles && !allowedRoles.includes(membership.role)) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "No tienes permisos para realizar esta acción" });
+    }
+
+    // Enforcement de suscripción: sin plan al corriente se bloquean las
+    // mutaciones (lectura permitida). billing.* queda abierto para reactivar.
+    if (type === "mutation" && !path.startsWith("billing.")) {
+      const { status, trialEndsAt } = membership.tenant;
+      const trialExpired = status === "TRIAL" && !!trialEndsAt && trialEndsAt < new Date();
+      if (status === "SUSPENDED" || status === "CANCELLED" || trialExpired) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: trialExpired
+            ? "Tu periodo de prueba terminó. Elige un plan en Suscripción para seguir haciendo cambios."
+            : "La suscripción de la escuela está " + (status === "SUSPENDED" ? "suspendida" : "cancelada") + ". Reactívala en Suscripción para seguir haciendo cambios.",
+        });
+      }
+    }
+
+    return next({ ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId, dbUser: ctx.dbUser, tenantRole: membership.role } });
   });
-  if (!membership) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
-  }
 
-  return next({ ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId, dbUser: ctx.dbUser, tenantRole: membership.role } });
-});
+const hasTenant = hasTenantRole();
 
 const isSuperAdmin = t.middleware(({ ctx, next }) => {
   if (!ctx.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
@@ -177,4 +199,8 @@ export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure.use(errorHandler).use(performanceMetrics);
 export const protectedProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(isAuthenticated);
 export const tenantProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(hasTenant).use(cacheInvalidation);
+// Miembros con permisos de gestión (recepción y administración)
+export const staffProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(hasTenantRole(["ADMIN", "RECEPTIONIST"])).use(cacheInvalidation);
+// Solo el administrador de la escuela (facturación, equipo, configuración)
+export const adminProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(hasTenantRole(["ADMIN"])).use(cacheInvalidation);
 export const superAdminProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(isSuperAdmin);

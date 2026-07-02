@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure, publicProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, adminProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { type Prisma } from "@prisma/client";
 import { loggingService } from "@/server/logging/loggingService";
@@ -21,7 +21,7 @@ const createEventSchema = z.object({
 
 export const eventsRouter = createTRPCRouter({
   // Crear evento
-  create: tenantProcedure
+  create: adminProcedure
     .input(createEventSchema)
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
@@ -324,7 +324,7 @@ export const eventsRouter = createTRPCRouter({
     }),
 
   // Marcar asistencia (admin)
-  markAttendance: tenantProcedure
+  markAttendance: adminProcedure
     .input(
       z.object({
         paymentId: z.string().cuid(),
@@ -377,7 +377,7 @@ export const eventsRouter = createTRPCRouter({
     }),
 
   // Marcar como pagado
-  markAsPaid: tenantProcedure
+  markAsPaid: adminProcedure
     .input(z.object({
       paymentId: z.string().cuid(),
       method: z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"]).optional(),
@@ -520,7 +520,7 @@ export const eventsRouter = createTRPCRouter({
     }),
 
   // Actualizar evento
-  update: tenantProcedure
+  update: adminProcedure
     .input(
       z.object({
         id: z.string().cuid(),
@@ -591,7 +591,7 @@ export const eventsRouter = createTRPCRouter({
     }),
 
   // Eliminar evento
-  delete: tenantProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
@@ -612,7 +612,7 @@ export const eventsRouter = createTRPCRouter({
     }),
 
   // Generar pagos faltantes para nuevos alumnos
-  generateMissingPayments: tenantProcedure
+  generateMissingPayments: adminProcedure
     .input(z.object({ eventId: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
@@ -761,7 +761,7 @@ export const eventsRouter = createTRPCRouter({
     }),
 
   // Marcar evento como completado
-  markAsCompleted: tenantProcedure
+  markAsCompleted: adminProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;

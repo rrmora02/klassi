@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
 import { loggingService } from "@/server/logging/loggingService";
 
 export const paymentsRouter = createTRPCRouter({
 
-  list: tenantProcedure
+  list: staffProcedure
     .input(z.object({
       studentId: z.string().optional(),
       status:    z.nativeEnum(PaymentStatus).optional(),
@@ -43,7 +43,7 @@ export const paymentsRouter = createTRPCRouter({
       return { payments, total, pages: Math.ceil(total / input.pageSize) };
     }),
 
-  overdueList: tenantProcedure
+  overdueList: staffProcedure
     .input(z.object({
       page: z.number().int().min(1).default(1),
       pageSize: z.number().int().min(1).max(100).default(50),
@@ -71,7 +71,7 @@ export const paymentsRouter = createTRPCRouter({
       return { payments, total, pages: Math.ceil(total / input.pageSize) };
     }),
 
-  create: tenantProcedure
+  create: staffProcedure
     .input(z.object({
       studentId: z.string(),
       concept:   z.string().min(1).max(200),
@@ -153,7 +153,7 @@ export const paymentsRouter = createTRPCRouter({
       return { ...newPayment, _isIdempotent: false };
     }),
 
-  markAsPaid: tenantProcedure
+  markAsPaid: staffProcedure
     .input(z.object({
       id:        z.string(),
       method:    z.nativeEnum(PaymentMethod),
@@ -232,7 +232,7 @@ export const paymentsRouter = createTRPCRouter({
       return updatedPayment;
     }),
 
-  summary: tenantProcedure
+  summary: staffProcedure
     .input(z.object({
       month: z.number().min(1).max(12),
       year:  z.number(),
@@ -268,7 +268,7 @@ export const paymentsRouter = createTRPCRouter({
       };
     }),
 
-  checkMonthlyPaymentExists: tenantProcedure
+  checkMonthlyPaymentExists: staffProcedure
     .input(z.object({
       studentId: z.string(),
       month: z.number().min(1).max(12),

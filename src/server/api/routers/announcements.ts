@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
 export const announcementsRouter = createTRPCRouter({
 
-  list: tenantProcedure
+  list: staffProcedure
     .input(z.object({
       page:     z.number().default(1),
       pageSize: z.number().default(20),
@@ -23,7 +23,7 @@ export const announcementsRouter = createTRPCRouter({
       return { announcements, total, pages: Math.ceil(total / input.pageSize) };
     }),
 
-  create: tenantProcedure
+  create: staffProcedure
     .input(z.object({
       title:        z.string().min(1, "El título es requerido").max(200),
       body:         z.string().min(1, "El cuerpo es requerido").max(5000),
@@ -42,7 +42,7 @@ export const announcementsRouter = createTRPCRouter({
       });
     }),
 
-  send: tenantProcedure
+  send: staffProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const announcement = await ctx.db.announcement.findFirst({
@@ -57,7 +57,7 @@ export const announcementsRouter = createTRPCRouter({
       });
     }),
 
-  delete: tenantProcedure
+  delete: staffProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const announcement = await ctx.db.announcement.findFirst({
