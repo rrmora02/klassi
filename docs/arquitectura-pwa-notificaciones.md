@@ -299,7 +299,52 @@ Notas de diseño:
 
 ---
 
-## 5. Despachador multicanal (el corazón del sistema)
+## 5. Base de datos: ¿compartida o separada?
+
+**Decisión: la misma base de datos PostgreSQL (mismo proyecto Supabase), mismo schema Prisma.**
+
+### Por qué compartida
+
+1. **El dominio de mensajería está amarrado al grafo existente.** Cada envío resuelve la cadena
+   `targetGroups → Enrollment → Student → ParentStudent → User → PushSubscription`. En la misma
+   BD eso es un JOIN; con BD separada habría que replicar ese grafo (sincronización, datos
+   desactualizados) o hacer llamadas entre servicios en cada fan-out.
+2. **El patrón outbox exige transacciones locales.** Mensaje + notificación + filas de entrega se
+   crean en una sola transacción; con dos BD serían transacciones distribuidas o consistencia
+   eventual — complejidad injustificada.
+3. **Supabase Realtime opera sobre esta BD.** Separarla implicaría un segundo proyecto Supabase
+   con su propia autorización de canales.
+4. **Costo operativo:** un pipeline de migraciones, un backup, un pooler, un modelo `tenantId`.
+
+### El volumen real no es un problema para Postgres
+
+Una escuela de 500 alumnos con 20 comunicados/mes genera ~10k notificaciones mensuales; incluso
+con chat activo y cientos de escuelas se trata de decenas de miles de escrituras al día.
+Postgres sostiene miles de inserts por segundo — hay 2–3 órdenes de magnitud de margen.
+
+### Riesgos reales y mitigaciones (dentro de la misma BD)
+
+| Riesgo | Mitigación |
+|---|---|
+| Picos de fan-out (comunicado a 800 padres ≈ 2,400 filas) | `createMany` por lotes y fan-out en el worker/cron, nunca en el request del usuario |
+| Conexiones en serverless (Vercel) | Ya resuelto: `directUrl` + URL con pooler (Supavisor) en `schema.prisma` |
+| Crecimiento de logs (`NotificationDelivery`, `WebhookDelivery`) | Job de retención: purgar entregas exitosas > 60–90 días |
+| Lecturas calientes del chat | Índice `(conversationId, createdAt)` + paginación por cursor |
+| Carga de replicación WAL por Realtime | Usar **Broadcast** explícito en vez de Postgres Changes |
+| Reportes pesados compitiendo con chat | Paso intermedio antes de separar nada: **réplica de lectura** en Supabase para reportes |
+
+### Cuándo sí separar
+
+Señales concretas: cientos de millones de mensajes acumulados, contención de escritura
+sostenida que los índices ya no resuelven, o que la mensajería se convierta en un producto
+independiente de los datos de Klassi. La preparación para ese futuro ya está en el diseño:
+código aislado en servicios (`NotificationService`, `MessageService`) y consumo externo solo
+vía API REST — extraer después significa mover tablas, no reescribir la aplicación. Separar
+hoy sería pagar el costo de un sistema distribuido para un problema que no existe.
+
+---
+
+## 6. Despachador multicanal (el corazón del sistema)
 
 ```
 Evento de dominio ──► NotificationService.notify()
@@ -314,7 +359,7 @@ Evento de dominio ──► NotificationService.notify()
                           └─► IN_APP→ insert ya visible + Supabase Realtime lo empuja al cliente
 ```
 
-### 5.1 ¿Qué usar como cola en Vercel (serverless)?
+### 6.1 ¿Qué usar como cola en Vercel (serverless)?
 
 BullMQ no encaja bien en serverless (necesita workers de larga vida). Opciones reales:
 
@@ -330,7 +375,7 @@ disparo a **QStash** cuando la latencia de 1 minuto sea insuficiente (p. ej. par
 la notificación push debe salir en segundos, se puede invocar el worker inline tras el POST y
 dejar el cron como red de seguridad).
 
-### 5.2 Tiempo real del chat
+### 6.2 Tiempo real del chat
 
 **Supabase Realtime (Broadcast)**: al insertar un `Message`, el servidor publica en el canal
 `tenant:{tenantId}:conversation:{id}`. La PWA suscrita lo pinta al instante; si la app está
@@ -342,9 +387,9 @@ conexiones concurrentes por escuela no se llegará pronto.
 
 ---
 
-## 6. API REST pública (`/api/v1`) — Klassi como plataforma
+## 7. API REST pública (`/api/v1`) — Klassi como plataforma
 
-### 6.1 Principios
+### 7.1 Principios
 
 - **Versionada por URL** (`/api/v1/...`), JSON, errores con formato consistente
   (`{ "error": { "code", "message" } }`).
@@ -358,7 +403,7 @@ conexiones concurrentes por escuela no se llegará pronto.
   - `zod-openapi` / `@asteasolutions/zod-to-openapi` reutilizando los schemas Zod existentes ✅
   - `trpc-openapi` para exponer routers tRPC como REST (atajo válido, menos control del contrato)
 
-### 6.2 Superficie mínima v1
+### 7.2 Superficie mínima v1
 
 ```
 # Notificaciones (el caso de uso estrella para integradores)
@@ -378,7 +423,7 @@ GET    /api/v1/students · /api/v1/groups · /api/v1/payments
 GET/POST/DELETE /api/v1/webhooks        # gestión de endpoints salientes
 ```
 
-### 6.3 Webhooks salientes (la otra mitad de "que otro sistema se integre")
+### 7.3 Webhooks salientes (la otra mitad de "que otro sistema se integre")
 
 - Eventos: `message.created`, `notification.delivered`, `payment.paid`, `attendance.recorded`,
   `student.enrolled`, …
@@ -393,7 +438,7 @@ contrato de plataforma SaaS que se pide.
 
 ---
 
-## 7. Seguridad y multi-tenant
+## 8. Seguridad y multi-tenant
 
 - **Padres/alumnos**: Clerk (rol `PARENT` ya existe). Un padre solo ve conversaciones donde es
   `ConversationParticipant`, y estas siempre están ancladas a sus hijos vía `ParentStudent`.
@@ -410,7 +455,7 @@ contrato de plataforma SaaS que se pide.
 
 ---
 
-## 8. Plan de implementación por fases
+## 9. Plan de implementación por fases
 
 | Fase | Alcance | Entregable verificable |
 |---|---|---|
@@ -426,11 +471,12 @@ push antes de invertir en la fase 4.
 
 ---
 
-## 9. Resumen de decisiones tecnológicas
+## 10. Resumen de decisiones tecnológicas
 
 | Área | Decisión | Alternativa descartada y por qué |
 |---|---|---|
 | Arquitectura app | Mismo monolito Next.js, route group `(portal)` | App separada: duplica auth/deploy sin beneficio actual |
+| Base de datos | Compartida (mismo Postgres/Supabase, mismo schema) | BD separada: transacciones distribuidas y replicación del grafo de datos, sin problema real de escala que lo justifique |
 | Service worker | Serwist | `next-pwa` (sin mantenimiento activo), SW manual (más error-prone) |
 | Push | Web Push estándar + VAPID (`web-push`) | FCM: innecesario para web, añade Firebase; se reconsidera solo si hay app nativa |
 | Tiempo real | Supabase Realtime | Pusher/Ably: vendor y coste extra sin necesidad de escala hoy |
