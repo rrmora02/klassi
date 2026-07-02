@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, staffProcedure } from "@/server/api/trpc";
+import { mxMonthRange, mxYearMonth } from "@/lib/dates";
 import { TRPCError } from "@trpc/server";
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
 import { loggingService } from "@/server/logging/loggingService";
@@ -106,8 +107,8 @@ export const paymentsRouter = createTRPCRouter({
 
       // Check for duplicate payments in the same month (unless force is true)
       if (!input.force) {
-        const monthStart = new Date(dueDate.getFullYear(), dueDate.getMonth(), 1);
-        const monthEnd = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0, 23, 59, 59);
+        const { year, month } = mxYearMonth(dueDate);
+        const { from: monthStart, to: monthEnd } = mxMonthRange(year, month);
 
         const existingPaymentInMonth = await ctx.db.payment.findFirst({
           where: {
@@ -121,7 +122,7 @@ export const paymentsRouter = createTRPCRouter({
         if (existingPaymentInMonth) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: `Ya existe un pago registrado para este estudiante en ${monthStart.toLocaleString('es-MX', { month: 'long', year: 'numeric' })}`,
+            message: `Ya existe un pago registrado para este estudiante en ${monthStart.toLocaleString('es-MX', { month: 'long', year: 'numeric', timeZone: 'America/Mexico_City' })}`,
           });
         }
       }
@@ -165,9 +166,16 @@ export const paymentsRouter = createTRPCRouter({
       const { id, discountAmount, ...data } = input;
       const payment = await ctx.db.payment.findFirst({
         where: { id, tenantId: ctx.tenantId },
-        select: { id: true, amount: true },
+        select: { id: true, amount: true, status: true },
       });
       if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (payment.status === "CANCELLED") {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Este pago está cancelado. Crea un pago nuevo si deseas cobrarlo.",
+        });
+      }
 
       // Validar que el descuento no sea mayor al monto del pago
       if (discountAmount > payment.amount) {
@@ -238,8 +246,7 @@ export const paymentsRouter = createTRPCRouter({
       year:  z.number(),
     }))
     .query(async ({ ctx, input }) => {
-      const from = new Date(input.year, input.month - 1, 1);
-      const to   = new Date(input.year, input.month, 0, 23, 59, 59);
+      const { from, to } = mxMonthRange(input.year, input.month);
 
       const [paidResult, pendingResult, overdueResult] = await Promise.all([
         ctx.db.payment.aggregate({
@@ -275,8 +282,7 @@ export const paymentsRouter = createTRPCRouter({
       year: z.number(),
     }))
     .query(async ({ ctx, input }) => {
-      const from = new Date(input.year, input.month - 1, 1);
-      const to = new Date(input.year, input.month, 0, 23, 59, 59);
+      const { from, to } = mxMonthRange(input.year, input.month);
 
       const existingPayment = await ctx.db.payment.findFirst({
         where: {

@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
 import { formatCurrency, formatDate, fullName } from "@/lib/utils";
+import { mxCurrentMonthRange } from "@/lib/dates";
 import { PaymentStatusBadge } from "@/components/pagos/payment-status-badge";
 import { PaymentsClient } from "@/components/pagos/payments-client";
 import Link from "next/link";
@@ -40,9 +41,7 @@ export default async function PagosPage({ searchParams }: PageProps) {
   const status    = searchParams.status as PaymentStatus | undefined;
   const search    = searchParams.q?.trim() ?? "";
 
-  const now        = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  const { from: monthStart, to: monthEnd } = mxCurrentMonthRange();
 
   const where = {
     tenantId: tenant.id,

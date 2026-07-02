@@ -4,7 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { instructorFormSchema } from "@/lib/schemas/instructor.schema";
 import { sendInstructorInvitation } from "@/server/services/email.service";
 import { canAddInstructor } from "@/server/services/tenant.service";
-import { randomBytes } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 
 export const instructorsUpdateSchema = instructorFormSchema.partial().extend({
   id: z.string().cuid("ID inválido"),
@@ -134,10 +134,10 @@ export const instructorsRouter = createTRPCRouter({
       });
 
       if (!user) {
-        // Crear usuario pendiente
+        // Crear usuario pendiente (UUID criptográfico: clerkId es unique)
         user = await db.user.create({
           data: {
-            clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
+            clerkId: `pending_${randomUUID()}`,
             email: input.email,
             name: input.name,
           }
@@ -280,9 +280,20 @@ export const instructorsRouter = createTRPCRouter({
       const existing = await ctx.db.instructor.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
       });
-      
+
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Instructor no encontrado" });
+      }
+
+      // Reactivar cuenta contra el límite del plan igual que crear
+      if (input.isActive && !existing.isActive) {
+        const allowed = await canAddInstructor(ctx.tenantId);
+        if (!allowed) {
+          throw new TRPCError({
+            code:    "FORBIDDEN",
+            message: "Has alcanzado el límite de instructores de tu plan. Actualiza tu suscripción para activar más.",
+          });
+        }
       }
 
       return ctx.db.instructor.update({
@@ -314,10 +325,14 @@ export const instructorsRouter = createTRPCRouter({
         });
       }
 
-      // Delete instructor and also remove their tenant membership
-      await ctx.db.tenantUser.deleteMany({
-        where: { tenantId: ctx.tenantId, userId: instructor.userId },
-      });
+      // Retirar la membresía SOLO si su rol es INSTRUCTOR y no es uno mismo:
+      // un ADMIN/RECEPTIONIST que además daba clases no debe perder su acceso
+      // a la escuela al borrar su registro de instructor.
+      if (instructor.userId !== ctx.dbUser!.id) {
+        await ctx.db.tenantUser.deleteMany({
+          where: { tenantId: ctx.tenantId, userId: instructor.userId, role: "INSTRUCTOR" },
+        });
+      }
 
       return ctx.db.instructor.delete({ where: { id: input.id } });
     }),
@@ -345,6 +360,15 @@ export const instructorsRouter = createTRPCRouter({
 
       if (existingInstructor) {
         return existingInstructor;
+      }
+
+      // Respetar el límite de instructores del plan también por esta vía
+      const allowed = await canAddInstructor(ctx.tenantId);
+      if (!allowed) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: "Has alcanzado el límite de instructores de tu plan. Actualiza tu suscripción para agregar más.",
+        });
       }
 
       // Create instructor record

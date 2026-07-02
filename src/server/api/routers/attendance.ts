@@ -69,13 +69,17 @@ export const attendanceRouter = createTRPCRouter({
           }
        }
 
-       const session = await ctx.db.classSession.create({
-          data: {
+       // Upsert sobre el unique [groupId, date]: si dos usuarios abren la
+       // asistencia a la vez, ambos obtienen la MISMA sesión.
+       const session = await ctx.db.classSession.upsert({
+          where: { groupId_date: { groupId: input.groupId, date: dateObj } },
+          create: {
             groupId: input.groupId,
             date: dateObj,
             startTime: st,
             endTime: et,
-          }
+          },
+          update: {},
        });
 
        return session;

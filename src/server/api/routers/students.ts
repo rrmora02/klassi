@@ -248,52 +248,61 @@ export const studentsRouter = createTRPCRouter({
 
       const { tutorName, tutorPhone, tutorEmail, tutorRelationship, ...studentData } = input;
 
-      const student = await db.student.create({
-        data: {
-          ...studentData,
-          email:    studentData.email   || null,
-          phone:    studentData.phone   || null,
-          avatarUrl: studentData.avatarUrl || null,
-          tenantId,
-        },
-      });
-
-      // Crear o vincular tutor si se proporcionaron datos
-      if (tutorName || tutorEmail || tutorPhone) {
-        const contactEmail = tutorEmail || `tutor_${student.id}@klassi.local`;
-        const contactName = tutorName || "Tutor de " + student.firstName;
-
-        let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
-        if (!parentUser) {
-          parentUser = await db.user.create({
-            data: {
-              clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
-              email: contactEmail,
-              name: contactName,
-              phone: tutorPhone || null,
-            }
-          });
-        }
-
-        // Idempotence: Check if parentStudent already exists
-        const existingParent = await db.parentStudent.findFirst({
-          where: {
-            userId: parentUser.id,
-            studentId: student.id,
+      // Alumno + tutor en una transacción: si el tutor falla, no queda un
+      // alumno a medias sin contacto registrado.
+      const student = await db.$transaction(async (tx) => {
+        const created = await tx.student.create({
+          data: {
+            ...studentData,
+            email:    studentData.email   || null,
+            phone:    studentData.phone   || null,
+            avatarUrl: studentData.avatarUrl || null,
+            tenantId,
           },
         });
 
-        if (!existingParent) {
-          await db.parentStudent.create({
-            data: {
+        // Crear o vincular tutor si se proporcionaron datos
+        if (tutorName || tutorEmail || tutorPhone) {
+          const contactEmail = tutorEmail || `tutor_${created.id}@klassi.local`;
+          const contactName = tutorName || "Tutor de " + created.firstName;
+
+          let parentUser = await tx.user.findFirst({ where: { email: contactEmail } });
+          if (!parentUser) {
+            const { randomUUID } = await import("crypto");
+            parentUser = await tx.user.create({
+              data: {
+                // Placeholder hasta que el tutor se registre en Clerk; UUID
+                // criptográfico para no colisionar con el unique de clerkId.
+                clerkId: `pending_${randomUUID()}`,
+                email: contactEmail,
+                name: contactName,
+                phone: tutorPhone || null,
+              }
+            });
+          }
+
+          // Idempotence: Check if parentStudent already exists
+          const existingParent = await tx.parentStudent.findFirst({
+            where: {
               userId: parentUser.id,
-              studentId: student.id,
-              relationship: tutorRelationship,
-              isPrimary: true,
-            }
+              studentId: created.id,
+            },
           });
+
+          if (!existingParent) {
+            await tx.parentStudent.create({
+              data: {
+                userId: parentUser.id,
+                studentId: created.id,
+                relationship: tutorRelationship,
+                isPrimary: true,
+              }
+            });
+          }
         }
-      }
+
+        return created;
+      });
 
       return { ...student, _isIdempotent: false };
     }),
@@ -376,9 +385,10 @@ export const studentsRouter = createTRPCRouter({
 
             let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
             if (!parentUser) {
+              const { randomUUID } = await import("crypto");
               parentUser = await db.user.create({
                 data: {
-                  clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
+                  clerkId: `pending_${randomUUID()}`,
                   email: contactEmail,
                   name: contactName,
                   phone: tutorPhone || null,
@@ -415,6 +425,18 @@ export const studentsRouter = createTRPCRouter({
       });
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Alumno no encontrado" });
+      }
+
+      // Reactivar cuenta contra el límite del plan igual que crear (sin esto,
+      // crear→desactivar→crear→reactivar permite superar cualquier plan).
+      if (input.status === "ACTIVE" && existing.status !== "ACTIVE") {
+        const allowed = await canAddStudent(ctx.tenantId);
+        if (!allowed) {
+          throw new TRPCError({
+            code:    "FORBIDDEN",
+            message: "Has alcanzado el límite de alumnos de tu plan. Actualiza tu suscripción para activar más.",
+          });
+        }
       }
 
       // Al desactivar: cancelar inscripciones activas

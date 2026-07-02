@@ -131,7 +131,10 @@ const hasTenantRole = (allowedRoles?: UserRole[]) =>
     // usuario del equipo su activeTenantId puede seguir apuntando a la escuela.
     const membership = await ctx.db.tenantUser.findUnique({
       where:  { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.dbUser.id } },
-      select: { role: true, tenant: { select: { status: true, trialEndsAt: true } } },
+      select: {
+        role: true,
+        tenant: { select: { status: true, trialEndsAt: true, blockChildWrites: true, blockChildWritesReason: true } },
+      },
     });
     if (!membership) {
       throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
@@ -140,10 +143,10 @@ const hasTenantRole = (allowedRoles?: UserRole[]) =>
       throw new TRPCError({ code: "FORBIDDEN", message: "No tienes permisos para realizar esta acción" });
     }
 
-    // Enforcement de suscripción: sin plan al corriente se bloquean las
-    // mutaciones (lectura permitida). billing.* queda abierto para reactivar.
     if (type === "mutation" && !path.startsWith("billing.")) {
-      const { status, trialEndsAt } = membership.tenant;
+      // Enforcement de suscripción: sin plan al corriente se bloquean las
+      // mutaciones (lectura permitida). billing.* queda abierto para reactivar.
+      const { status, trialEndsAt, blockChildWrites, blockChildWritesReason } = membership.tenant;
       const trialExpired = status === "TRIAL" && !!trialEndsAt && trialEndsAt < new Date();
       if (status === "SUSPENDED" || status === "CANCELLED" || trialExpired) {
         throw new TRPCError({
@@ -151,6 +154,15 @@ const hasTenantRole = (allowedRoles?: UserRole[]) =>
           message: trialExpired
             ? "Tu periodo de prueba terminó. Elige un plan en Suscripción para seguir haciendo cambios."
             : "La suscripción de la escuela está " + (status === "SUSPENDED" ? "suspendida" : "cancelada") + ". Reactívala en Suscripción para seguir haciendo cambios.",
+        });
+      }
+
+      // Escuela hija bloqueada (plan del padre < Enterprise): solo lectura.
+      // Cubre TODAS las mutaciones, no solo crear alumnos/grupos/instructores.
+      if (blockChildWrites) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: blockChildWritesReason || "Esta escuela está en modo solo lectura porque el plan de la escuela principal no soporta múltiples escuelas.",
         });
       }
     }

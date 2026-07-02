@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, adminProcedure } from "@/server/api/trpc";
+import { mxMonthRange } from "@/lib/dates";
 
 export const reportsRouter = createTRPCRouter({
 
@@ -10,8 +11,7 @@ export const reportsRouter = createTRPCRouter({
       // a Node solo para sumarlas.
       const results = await Promise.all(
         Array.from({ length: 12 }, (_, i) => {
-          const from = new Date(input.year, i, 1);
-          const to   = new Date(input.year, i + 1, 0, 23, 59, 59);
+          const { from, to } = mxMonthRange(input.year, i + 1);
           return ctx.db.payment.aggregate({
             where:  { tenantId: ctx.tenantId, status: "PAID", paidAt: { gte: from, lte: to } },
             _sum:   { amount: true, discountAmount: true },

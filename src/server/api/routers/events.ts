@@ -68,6 +68,7 @@ export const eventsRouter = createTRPCRouter({
           date: input.date,
           isSchoolWide: input.isSchoolWide,
           amount: input.amount,
+          paymentDueDate: input.dueDate,
           status: "PENDING",
           groups: !input.isSchoolWide
             ? {
@@ -488,7 +489,12 @@ export const eventsRouter = createTRPCRouter({
       }
 
       const oldPayment = payment;
-      const newStatus = input.willAttend ? "PENDING" : "NOT_ATTENDING";
+
+      // Nunca degradar un pago ya realizado: si el papá re-clickea el link
+      // después de pagar, solo se actualiza su confirmación de asistencia.
+      const newStatus = payment.status === "PAID"
+        ? "PAID"
+        : input.willAttend ? "PENDING" : "NOT_ATTENDING";
 
       const updatedPayment = await db.eventPayment.update({
         where: { id: input.eventPaymentId },

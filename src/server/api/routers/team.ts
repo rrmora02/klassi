@@ -257,45 +257,49 @@ export const teamRouter = createTRPCRouter({
          throw new TRPCError({ code: "CONFLICT", message: "Ya eres miembro de este equipo." });
        }
 
-       await ctx.db.tenantUser.create({
-         data: {
-           tenantId: invitation.tenantId,
-           userId: user.id,
-           role: invitation.role
-         }
-       });
-
-       // If role is INSTRUCTOR, create the instructor record (if not already exists)
-       if (invitation.role === "INSTRUCTOR") {
-         const existingInstructor = await ctx.db.instructor.findFirst({
-           where: { tenantId: invitation.tenantId, userId: user.id }
+       // Membresía + instructor + activeTenant + invitación en una transacción:
+       // un fallo a medias dejaría al invitado en un estado inconsistente.
+       await ctx.db.$transaction(async (tx) => {
+         await tx.tenantUser.create({
+           data: {
+             tenantId: invitation.tenantId,
+             userId: user.id,
+             role: invitation.role
+           }
          });
 
-         if (!existingInstructor) {
-           await ctx.db.instructor.create({
-             data: {
-               tenantId: invitation.tenantId,
-               userId: user.id
-             }
+         // If role is INSTRUCTOR, create the instructor record (if not already exists)
+         if (invitation.role === "INSTRUCTOR") {
+           const existingInstructor = await tx.instructor.findFirst({
+             where: { tenantId: invitation.tenantId, userId: user.id }
            });
-         }
-       }
 
-       // Set this tenant as the user's active tenant
-       await ctx.db.user.update({
-         where: { id: user.id },
-         data: { activeTenantId: invitation.tenantId }
+           if (!existingInstructor) {
+             await tx.instructor.create({
+               data: {
+                 tenantId: invitation.tenantId,
+                 userId: user.id
+               }
+             });
+           }
+         }
+
+         // Set this tenant as the user's active tenant
+         await tx.user.update({
+           where: { id: user.id },
+           data: { activeTenantId: invitation.tenantId }
+         });
+
+         // Mark invitation as accepted
+         await tx.teamInvitation.update({
+           where: { id: invitation.id },
+           data: { status: "ACCEPTED" }
+         });
        });
 
        // El contexto tRPC cachea el usuario (TTL 10 min); sin esto el recién
        // invitado seguiría viendo "No perteneces a ninguna escuela".
        invalidateUserCache(clerkId);
-
-       // Mark invitation as accepted
-       await ctx.db.teamInvitation.update({
-         where: { id: invitation.id },
-         data: { status: "ACCEPTED" }
-       });
 
        return { success: true, tenantId: invitation.tenantId };
     })

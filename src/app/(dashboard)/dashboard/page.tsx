@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/server/db";
 import { getCurrentContext } from "@/server/request-context";
 import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
+import { mxCurrentMonthRange } from "@/lib/dates";
 import { StatCard } from "@/components/shared";
 import { ClassAttendanceIndicator } from "@/components/dashboard/class-attendance-indicator";
 import { EventSummaryClient } from "@/components/dashboard/event-summary-client";
@@ -18,9 +19,8 @@ import {
 // ─── Data ────────────────────────────────────────────────────────
 
 async function getDashboardData(tenantId: string, userRole?: string, userId?: string) {
-  const now        = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  const now = new Date();
+  const { from: monthStart, to: monthEnd } = mxCurrentMonthRange();
 
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);

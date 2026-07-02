@@ -34,11 +34,15 @@ function getNextDueDate(frequency: BillingFrequency, billingDay?: number | null,
 
   if (frequency === "BIWEEKLY" && billingWeekOfMonth) {
     // Primera quincena: día 15, Segunda quincena: último día del mes
-    const targetDay = billingWeekOfMonth === 1 ? 15 : new Date(year, month + 1, 0).getUTCDate();
+    const lastDayOfMonth = (y: number, m: number) => new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    const targetDay = billingWeekOfMonth === 1 ? 15 : lastDayOfMonth(year, month);
     const dueDate = new Date(Date.UTC(year, month, targetDay));
     if (dueDate <= today) {
-      dueDate.setUTCMonth(month + 1);
-      dueDate.setUTCDate(billingWeekOfMonth === 1 ? 15 : new Date(year, month + 1, 0).getUTCDate());
+      // Construir la fecha del mes siguiente directamente: mutar con
+      // setUTCMonth sobre un día 31 puede saltarse un mes, y el "último día"
+      // debe ser el del MES SIGUIENTE, no el del actual.
+      const nextTarget = billingWeekOfMonth === 1 ? 15 : lastDayOfMonth(year, month + 1);
+      return new Date(Date.UTC(year, month + 1, nextTarget));
     }
     return dueDate;
   }
@@ -46,14 +50,15 @@ function getNextDueDate(frequency: BillingFrequency, billingDay?: number | null,
   return today; // fallback
 }
 
-// Verifica si hoy es el día para generar pagos (2 días antes de la fecha de vencimiento)
+// Verifica si toca generar pagos: dentro de la ventana de 2 días antes de la
+// fecha de vencimiento. Ventana (no día exacto) para que un cron caído un día
+// no pierda el ciclo completo — el dedupe evita duplicados en días siguientes.
 function shouldGeneratePayments(frequency: BillingFrequency, billingDay?: number | null, billingDayOfWeek?: string | null, billingWeekOfMonth?: number | null): boolean {
   const today = new Date();
   const dueDate = getNextDueDate(frequency, billingDay, billingDayOfWeek, billingWeekOfMonth);
   const daysUntilDue = Math.floor((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-  // Generar pagos exactamente 2 días antes
-  return daysUntilDue === 2;
+  return daysUntilDue >= 0 && daysUntilDue <= 2;
 }
 
 export async function GET(req: Request) {
@@ -126,12 +131,17 @@ export async function GET(req: Request) {
     }
 
     for (const enrollment of group.enrollments) {
-      // Verificar que no exista ya un pago para este concepto y estudiante
+      // Dedupe por (alumno, grupo, fecha de vencimiento) — renombrar el grupo
+      // ya no re-cobra a todos. Se conserva el match por concepto como
+      // compatibilidad con pagos generados antes de que existiera groupId.
       const existing = await db.payment.findFirst({
         where: {
           tenantId:  group.tenant.id,
           studentId: enrollment.studentId,
-          concept,
+          OR: [
+            { groupId: group.id, dueDate },
+            { concept },
+          ],
         },
         select: { id: true },
       });
@@ -148,6 +158,7 @@ export async function GET(req: Request) {
         data: {
           tenantId:  group.tenant.id,
           studentId: enrollment.studentId,
+          groupId:   group.id,
           concept,
           amount,
           currency:  "MXN",

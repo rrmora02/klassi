@@ -468,11 +468,11 @@ model ClassSession {
 
   attendances Attendance[]
 
+  // Una sesión por grupo y fecha: sin esto, dos usuarios marcando asistencia
+  // a la vez creaban sesiones duplicadas y la asistencia se repartía entre ambas.
+  @@unique([groupId, date])
   @@index([groupId])
   @@index([date])
-  @@index([groupId, date])
-  // Covering index for session roster queries (20-30% faster)
-  @@index([groupId, date, id, createdAt, startTime, endTime])
 }
 
 // ─── Asistencia ───────────────────────────────────────────────────
@@ -505,6 +505,7 @@ model Payment {
   tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   studentId  String
   student    Student       @relation(fields: [studentId], references: [id])
+  groupId    String? // grupo que originó el cobro automático (dedupe del cron)
   concept    String // "Mensualidad Enero 2026"
   amount     Int // en centavos para evitar flotantes
   discountAmount Int @default(0) // descuento en centavos
@@ -525,6 +526,7 @@ model Payment {
   @@index([tenantId, dueDate])
   @@index([studentId, status])
   @@index([tenantId, paidAt])
+  @@index([studentId, groupId, dueDate])
 }
 
 // ─── Comunicados ──────────────────────────────────────────────────

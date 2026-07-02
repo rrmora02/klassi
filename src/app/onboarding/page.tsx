@@ -45,23 +45,42 @@ async function createTenantAction(formData: FormData) {
     newPlan        = "ENTERPRISE";
   }
 
-  // 3. Crear Tenant
+  // 3-5. Crear Tenant + membresía ADMIN + activeTenantId en una transacción:
+  // un fallo a medias dejaría una escuela huérfana sin administrador.
   const base = schoolName.toLowerCase().trim().replace(/\s+/g, "-");
   const slug  = `${base}-${Math.random().toString(36).slice(2, 6)}`;
 
-  const tenant = await db.tenant.create({
-    data: {
-      name:           schoolName.trim(),
-      slug,
-      plan:           newPlan,
-      status:         isAdditionalSchool ? "ACTIVE" : "TRIAL",
-      trialEndsAt:    isAdditionalSchool ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      parentTenantId,
-      createdByUserId: user.id,
-    },
+  const tenant = await db.$transaction(async (tx) => {
+    const created = await tx.tenant.create({
+      data: {
+        name:           schoolName.trim(),
+        slug,
+        plan:           newPlan,
+        status:         isAdditionalSchool ? "ACTIVE" : "TRIAL",
+        trialEndsAt:    isAdditionalSchool ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        parentTenantId,
+        createdByUserId: user.id,
+      },
+    });
+
+    await tx.tenantUser.create({
+      data: { userId: user.id, tenantId: created.id, role: "ADMIN" },
+    });
+
+    await tx.user.update({
+      where: { id: user.id },
+      data:  { activeTenantId: created.id },
+    });
+
+    return created;
   });
 
-  // 4. Crear organización en Clerk
+  // El contexto tRPC cachea el usuario (TTL 10 min); invalidar para que
+  // las siguientes llamadas operen sobre la escuela recién creada.
+  const { invalidateUserCache } = await import("@/server/cache/userAuthCache");
+  invalidateUserCache(userId);
+
+  // Crear organización en Clerk (best-effort, fuera de la transacción)
   try {
     const { clerkClient } = await import("@clerk/nextjs/server");
     const client = await clerkClient();
@@ -72,22 +91,6 @@ async function createTenantAction(formData: FormData) {
   } catch (error) {
     console.error("Error creating Clerk organization:", error);
   }
-
-  // 5. Vincular usuario como ADMIN
-  await db.tenantUser.create({
-    data: { userId: user.id, tenantId: tenant.id, role: "ADMIN" },
-  });
-
-  // 6. Actualizar activeTenantId al nuevo tenant
-  await db.user.update({
-    where: { id: user.id },
-    data:  { activeTenantId: tenant.id },
-  });
-
-  // El contexto tRPC cachea el usuario (TTL 10 min); invalidar para que
-  // las siguientes llamadas operen sobre la escuela recién creada.
-  const { invalidateUserCache } = await import("@/server/cache/userAuthCache");
-  invalidateUserCache(userId);
 
   if (invitationToken) {
     redirect(`/aceptar-invitacion?token=${invitationToken}`);

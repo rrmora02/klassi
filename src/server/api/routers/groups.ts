@@ -314,6 +314,17 @@ export const groupsRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND", message: "Grupo no encontrado" });
       }
 
+      // Reactivar cuenta contra el límite del plan igual que crear
+      if (input.isActive && !existing.isActive) {
+        const allowed = await canAddGroup(ctx.tenantId);
+        if (!allowed) {
+          throw new TRPCError({
+            code:    "FORBIDDEN",
+            message: "Has alcanzado el límite de grupos de tu plan. Actualiza tu suscripción para activar más.",
+          });
+        }
+      }
+
       // TODO: cuando el módulo de inscripciones esté listo,
       // cancelar automáticamente las inscripciones activas al desactivar.
 

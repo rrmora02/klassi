@@ -153,9 +153,19 @@ export const billingRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const tenant = await ctx.db.tenant.findUnique({
         where:  { id: ctx.tenantId },
-        select: { stripeCustomerId: true, email: true, name: true, plan: true, status: true },
+        select: { stripeCustomerId: true, stripeSubId: true, email: true, name: true, plan: true, status: true },
       });
       if (!tenant) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Con una suscripción viva, los cambios de plan van por el portal:
+      // un segundo checkout crearía OTRA suscripción en Stripe y la primera
+      // quedaría huérfana cobrando al cliente.
+      if (tenant.stripeSubId && tenant.status !== "CANCELLED") {
+        throw new TRPCError({
+          code:    "PRECONDITION_FAILED",
+          message: "Ya tienes una suscripción activa. Usa 'Gestionar suscripción' para cambiar de plan.",
+        });
+      }
 
       const priceId = STRIPE_PRICE_IDS[input.plan as SubscriptionPlan];
       if (!priceId) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Plan no disponible" });

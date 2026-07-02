@@ -90,6 +90,13 @@ export const enrollmentsRouter = createTRPCRouter({
 
        if (!group || !student) throw new TRPCError({ code: "NOT_FOUND" });
 
+       if (!group.isActive) {
+         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "El grupo está inactivo." });
+       }
+       if (student.status !== "ACTIVE") {
+         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "El alumno no está activo. Actívalo antes de inscribirlo." });
+       }
+
        // If Karate and belt provided, update student's belt
        if (input.currentBeltColor) {
          await ctx.db.student.update({
@@ -110,23 +117,34 @@ export const enrollmentsRouter = createTRPCRouter({
          return { ...existing, _isIdempotent: true };
        }
 
-       // Upsert (to handle CANCELLED turning into ACTIVE again)
-       const enrollment = await ctx.db.enrollment.upsert({
-          where: { studentId_groupId: { studentId: input.studentId, groupId: input.groupId } },
-          create: {
-             studentId: input.studentId,
-             groupId: input.groupId,
-             status: "ACTIVE",
-             discount: input.discount,
-             startDate: new Date(),
-          },
-          update: {
-             status: "ACTIVE",
-             discount: input.discount,
-             startDate: new Date(),
-             endDate: null,
+       // Capacidad + upsert dentro de una transacción serializable: dos
+       // inscripciones simultáneas ya no pueden rebasar el cupo del grupo.
+       const enrollment = await ctx.db.$transaction(async (tx) => {
+          const activeCount = await tx.enrollment.count({
+             where: { groupId: input.groupId, status: "ACTIVE" },
+          });
+          if (activeCount >= group.capacity) {
+             throw new TRPCError({ code: "PRECONDITION_FAILED", message: `El grupo está lleno (${group.capacity} lugares).` });
           }
-       });
+
+          return tx.enrollment.upsert({
+             where: { studentId_groupId: { studentId: input.studentId, groupId: input.groupId } },
+             create: {
+                studentId: input.studentId,
+                groupId: input.groupId,
+                status: "ACTIVE",
+                discount: input.discount,
+                startDate: new Date(),
+             },
+             update: {
+                status: "ACTIVE",
+                discount: input.discount,
+                startDate: new Date(),
+                endDate: null,
+             }
+          });
+       }, { isolationLevel: "Serializable" });
+
        return { ...enrollment, _isIdempotent: false };
     }),
 
