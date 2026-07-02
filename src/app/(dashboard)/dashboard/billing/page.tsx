@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/trpc";
 import { PlanUsageBar } from "@/components/billing/plan-usage-bar";
 import { PLAN_LABELS, PLAN_PRICES, PLAN_LIMITS } from "@/lib/plan-limits";
@@ -13,10 +14,15 @@ const PLAN_FEATURES: Record<SubscriptionPlan, string[]> = {
 };
 
 export default function BillingPage() {
-  const { data: sub,   isLoading: loadingSub   } = api.billing.getSubscription.useQuery(undefined, { staleTime: 0 });
-  const { data: usage, isLoading: loadingUsage } = api.billing.getPlanUsage.useQuery(undefined, { staleTime: 0 });
-  const { data: plans, isLoading: loadingPlans } = api.billing.getPlans.useQuery();
-  const { data: allTenants, isLoading: loadingTenants } = api.tenants.getAllTenants.useQuery();
+  // Al volver del checkout (?success=1) se fuerza la reconciliación con
+  // Stripe; en visitas normales el servidor la limita a una cada 10 min.
+  const searchParams   = useSearchParams();
+  const forceReconcile = searchParams.get("success") === "1";
+
+  const { data: sub,   isLoading: loadingSub   } = api.billing.getSubscription.useQuery({ forceReconcile }, { staleTime: forceReconcile ? 0 : 30_000 });
+  const { data: usage, isLoading: loadingUsage } = api.billing.getPlanUsage.useQuery();
+  const { data: plans } = api.billing.getPlans.useQuery();
+  const { data: allTenants } = api.tenants.getAllTenants.useQuery();
 
   const checkoutMutation = api.billing.createCheckoutSession.useMutation({
     onSuccess: ({ url }) => { if (url) window.location.href = url; },
@@ -25,7 +31,9 @@ export default function BillingPage() {
     onSuccess: ({ url }) => { window.location.href = url; },
   });
 
-  if (loadingSub || loadingUsage || loadingPlans || loadingTenants) {
+  // Solo suscripción y uso bloquean el render: los planes son constantes y
+  // la lista de escuelas solo alimenta un aviso secundario.
+  if (loadingSub || loadingUsage) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sb-accent" />

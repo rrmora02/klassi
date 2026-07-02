@@ -6,17 +6,20 @@ export const reportsRouter = createTRPCRouter({
   monthlyRevenue: adminProcedure
     .input(z.object({ year: z.number() }))
     .query(async ({ ctx, input }) => {
+      // Agregación en la BD: antes se traían todas las filas PAID del año
+      // a Node solo para sumarlas.
       const results = await Promise.all(
         Array.from({ length: 12 }, (_, i) => {
           const from = new Date(input.year, i, 1);
           const to   = new Date(input.year, i + 1, 0, 23, 59, 59);
-          return ctx.db.payment.findMany({
-            where: { tenantId: ctx.tenantId, status: "PAID", paidAt: { gte: from, lte: to } },
-            select: { amount: true, discountAmount: true },
-          }).then(payments => ({
+          return ctx.db.payment.aggregate({
+            where:  { tenantId: ctx.tenantId, status: "PAID", paidAt: { gte: from, lte: to } },
+            _sum:   { amount: true, discountAmount: true },
+            _count: { _all: true },
+          }).then(agg => ({
             month: i + 1,
-            total: payments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0),
-            count: payments.length
+            total: (agg._sum.amount ?? 0) - (agg._sum.discountAmount ?? 0),
+            count: agg._count._all,
           }));
         })
       );

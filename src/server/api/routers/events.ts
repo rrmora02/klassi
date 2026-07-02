@@ -702,41 +702,41 @@ export const eventsRouter = createTRPCRouter({
         const monthStart = new Date(input.year, input.month - 1, 1);
         const monthEnd = new Date(input.year, input.month, 1);
 
-        // Filter by date at DB level to avoid loading all events into memory
-        const filteredEvents = await db.event.findMany({
-          where: {
-            tenantId,
-            date: { gte: monthStart, lt: monthEnd }
-          },
-          include: {
-            eventPayments: {
-              select: {
-                id: true,
-                amount: true,
-                discountAmount: true,
-                status: true,
-                paidAt: true,
-              },
+        // Agregación en la BD: antes se traía cada EventPayment del mes
+        // (una fila por alumno por evento) solo para sumarlo en JS.
+        const [filteredEvents, paymentGroups] = await Promise.all([
+          db.event.findMany({
+            where: {
+              tenantId,
+              date: { gte: monthStart, lt: monthEnd }
             },
-          },
-        });
+            select: { id: true, name: true, date: true },
+          }),
+          db.eventPayment.groupBy({
+            by: ["eventId", "status"],
+            where: {
+              event: { tenantId, date: { gte: monthStart, lt: monthEnd } },
+            },
+            _count: { _all: true },
+            _sum:   { amount: true, discountAmount: true },
+          }),
+        ]);
 
         const summary = filteredEvents.map((event) => {
-          const paidPayments = event.eventPayments.filter(
-            (p) => p.status === "PAID" && p.paidAt !== null
-          );
-          const paidAmount = paidPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
+          const rows    = paymentGroups.filter(g => g.eventId === event.id);
+          const paid    = rows.find(g => g.status === "PAID");
+          const pending = rows.find(g => g.status === "PENDING");
 
-          const pendingPayments = event.eventPayments.filter((p) => p.status === "PENDING");
-          const pendingAmount = pendingPayments.reduce((sum, p) => sum + p.amount, 0);
+          const paidAmount    = (paid?._sum.amount ?? 0) - (paid?._sum.discountAmount ?? 0);
+          const pendingAmount = pending?._sum.amount ?? 0;
 
           return {
             eventId: event.id,
             eventName: event.name,
             eventDate: event.date,
-            totalPayments: event.eventPayments.length,
-            paidPayments: paidPayments.length,
-            pendingPayments: pendingPayments.length,
+            totalPayments: rows.reduce((sum, g) => sum + g._count._all, 0),
+            paidPayments: paid?._count._all ?? 0,
+            pendingPayments: pending?._count._all ?? 0,
             paidAmount,
             expectedAmount: paidAmount + pendingAmount,
           };

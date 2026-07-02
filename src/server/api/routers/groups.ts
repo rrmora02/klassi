@@ -348,37 +348,6 @@ export const groupsRouter = createTRPCRouter({
       return ctx.db.group.delete({ where: { id: input.id } });
     }),
 
-  getTodayAttendance: tenantProcedure
-    .input(z.object({ groupId: z.string().cuid() }))
-    .query(async ({ ctx, input }) => {
-      const { tenantId, db } = ctx;
-
-      // Obtener el grupo y verificar que pertenece al tenant del usuario
-      const group = await db.group.findFirst({
-        where: { id: input.groupId, tenantId },
-        include: {
-          enrollments: {
-            where: { status: "ACTIVE" },
-          },
-        },
-      });
-
-      if (!group) {
-        return {
-          totalStudents: 0,
-          presentStudents: null,
-          startTime: null,
-          endTime: null,
-        };
-      }
-
-      return {
-        totalStudents: group.enrollments.length,
-        presentStudents: null,
-        startTime: null,
-        endTime: null,
-      };
-    }),
 });
 
 export type GroupsRouter = typeof groupsRouter;

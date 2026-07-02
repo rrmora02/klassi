@@ -472,27 +472,28 @@ export const studentsRouter = createTRPCRouter({
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const [totalClasses, presentCount, payments] = await Promise.all([
+      const [totalClasses, presentCount, paid] = await Promise.all([
         db.attendance.count({
           where: { enrollment: { studentId: input.id } },
         }),
         db.attendance.count({
           where: { enrollment: { studentId: input.id }, status: "PRESENT" },
         }),
-        db.payment.findMany({
+        db.payment.aggregate({
           where:  { studentId: input.id, status: "PAID" },
-          select: { amount: true, discountAmount: true },
+          _sum:   { amount: true, discountAmount: true },
+          _count: { _all: true },
         }),
       ]);
 
       const attendance = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : null;
-      const totalPaid = payments.reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
+      const totalPaid = (paid._sum.amount ?? 0) - (paid._sum.discountAmount ?? 0);
 
       return {
         attendanceRate: attendance,
         totalClasses,
         totalPaid,
-        totalPayments:  payments.length,
+        totalPayments:  paid._count._all,
       };
     }),
 

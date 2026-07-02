@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { fullName, formatDate, calcAge, formatCurrency, translatePaymentStatus } from "@/lib/utils";
@@ -10,42 +10,43 @@ import { StudentShareButton } from "@/components/alumnos/student-share-button";
 import { AssignFirstBeltSection } from "@/components/alumnos/assign-first-belt-section";
 
 export default async function AlumnoDetailPage({ params }: { params: { id: string } }) {
-  const { userId } = await auth();
-  if (!userId) return null;
+  // Identidad compartida del request (deduplicada con layout/TopBar)
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenantId = ctx.activeTenant.id;
 
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
-  if (!tenant) return null;
-
-  const student = await db.student.findFirst({
-    where: { id: params.id, tenantId: tenant.id },
-    include: {
-      enrollments: {
-        orderBy: { startDate: "desc" },
-        include: {
-          group: {
-            include: {
-              discipline: true,
-              instructor: { include: { user: true } },
+  // Estadísticas de asistencia agregadas en la BD (evita traer todas las
+  // filas de asistencia solo para contarlas), en paralelo con el alumno.
+  const [student, attendanceByStatus] = await Promise.all([
+    db.student.findFirst({
+      where: { id: params.id, tenantId },
+      include: {
+        enrollments: {
+          orderBy: { startDate: "desc" },
+          include: {
+            group: {
+              include: {
+                discipline: true,
+                instructor: { include: { user: true } },
+              },
             },
           },
         },
+        payments: { orderBy: { dueDate: "desc" }, take: 10 },
+        parents: { include: { user: true } },
       },
-      payments: { orderBy: { dueDate: "desc" }, take: 10 },
-      parents: { include: { user: true } },
-    },
-  });
+    }),
+    db.attendance.groupBy({
+      by: ["status"],
+      where: { enrollment: { studentId: params.id, student: { tenantId } } },
+      _count: { _all: true },
+    }),
+  ]);
 
   if (!student) notFound();
 
-  // Estadísticas de asistencia
-  const attendances = await db.attendance.findMany({
-    where: { enrollment: { studentId: student.id } },
-    select: { status: true },
-  });
-
-  const totalClasses = attendances.length;
-  const presentCount = attendances.filter(a => a.status === "PRESENT").length;
+  const totalClasses = attendanceByStatus.reduce((sum, g) => sum + g._count._all, 0);
+  const presentCount = attendanceByStatus.find(g => g.status === "PRESENT")?._count._all ?? 0;
   const attendanceRate = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : null;
 
   const activeEnrollments = student.enrollments.filter(e => e.status === "ACTIVE");

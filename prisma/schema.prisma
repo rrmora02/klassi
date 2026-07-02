@@ -407,8 +407,6 @@ model Student {
   @@index([tenantId, status])
   @@index([tenantId, createdAt])
   @@index([tenantId, updatedAt])
-  // Covering index for student list queries (25-35% faster)
-  @@index([tenantId, lastName, firstName, id, email, phone, status, createdAt])
 }
 
 // ─── Padre / Tutor <-> Alumno ─────────────────────────────────────
@@ -527,8 +525,6 @@ model Payment {
   @@index([tenantId, dueDate])
   @@index([studentId, status])
   @@index([tenantId, paidAt])
-  // Covering index for payment list queries (30-40% faster)
-  @@index([tenantId, status, dueDate, id, concept, amount, createdAt, studentId])
 }
 
 // ─── Comunicados ──────────────────────────────────────────────────
@@ -642,8 +638,6 @@ model AuditLog {
   @@index([entityId])
   @@index([createdAt])
   @@index([tenantId, createdAt])
-  // Covering index for audit log pagination (15-25% faster)
-  @@index([tenantId, createdAt, id, userId, action, entity, description, oldValues, newValues, ipAddress, userAgent])
 }
 
 // ─── Log de Errores ──────────────────────────────────────────────
@@ -666,8 +660,6 @@ model ErrorLog {
   @@index([severity])
   @@index([resolved])
   @@index([createdAt])
-  // Covering index for error log pagination (20-30% faster)
-  @@index([tenantId, severity, createdAt, id, resolved, message, errorType, stack, context, resolvedAt, resolvedBy])
 }
 
 // ─── Eventos de Negocio ──────────────────────────────────────────

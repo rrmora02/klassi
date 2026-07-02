@@ -57,40 +57,41 @@ export default async function PagosPage({ searchParams }: PageProps) {
     }),
   };
 
-  const [payments, total, summary, students, statusCounts] = await Promise.all([
+  // Sumas y conteos con agregaciones en la BD (antes se traían TODAS las
+  // filas de pagos a Node solo para reducirlas a 3 números).
+  const [payments, total, paidThisMonth, byStatus, students] = await Promise.all([
     db.payment.findMany({
       where, skip: (page - 1) * pageSize, take: pageSize,
       orderBy: [{ status: "asc" }, { dueDate: "desc" }],
       select: { id: true, concept: true, amount: true, currency: true, method: true, status: true, dueDate: true, paidAt: true, reference: true, discountAmount: true, student: { select: { firstName: true, lastName: true } } },
     }),
     db.payment.count({ where }),
-    Promise.all([
-      db.payment.findMany({ where: { tenantId: tenant.id, status: "PAID",    paidAt:  { gte: monthStart, lte: monthEnd } }, select: { amount: true, discountAmount: true } }),
-      db.payment.findMany({ where: { tenantId: tenant.id, status: "PENDING"                                              }, select: { amount: true } }),
-      db.payment.findMany({ where: { tenantId: tenant.id, status: "OVERDUE"                                              }, select: { amount: true } }),
-    ]),
+    db.payment.aggregate({
+      where: { tenantId: tenant.id, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } },
+      _sum:   { amount: true, discountAmount: true },
+      _count: { _all: true },
+    }),
+    db.payment.groupBy({
+      by: ["status"],
+      where: { tenantId: tenant.id },
+      _count: { _all: true },
+      _sum:   { amount: true },
+    }),
     db.student.findMany({ where: { tenantId: tenant.id, status: "ACTIVE" }, select: { id: true, firstName: true, lastName: true }, orderBy: [{ lastName: "asc" }, { firstName: "asc" }] }),
-    Promise.all([
-      db.payment.count({ where: { tenantId: tenant.id, status: "PENDING"   } }),
-      db.payment.count({ where: { tenantId: tenant.id, status: "PAID"      } }),
-      db.payment.count({ where: { tenantId: tenant.id, status: "OVERDUE"   } }),
-      db.payment.count({ where: { tenantId: tenant.id, status: "CANCELLED" } }),
-    ]),
   ]);
 
-  const [paidPayments, pendingPayments, overduePayments] = summary;
-  const [cntPending, cntPaid, cntOverdue, cntCancelled] = statusCounts;
+  const statusRow = (s: string) => byStatus.find(r => r.status === s);
 
-  const paidTotal = paidPayments.reduce((sum, p) => sum + (p.amount - (p.discountAmount ?? 0)), 0);
-  const pendingTotal = pendingPayments.reduce((sum, p) => sum + p.amount, 0);
-  const overdueTotal = overduePayments.reduce((sum, p) => sum + p.amount, 0);
+  const paidTotal    = (paidThisMonth._sum.amount ?? 0) - (paidThisMonth._sum.discountAmount ?? 0);
+  const pendingTotal = statusRow("PENDING")?._sum.amount ?? 0;
+  const overdueTotal = statusRow("OVERDUE")?._sum.amount ?? 0;
 
-  const countMap: Record<string, number> = {
-    PENDING:   cntPending,
-    PAID:      cntPaid,
-    OVERDUE:   cntOverdue,
-    CANCELLED: cntCancelled,
-  };
+  const countMap = {
+    PENDING:   statusRow("PENDING")?._count._all   ?? 0,
+    PAID:      statusRow("PAID")?._count._all      ?? 0,
+    OVERDUE:   statusRow("OVERDUE")?._count._all   ?? 0,
+    CANCELLED: statusRow("CANCELLED")?._count._all ?? 0,
+  } satisfies Record<PaymentStatus, number>;
   const pages = Math.ceil(total / pageSize);
 
   function buildUrl(params: Record<string, string | undefined>) {
@@ -117,21 +118,21 @@ export default async function PagosPage({ searchParams }: PageProps) {
           <p style={{ fontSize: 16, fontWeight: 600, color: "#15803d", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
             {formatCurrency(paidTotal)}
           </p>
-          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{paidPayments.length} pagos</p>
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{paidThisMonth._count._all} pagos</p>
         </div>
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Por cobrar</p>
           <p style={{ fontSize: 16, fontWeight: 600, color: "#b45309", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
             {formatCurrency(pendingTotal)}
           </p>
-          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{pendingPayments.length} pendientes</p>
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{countMap.PENDING} pendientes</p>
         </div>
-        <div style={{ background: overduePayments.length > 0 ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${overduePayments.length > 0 ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
+        <div style={{ background: countMap.OVERDUE > 0 ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${countMap.OVERDUE > 0 ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 12, padding: "12px 16px" }} className="sm:p-5">
           <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>Adeudos vencidos</p>
-          <p style={{ fontSize: 16, fontWeight: 600, color: overduePayments.length > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
+          <p style={{ fontSize: 16, fontWeight: 600, color: countMap.OVERDUE > 0 ? "#b91c1c" : "#15803d", margin: "4px 0 0", wordBreak: "break-word", overflowWrap: "break-word" }} className="sm:text-2xl break-words">
             {formatCurrency(overdueTotal)}
           </p>
-          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{overduePayments.length} vencidos</p>
+          <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>{countMap.OVERDUE} vencidos</p>
         </div>
       </div>
 

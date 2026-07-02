@@ -50,10 +50,17 @@ async function getPortalConfigurationId(): Promise<string> {
   return config.id;
 }
 
+// Throttle de reconciliación con Stripe (por tenant, por instancia): la vía
+// principal de sincronización son los webhooks; la reconciliación es red de
+// seguridad y no amerita una llamada a Stripe (~300-800 ms) en cada visita.
+const RECONCILE_TTL_MS  = 10 * 60 * 1000;
+const lastReconciledAt = new Map<string, number>();
+
 export const billingRouter = createTRPCRouter({
 
   getSubscription: tenantProcedure
-    .query(async ({ ctx }) => {
+    .input(z.object({ forceReconcile: z.boolean().optional() }).optional())
+    .query(async ({ ctx, input }) => {
       const select = {
         id: true,
         plan: true, status: true,
@@ -65,12 +72,17 @@ export const billingRouter = createTRPCRouter({
       let tenant = await ctx.db.tenant.findUnique({ where: { id: ctx.tenantId }, select });
       if (!tenant) throw new TRPCError({ code: "NOT_FOUND" });
 
+      const reconcileDue =
+        !!input?.forceReconcile ||
+        Date.now() - (lastReconciledAt.get(ctx.tenantId) ?? 0) > RECONCILE_TTL_MS;
+
       // Reconciliación: si Stripe quedó con un plan o status distinto al de la
       // BD (p. ej. por un webhook que no llegó), sincronizamos al consultar,
       // usando la misma lógica que los webhooks (incluye escuelas hijas).
       // No tocamos `plan` si coincide con un downgrade ya programado (pendingPlan),
       // ya que ese cambio se aplica intencionalmente hasta el fin del período.
-      if (tenant.stripeSubId && (tenant.status === "ACTIVE" || tenant.status === "SUSPENDED")) {
+      if (reconcileDue && tenant.stripeSubId && (tenant.status === "ACTIVE" || tenant.status === "SUSPENDED")) {
+        lastReconciledAt.set(ctx.tenantId, Date.now());
         try {
           const sub      = await stripe.subscriptions.retrieve(tenant.stripeSubId);
           const livePlan = PRICE_TO_PLAN[sub.items.data[0]?.price.id ?? ""];

@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
 import { StatCard } from "@/components/shared";
 import { ClassAttendanceIndicator } from "@/components/dashboard/class-attendance-indicator";
@@ -85,6 +85,9 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
       include: {
         discipline: { select: { name: true, color: true } },
         instructor: { select: { user: { select: { name: true } } } },
+        // Conteo de inscritos aquí mismo: evita una query tRPC por grupo
+        // desde el cliente solo para mostrar "N alumnos".
+        _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
       },
       orderBy: { name: "asc" },
       take: 100
@@ -109,6 +112,7 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
         instructor: group.instructor?.user.name,
         startTime: todaySchedule?.startTime,
         endTime: todaySchedule?.endTime,
+        studentCount: group._count.enrollments,
       };
     });
 
@@ -141,15 +145,10 @@ function trialDaysLeft(trialEndsAt: Date): number {
 // ─── Page ────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  let user;
+  // Identidad compartida del request (deduplicada con layout/TopBar)
+  let ctx;
   try {
-    user = await db.user.findUnique({
-      where: { clerkId: userId },
-      select: { id: true, activeTenantId: true, activeTenant: true }
-    });
+    ctx = await getCurrentContext();
   } catch (err) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
@@ -161,20 +160,12 @@ export default async function DashboardPage() {
     );
   }
 
-  if (!user || !user.activeTenant) return null; // DashboardLayout redirects this to /onboarding
+  if (!ctx?.activeTenant) return null; // DashboardLayout redirects this to /onboarding
 
-  const tenant = user.activeTenant;
+  const tenant   = ctx.activeTenant;
+  const userRole = ctx.activeRole ?? "RECEPTIONIST";
 
-  // Get user role
-  const tenantUser = await db.tenantUser.findFirst({
-    where: {
-      userId: user.id,
-      tenantId: user.activeTenantId!
-    },
-  });
-  const userRole = tenantUser?.role || "RECEPTIONIST";
-
-  const { stats, overduePayments, recentStudents, groupsWithClassesToday } = await getDashboardData(tenant.id, userRole, user.id);
+  const { stats, overduePayments, recentStudents, groupsWithClassesToday } = await getDashboardData(tenant.id, userRole, ctx.user.id);
 
   const showTrialBanner =
     tenant.status === "TRIAL" && tenant.trialEndsAt && trialDaysLeft(tenant.trialEndsAt) >= 0;
@@ -263,7 +254,7 @@ export default async function DashboardPage() {
                         </>
                       )}
                       <span className="text-gray-300 dark:text-sb-light/30">•</span>
-                      <ClassAttendanceIndicator groupId={group.id} />
+                      <ClassAttendanceIndicator count={group.studentCount} />
                     </div>
                   </div>
 
@@ -396,7 +387,7 @@ export default async function DashboardPage() {
                       </>
                     )}
                     <span className="text-gray-300 dark:text-sb-light/30">•</span>
-                    <ClassAttendanceIndicator groupId={group.id} />
+                    <ClassAttendanceIndicator count={group.studentCount} />
                   </div>
                 </div>
 
