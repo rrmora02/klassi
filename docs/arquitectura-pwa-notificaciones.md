@@ -344,7 +344,84 @@ hoy sería pagar el costo de un sistema distribuido para un problema que no exis
 
 ---
 
-## 6. Despachador multicanal (el corazón del sistema)
+## 6. Registro y acceso de los padres (onboarding)
+
+**Principio: la escuela da de alta al tutor al inscribir al alumno; el padre nunca "se registra
+solo"** — siempre entra por una invitación, lo que garantiza que cada cuenta queda vinculada a
+los alumnos correctos desde el primer login.
+
+### 6.1 Modelo: invitación de padre
+
+Mismo patrón que el `TeamInvitation` existente para staff, pero apuntando a alumnos:
+
+```prisma
+model ParentInvitation {
+  id         String   @id @default(cuid())
+  tenantId   String
+  email      String?            // al menos uno de email/phone
+  phone      String?
+  name       String?            // "Rosa Martínez"
+  studentIds Json     @default("[]") // alumnos a vincular al aceptar
+  token      String   @unique
+  status     String   @default("PENDING") // PENDING | ACCEPTED | REVOKED | EXPIRED
+  invitedBy  String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId, status])
+  @@index([email])
+}
+```
+
+La vinculación se hace **siempre por token, nunca por coincidencia de email/teléfono** — así el
+flujo es idéntico con o sin correo y un typo en recepción no vincula a la persona equivocada.
+
+### 6.2 Flujo A — el tutor tiene correo
+
+1. Al inscribir al alumno, recepción captura nombre, parentesco y correo del tutor →
+   se crea `ParentInvitation` + email vía Resend con enlace `/portal/activar/[token]`.
+2. El padre abre el enlace, ve a sus hijos ya vinculados y **crea su contraseña ahí mismo**
+   (o entra con Google) — Clerk maneja ambos. El token prueba la propiedad del correo;
+   no hace falta un paso extra de verificación.
+3. El webhook `user.created` de Clerk (ya existe en `/api/webhooks/clerk`) resuelve la
+   invitación: crea `User` (rol `PARENT`), un `ParentStudent` por hijo y marca la invitación
+   como `ACCEPTED`.
+4. Si el correo ya tiene cuenta (otro hijo u otra escuela Klassi), no se crea cuenta nueva:
+   solo se agregan vínculos. Un padre con hijos en dos escuelas ve ambas con un solo login.
+
+### 6.3 Flujo B — solo tiene teléfono
+
+Clerk soporta **autenticación por teléfono con código SMS (OTP)**: el padre entra con su
+número y un código de 6 dígitos, sin contraseña que recordar — para usuarios poco técnicos es
+incluso mejor. El reto no es la autenticación sino entregar la invitación sin correo:
+
+| Entrega | Costo | Cuándo |
+|---|---|---|
+| **QR en recepción** (pantalla del dashboard o impreso en el comprobante) | $0 | ✅ Recomendado: el padre lo escanea en el mostrador y la recepcionista le ayuda a instalar la PWA y aceptar el permiso de push en ese momento |
+| SMS con enlace corto (Twilio / SMS de Clerk) | por mensaje | Inscripciones a distancia |
+
+Implicaciones:
+
+- Sin correo no hay canal de respaldo email: **el push se vuelve el canal principal** para ese
+  usuario, por eso el onboarding en mostrador debe confirmar el permiso de notificaciones.
+  El despachador marca el canal EMAIL como `SKIPPED` cuando `User.email` es null.
+- `User.email` pasa a ser opcional para cuentas de padres (hoy es requerido en el schema);
+  el identificador estable es el `clerkId`.
+
+### 6.4 Casos límite
+
+- **Ni correo ni smartphone**: el alumno queda sin portal; el dashboard lo señala como
+  "sin acceso al portal" para que la escuela sepa que a esa familia se le avisa en persona.
+- **Dos o más tutores por alumno**: cada uno recibe su propia invitación
+  (`ParentStudent` ya soporta N tutores con `isPrimary`).
+- **Cambio de correo/teléfono**: se edita en Clerk (perfil) y el webhook `user.updated`
+  sincroniza el `User` local; las invitaciones pendientes se pueden revocar y reenviar.
+- **Expiración**: invitaciones con `expiresAt` (p. ej. 30 días) y reenvío con un clic desde
+  la ficha del alumno.
+
+---
+
+## 7. Despachador multicanal (el corazón del sistema)
 
 ```
 Evento de dominio ──► NotificationService.notify()
@@ -359,7 +436,7 @@ Evento de dominio ──► NotificationService.notify()
                           └─► IN_APP→ insert ya visible + Supabase Realtime lo empuja al cliente
 ```
 
-### 6.1 ¿Qué usar como cola en Vercel (serverless)?
+### 7.1 ¿Qué usar como cola en Vercel (serverless)?
 
 BullMQ no encaja bien en serverless (necesita workers de larga vida). Opciones reales:
 
@@ -375,7 +452,7 @@ disparo a **QStash** cuando la latencia de 1 minuto sea insuficiente (p. ej. par
 la notificación push debe salir en segundos, se puede invocar el worker inline tras el POST y
 dejar el cron como red de seguridad).
 
-### 6.2 Tiempo real del chat
+### 7.2 Tiempo real del chat
 
 **Supabase Realtime (Broadcast)**: al insertar un `Message`, el servidor publica en el canal
 `tenant:{tenantId}:conversation:{id}`. La PWA suscrita lo pinta al instante; si la app está
@@ -387,9 +464,9 @@ conexiones concurrentes por escuela no se llegará pronto.
 
 ---
 
-## 7. API REST pública (`/api/v1`) — Klassi como plataforma
+## 8. API REST pública (`/api/v1`) — Klassi como plataforma
 
-### 7.1 Principios
+### 8.1 Principios
 
 - **Versionada por URL** (`/api/v1/...`), JSON, errores con formato consistente
   (`{ "error": { "code", "message" } }`).
@@ -403,7 +480,7 @@ conexiones concurrentes por escuela no se llegará pronto.
   - `zod-openapi` / `@asteasolutions/zod-to-openapi` reutilizando los schemas Zod existentes ✅
   - `trpc-openapi` para exponer routers tRPC como REST (atajo válido, menos control del contrato)
 
-### 7.2 Superficie mínima v1
+### 8.2 Superficie mínima v1
 
 ```
 # Notificaciones (el caso de uso estrella para integradores)
@@ -423,7 +500,7 @@ GET    /api/v1/students · /api/v1/groups · /api/v1/payments
 GET/POST/DELETE /api/v1/webhooks        # gestión de endpoints salientes
 ```
 
-### 7.3 Webhooks salientes (la otra mitad de "que otro sistema se integre")
+### 8.3 Webhooks salientes (la otra mitad de "que otro sistema se integre")
 
 - Eventos: `message.created`, `notification.delivered`, `payment.paid`, `attendance.recorded`,
   `student.enrolled`, …
@@ -438,7 +515,7 @@ contrato de plataforma SaaS que se pide.
 
 ---
 
-## 8. Seguridad y multi-tenant
+## 9. Seguridad y multi-tenant
 
 - **Padres/alumnos**: Clerk (rol `PARENT` ya existe). Un padre solo ve conversaciones donde es
   `ConversationParticipant`, y estas siempre están ancladas a sus hijos vía `ParentStudent`.
@@ -455,7 +532,7 @@ contrato de plataforma SaaS que se pide.
 
 ---
 
-## 9. Plan de implementación por fases
+## 10. Plan de implementación por fases
 
 | Fase | Alcance | Entregable verificable |
 |---|---|---|
@@ -471,12 +548,13 @@ push antes de invertir en la fase 4.
 
 ---
 
-## 10. Resumen de decisiones tecnológicas
+## 11. Resumen de decisiones tecnológicas
 
 | Área | Decisión | Alternativa descartada y por qué |
 |---|---|---|
 | Arquitectura app | Mismo monolito Next.js, route group `(portal)` | App separada: duplica auth/deploy sin beneficio actual |
 | Base de datos | Compartida (mismo Postgres/Supabase, mismo schema) | BD separada: transacciones distribuidas y replicación del grafo de datos, sin problema real de escala que lo justifique |
+| Alta de padres | Invitación por token creada al inscribir al alumno (email o QR + teléfono/OTP de Clerk) | Registro abierto: imposible saber a qué alumnos vincular y abre la puerta a cuentas ajenas al tenant |
 | Service worker | Serwist | `next-pwa` (sin mantenimiento activo), SW manual (más error-prone) |
 | Push | Web Push estándar + VAPID (`web-push`) | FCM: innecesario para web, añade Firebase; se reconsidera solo si hay app nativa |
 | Tiempo real | Supabase Realtime | Pusher/Ably: vendor y coste extra sin necesidad de escala hoy |
