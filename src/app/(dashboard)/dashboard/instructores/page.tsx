@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
+import { LockedButton } from "@/components/shared/locked-button";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { AdminInstructorBanner } from "@/components/instructores/admin-instructor-banner";
@@ -80,9 +81,13 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Instructores</h1>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{total} {total === 1 ? "instructor" : "instructores"}</p>
         </div>
-        <Link href="/dashboard/instructores/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
-          + Nuevo instructor
-        </Link>
+        {tenant.blockChildWrites ? (
+          <LockedButton label="+ Nuevo instructor" reason={tenant.blockChildWritesReason} />
+        ) : (
+          <Link href="/dashboard/instructores/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+            + Nuevo instructor
+          </Link>
+        )}
       </div>
 
       {/* Tabs */}

@@ -167,7 +167,12 @@ export default async function PagosPage({ searchParams }: PageProps) {
       </div>
 
       {/* Client component con tabla y modales */}
-      <PaymentsClient payments={payments as any} students={students} />
+      <PaymentsClient
+        payments={payments as any}
+        students={students}
+        readOnly={tenant.blockChildWrites}
+        readOnlyReason={tenant.blockChildWritesReason}
+      />
 
       {/* Paginación */}
       {pages > 1 && (

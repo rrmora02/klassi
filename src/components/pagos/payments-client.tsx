@@ -26,13 +26,16 @@ interface Student { id: string; firstName: string; lastName: string; }
 interface Props {
   payments: Payment[];
   students: Student[];
+  /** Escuela hija bloqueada: no se pueden registrar ni marcar pagos */
+  readOnly?: boolean;
+  readOnlyReason?: string | null;
 }
 
 const METHOD_LABELS: Record<string, string> = {
   CASH: "Efectivo", TRANSFER: "Transferencia", CARD: "Tarjeta", OXXO: "OXXO", SPEI: "SPEI",
 };
 
-export function PaymentsClient({ payments, students }: Props) {
+export function PaymentsClient({ payments, students, readOnly = false, readOnlyReason }: Props) {
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [showNew, setShowNew]     = useState(false);
 
@@ -41,10 +44,16 @@ export function PaymentsClient({ payments, students }: Props) {
   return (
     <>
       <button
-        onClick={() => setShowNew(true)}
-        style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, border: "none", cursor: "pointer" }}
+        onClick={() => !readOnly && setShowNew(true)}
+        disabled={readOnly}
+        title={readOnly ? (readOnlyReason || "Escuela en modo solo lectura") : undefined}
+        style={{
+          background: readOnly ? "#94a3b8" : "#00754A",
+          color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500,
+          border: "none", cursor: readOnly ? "not-allowed" : "pointer", opacity: readOnly ? 0.7 : 1,
+        }}
       >
-        + Nuevo pago
+        {readOnly ? "🔒 Nuevo pago" : "+ Nuevo pago"}
       </button>
 
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto", marginTop: 16 }}>
@@ -87,7 +96,7 @@ export function PaymentsClient({ payments, students }: Props) {
                   <PaymentStatusBadge status={p.status} />
                 </td>
                 <td style={{ padding: "8px 10px", textAlign: "right" }} className="sm:px-3.5 sm:py-2.5">
-                  {(p.status === "PENDING" || p.status === "OVERDUE") && (
+                  {(p.status === "PENDING" || p.status === "OVERDUE") && !readOnly && (
                     <button
                       onClick={() => setMarkingId(p.id)}
                       className="inline-flex items-center rounded-full border border-sb-accent/40 dark:border-sb-light/30 bg-sb-light/40 dark:bg-sb-uplift px-2 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light hover:bg-sb-light dark:hover:bg-sb-house transition-colors cursor-pointer whitespace-nowrap"

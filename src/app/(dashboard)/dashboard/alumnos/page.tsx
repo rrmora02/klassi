@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { fullName, calcAge } from "@/lib/utils";
 import Link from "next/link";
+import { LockedButton } from "@/components/shared/locked-button";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { StudentRow } from "@/components/alumnos/student-row";
@@ -121,9 +122,13 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Alumnos</h1>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>{total} {total === 1 ? "alumno" : "alumnos"}</p>
         </div>
-        <Link href="/dashboard/alumnos/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap" }}>
-          + Nuevo alumno
-        </Link>
+        {tenant.blockChildWrites ? (
+          <LockedButton label="+ Nuevo alumno" reason={tenant.blockChildWritesReason} />
+        ) : (
+          <Link href="/dashboard/alumnos/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap" }}>
+            + Nuevo alumno
+          </Link>
+        )}
       </div>
 
       {/* Tabs */}

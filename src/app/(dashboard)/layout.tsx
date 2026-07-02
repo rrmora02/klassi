@@ -5,6 +5,7 @@ import { TopBar, TopBarSkeleton } from "@/components/layout/topbar";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { OnboardingTourWrapper } from "@/components/onboarding/onboarding-tour-wrapper";
 import { SubscriptionBanner } from "@/components/billing/subscription-banner";
+import { ReadOnlyBanner } from "@/components/billing/read-only-banner";
 import { getCurrentContext } from "@/server/request-context";
 import { db } from "@/server/db";
 
@@ -38,7 +39,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         }
       >
         {tenant && (
-          <div className="px-6 pt-4">
+          <div className="px-6 pt-4 space-y-2">
+            {ctx.readOnly && <ReadOnlyBanner reason={ctx.readOnlyReason} />}
             <SubscriptionBanner
               status={tenant.status}
               trialEndsAt={tenant.trialEndsAt}

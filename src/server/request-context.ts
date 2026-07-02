@@ -57,6 +57,9 @@ export const getCurrentContext = cache(async () => {
     activeTenant: user.activeTenant,
     /** Rol en la escuela activa; null si no hay membresía real */
     activeRole: activeMembership?.role ?? null,
+    /** Escuela hija bloqueada (plan del padre < Enterprise): solo lectura */
+    readOnly: activeMembership?.tenant.blockChildWrites ?? false,
+    readOnlyReason: activeMembership?.tenant.blockChildWritesReason ?? null,
   };
 });
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LockedButton } from "@/components/shared/locked-button";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { redirect } from "next/navigation";
@@ -82,13 +83,17 @@ export default async function EventosPage({ searchParams }: EventosPageProps) {
             {totalEvents} evento{totalEvents !== 1 ? "s" : ""} registrado{totalEvents !== 1 ? "s" : ""}
           </p>
         </div>
-        <Link
-          href="/dashboard/eventos/nuevo"
-          className="inline-flex items-center gap-2 rounded-lg bg-sb-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-sb-green transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Crear evento
-        </Link>
+        {tenant.blockChildWrites ? (
+          <LockedButton label="Crear evento" reason={tenant.blockChildWritesReason} />
+        ) : (
+          <Link
+            href="/dashboard/eventos/nuevo"
+            className="inline-flex items-center gap-2 rounded-lg bg-sb-accent px-4 py-2.5 text-sm font-medium text-white hover:bg-sb-green transition-colors"
+          >
+            <Plus className="h-4 w-4" />
+            Crear evento
+          </Link>
+        )}
       </div>
 
       {/* Lista de eventos */}

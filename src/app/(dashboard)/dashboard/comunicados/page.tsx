@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { formatDate } from "@/lib/utils";
 import { AnnouncementActions } from "@/components/comunicados/announcement-actions";
 import Link from "next/link";
+import { LockedButton } from "@/components/shared/locked-button";
 import { Bell, Users, BookOpen, User } from "lucide-react";
 
 interface PageProps {
@@ -57,9 +58,13 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
             {total} {total === 1 ? "comunicado" : "comunicados"}
           </p>
         </div>
-        <Link href="/dashboard/comunicados/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none", width: "100%", textAlign: "center" }} className="sm:w-auto">
-          + Nuevo comunicado
-        </Link>
+        {tenant.blockChildWrites ? (
+          <LockedButton label="+ Nuevo comunicado" reason={tenant.blockChildWritesReason} />
+        ) : (
+          <Link href="/dashboard/comunicados/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none", width: "100%", textAlign: "center" }} className="sm:w-auto">
+            + Nuevo comunicado
+          </Link>
+        )}
       </div>
 
       {/* Summary cards */}
@@ -87,9 +92,13 @@ export default async function ComunicadosPage({ searchParams }: PageProps) {
           <Bell size={32} style={{ color: "var(--color-text-tertiary)", marginBottom: 12 }} />
           <p style={{ fontSize: 15, fontWeight: 500, color: "var(--color-text-secondary)", margin: 0 }}>Sin comunicados aún</p>
           <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", margin: "4px 0 16px" }}>Crea tu primer comunicado para notificar a los alumnos y familias</p>
-          <Link href="/dashboard/comunicados/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
-            + Nuevo comunicado
-          </Link>
+          {tenant.blockChildWrites ? (
+            <LockedButton label="+ Nuevo comunicado" reason={tenant.blockChildWritesReason} />
+          ) : (
+            <Link href="/dashboard/comunicados/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+              + Nuevo comunicado
+            </Link>
+          )}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

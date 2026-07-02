@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
+import { LockedButton } from "@/components/shared/locked-button";
 import { redirect } from "next/navigation";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 import { formatBillingInfo } from "@/lib/utils";
@@ -119,15 +120,19 @@ export default async function GruposPage({ searchParams }: PageProps) {
             {total} {total === 1 ? "grupo" : "grupos"}
           </p>
         </div>
-        <Link
-          href="/dashboard/grupos/nuevo"
-          style={{
-            background: "#00754A", color: "#fff", borderRadius: 8,
-            padding: "8px 20px", fontSize: 13, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap",
-          }}
-        >
-          + Nuevo grupo
-        </Link>
+        {tenant.blockChildWrites ? (
+          <LockedButton label="+ Nuevo grupo" reason={tenant.blockChildWritesReason} />
+        ) : (
+          <Link
+            href="/dashboard/grupos/nuevo"
+            style={{
+              background: "#00754A", color: "#fff", borderRadius: 8,
+              padding: "8px 20px", fontSize: 13, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap",
+            }}
+          >
+            + Nuevo grupo
+          </Link>
+        )}
       </div>
 
       {/* Tabs activos / inactivos */}
