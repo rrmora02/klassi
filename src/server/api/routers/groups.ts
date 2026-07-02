@@ -50,17 +50,10 @@ const groupUpdateSchema = groupCreateSchema.partial().extend({
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
-// Normaliza monthlyFee a centavos
-// Si el valor está entre 1 y 999, asume que está en pesos y multiplica por 100
+// El formulario siempre envía el monto en pesos; en BD se guarda en centavos.
 function normalizeMonthlyFee(fee: number | null | undefined): number | null {
-  if (!fee) return null;
-
-  // Si es menor a 1000, asumir que está en pesos y convertir a centavos
-  if (fee > 0 && fee < 1000) {
-    return fee * 100;
-  }
-
-  return fee;
+  if (!fee || fee <= 0) return null;
+  return Math.round(fee * 100);
 }
 
 // ─── Router ───────────────────────────────────────────────────────

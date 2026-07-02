@@ -84,6 +84,11 @@ async function createTenantAction(formData: FormData) {
     data:  { activeTenantId: tenant.id },
   });
 
+  // El contexto tRPC cachea el usuario (TTL 10 min); invalidar para que
+  // las siguientes llamadas operen sobre la escuela recién creada.
+  const { invalidateUserCache } = await import("@/server/cache/userAuthCache");
+  invalidateUserCache(userId);
+
   if (invitationToken) {
     redirect(`/aceptar-invitacion?token=${invitationToken}`);
   }

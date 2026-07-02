@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure, protectedProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { invalidateUserCache } from "@/server/cache/userAuthCache";
 
 export const tenantsRouter = createTRPCRouter({
 
@@ -53,6 +54,7 @@ export const tenantsRouter = createTRPCRouter({
         where: { id: ctx.dbUser!.id },
         data: { activeTenantId: tenant.id }
       });
+      invalidateUserCache(ctx.userId);
 
       return tenant;
     }),

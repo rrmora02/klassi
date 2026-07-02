@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure, publicProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import { invalidateUserCache } from "@/server/cache/userAuthCache";
 
 export const teamRouter = createTRPCRouter({
   
@@ -95,7 +96,8 @@ export const teamRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
        // Cannot remove yourself basically
        const member = await ctx.db.tenantUser.findFirst({
-         where: { id: input.id, tenantId: ctx.tenantId }
+         where: { id: input.id, tenantId: ctx.tenantId },
+         include: { user: { select: { clerkId: true } } }
        });
        if (!member) throw new TRPCError({ code: "NOT_FOUND" });
        if (member.userId === ctx.dbUser!.id) {
@@ -124,9 +126,19 @@ export const teamRouter = createTRPCRouter({
          });
        }
 
-       return ctx.db.tenantUser.delete({
+       const deleted = await ctx.db.tenantUser.delete({
          where: { id: input.id }
        });
+
+       // Si esta escuela era su tenant activo, desvincularlo para que no
+       // conserve acceso residual, e invalidar su caché de auth.
+       await ctx.db.user.updateMany({
+         where: { id: member.userId, activeTenantId: ctx.tenantId },
+         data:  { activeTenantId: null }
+       });
+       invalidateUserCache(member.user.clerkId);
+
+       return deleted;
     }),
 
   getInvitationByToken: publicProcedure
@@ -201,10 +213,12 @@ export const teamRouter = createTRPCRouter({
 
          if (userByEmail) {
            // Update existing pending user with real clerkId
+           const oldClerkId = userByEmail.clerkId;
            user = await ctx.db.user.update({
              where: { id: userByEmail.id },
              data: { clerkId: input.clerkId, name: input.name }
            });
+           invalidateUserCache(oldClerkId);
          } else {
            // Create new user
            user = await ctx.db.user.create({
@@ -255,6 +269,10 @@ export const teamRouter = createTRPCRouter({
          where: { id: user.id },
          data: { activeTenantId: invitation.tenantId }
        });
+
+       // El contexto tRPC cachea el usuario (TTL 10 min); sin esto el recién
+       // invitado seguiría viendo "No perteneces a ninguna escuela".
+       invalidateUserCache(input.clerkId);
 
        // Mark invitation as accepted
        await ctx.db.teamInvitation.update({

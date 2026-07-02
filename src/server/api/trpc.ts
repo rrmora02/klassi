@@ -121,10 +121,21 @@ const isAuthenticated = t.middleware(({ ctx, next }) => {
   return next({ ctx: { ...ctx, userId: ctx.userId, dbUser: ctx.dbUser } });
 });
 
-const hasTenant = t.middleware(({ ctx, next }) => {
+const hasTenant = t.middleware(async ({ ctx, next }) => {
   if (!ctx.userId) throw new TRPCError({ code: "UNAUTHORIZED" });
-  if (!ctx.tenantId) throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
-  return next({ ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId, dbUser: ctx.dbUser } });
+  if (!ctx.tenantId || !ctx.dbUser) throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
+
+  // Verificar la membresía real, no solo activeTenantId: al remover a un
+  // usuario del equipo su activeTenantId puede seguir apuntando a la escuela.
+  const membership = await ctx.db.tenantUser.findUnique({
+    where:  { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.dbUser.id } },
+    select: { role: true },
+  });
+  if (!membership) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
+  }
+
+  return next({ ctx: { ...ctx, userId: ctx.userId, tenantId: ctx.tenantId, dbUser: ctx.dbUser, tenantRole: membership.role } });
 });
 
 const isSuperAdmin = t.middleware(({ ctx, next }) => {

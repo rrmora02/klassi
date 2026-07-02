@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { invalidateUserCache } from "@/server/cache/userAuthCache";
 
 export async function switchTenantAction(tenantId: string) {
   const { userId } = await auth();
@@ -22,4 +23,8 @@ export async function switchTenantAction(tenantId: string) {
     where: { id: user.id },
     data: { activeTenantId: tenantId }
   });
+
+  // El contexto tRPC deriva tenantId de un caché de usuario (TTL 10 min);
+  // sin esto, los writes seguirían yendo a la escuela anterior.
+  invalidateUserCache(userId);
 }

@@ -21,8 +21,12 @@ export async function getUserByClerkId(
     where: { clerkId },
   });
 
-  userCache.set(clerkId, user);
-  console.log(`[CACHE SET] User ${clerkId} cached (${user ? 'user: ' + user.email : 'null'})`);
+  // No cachear null: durante el signup el usuario aún no existe en BD y
+  // cachear la ausencia lo dejaría "invisible" hasta 10 min después de crearse.
+  if (user) {
+    userCache.set(clerkId, user);
+    console.log(`[CACHE SET] User ${clerkId} cached (user: ${user.email})`);
+  }
   return user;
 }
 
