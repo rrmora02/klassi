@@ -28,11 +28,12 @@ export function StudentActions({ studentId, studentName, status }: Props) {
     onError:   (e) => setDeleteError(e.message),
   });
 
-  const statusOptions: { label: string; value: StudentStatus; }[] = [
+  const allStatusOptions: { label: string; value: StudentStatus; }[] = [
     { label: "Activar",    value: "ACTIVE"    },
     { label: "Desactivar", value: "INACTIVE"  },
     { label: "Suspender",  value: "SUSPENDED" },
-  ].filter(o => o.value !== status);
+  ];
+  const statusOptions = allStatusOptions.filter(o => o.value !== status);
 
   return (
     <>

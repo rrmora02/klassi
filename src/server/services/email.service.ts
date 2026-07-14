@@ -1,11 +1,19 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM   = process.env.RESEND_FROM_EMAIL ?? "noreply@klassi.io";
-const APP    = process.env.NEXT_PUBLIC_APP_URL ?? "https://klassi.io";
+const FROM = process.env.RESEND_FROM_EMAIL ?? "noreply@klassi.io";
+const APP  = process.env.NEXT_PUBLIC_APP_URL ?? "https://klassi.io";
+
+// Instancia perezosa: el constructor de Resend lanza sin API key,
+// lo que rompería el build cuando la variable no está definida.
+let resendClient: Resend | null = null;
+
+function getResend(): Resend {
+  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
+  return resendClient;
+}
 
 async function send(opts: { to: string | string[]; subject: string; html: string }) {
-  return resend.emails.send({ from: FROM, ...opts });
+  return getResend().emails.send({ from: FROM, ...opts });
 }
 
 export async function sendWelcomeEmail(to: string, schoolName: string) {

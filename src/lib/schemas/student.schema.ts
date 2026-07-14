@@ -64,7 +64,7 @@ export const studentFormSchema = z.object({
 
 export type StudentFormValues = z.infer<typeof studentFormSchema>;
 
-export const studentFormDefaults: StudentFormValues = {
+export const studentFormDefaults: Partial<StudentFormValues> = {
   firstName:         "",
   lastName:          "",
   birthDate:         "",

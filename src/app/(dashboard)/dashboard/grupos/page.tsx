@@ -36,7 +36,8 @@ export default async function GruposPage({ searchParams }: PageProps) {
   const { userId } = await auth();
   if (!userId) return null;
   const user = await db.user.findUnique({ where: { clerkId: userId } });
-  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
+  if (!user) return null;
+  const tenant = user.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
   if (!tenant) return null;
 
   // Solo ADMIN y RECEPTIONIST
@@ -54,7 +55,7 @@ export default async function GruposPage({ searchParams }: PageProps) {
   const levelFilter = searchParams.level as GroupLevel | undefined;
   const activeFilter = searchParams.active === "false" ? false : searchParams.active === "true" ? true : undefined;
 
-  const where: Parameters<typeof db.group.findMany>[0]["where"] = {
+  const where: NonNullable<Parameters<typeof db.group.findMany>[0]>["where"] = {
     tenantId: tenant.id,
     ...(activeFilter !== undefined && { isActive: activeFilter }),
     ...(levelFilter && { level: levelFilter }),

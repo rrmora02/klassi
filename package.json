@@ -36,6 +36,7 @@
     "server-only": "^0.0.1",
     "stripe": "^14.0.0",
     "superjson": "^2.2.6",
+    "svix": "^1.96.1",
     "tailwind-merge": "^2.2.0",
     "tailwindcss": "^3.3.0",
     "web-push": "^3.6.7",

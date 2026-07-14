@@ -3,25 +3,21 @@ import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { GroupLevel, type Prisma } from "@prisma/client";
 
-export enum DayOfWeek {
-  MON = "MON",
-  TUE = "TUE",
-  WED = "WED",
-  THU = "THU",
-  FRI = "FRI",
-  SAT = "SAT",
-  SUN = "SUN",
-}
 import { canAddGroup } from "@/server/services/tenant.service";
 
 // ─── Tipos locales ────────────────────────────────────────────────
+// Union de literales (no enum TS) para que el formulario cliente,
+// que valida con z.enum en lib/schemas/group.schema.ts, sea asignable.
+
+const DAYS_OF_WEEK = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] as const;
+export type DayOfWeek = (typeof DAYS_OF_WEEK)[number];
 
 type ScheduleSlot = { day: DayOfWeek; startTime: string; endTime: string };
 
 // ─── Schemas de validación ────────────────────────────────────────
 
 const scheduleSlotSchema = z.object({
-  day:       z.nativeEnum(DayOfWeek),
+  day:       z.enum(DAYS_OF_WEEK),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, "Formato HH:MM requerido"),
   endTime:   z.string().regex(/^\d{2}:\d{2}$/, "Formato HH:MM requerido"),
 }).refine((s) => s.startTime < s.endTime, {

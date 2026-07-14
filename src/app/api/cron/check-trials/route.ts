@@ -32,13 +32,13 @@ export async function GET(req: NextRequest) {
   });
 
   for (const tenant of trialExpiringSoon) {
-    // Obtener email del admin
-    const admin = await db.user.findFirst({
-      where: { tenantId: tenant.id, role: "ADMIN" },
-      select: { email: true, name: true },
+    // Obtener email del admin (la membresía vive en TenantUser)
+    const adminMembership = await db.tenantUser.findFirst({
+      where:   { tenantId: tenant.id, role: "ADMIN" },
+      include: { user: { select: { email: true, name: true } } },
     });
-    if (admin?.email) {
-      await sendTrialExpiredEmail(admin.email, tenant.name, /* expiring soon */ false);
+    if (adminMembership?.user.email) {
+      await sendTrialExpiredEmail(adminMembership.user.email, tenant.name, /* expiring soon */ false);
     }
   }
 
@@ -59,12 +59,12 @@ export async function GET(req: NextRequest) {
     });
     suspendedIds.push(tenant.id);
 
-    const admin = await db.user.findFirst({
-      where: { tenantId: tenant.id, role: "ADMIN" },
-      select: { email: true, name: true },
+    const adminMembership = await db.tenantUser.findFirst({
+      where:   { tenantId: tenant.id, role: "ADMIN" },
+      include: { user: { select: { email: true, name: true } } },
     });
-    if (admin?.email) {
-      await sendTrialExpiredEmail(admin.email, tenant.name, /* already expired */ true);
+    if (adminMembership?.user.email) {
+      await sendTrialExpiredEmail(adminMembership.user.email, tenant.name, /* already expired */ true);
     }
   }
 

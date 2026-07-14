@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { api } from "@/lib/trpc";
 import { Toast } from "@/components/shared/toast";
 
+// useSearchParams exige un límite de Suspense para el prerender
 export default function AceptarInvitacionPage() {
+  return (
+    <Suspense fallback={null}>
+      <AceptarInvitacionContent />
+    </Suspense>
+  );
+}
+
+function AceptarInvitacionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { userId, isLoaded } = useAuth();

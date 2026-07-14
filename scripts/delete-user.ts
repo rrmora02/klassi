@@ -7,7 +7,7 @@ async function deleteUser(email: string) {
     console.log(`🔍 Buscando usuario con email: ${email}`);
 
     // Find user
-    const user = await db.user.findUnique({
+    const user = await db.user.findFirst({
       where: { email },
       include: {
         memberships: true,

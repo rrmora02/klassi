@@ -31,7 +31,7 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
   const status   = searchParams.status as "ACTIVE" | "INACTIVE" | "SUSPENDED" | undefined;
   const discId   = searchParams.disc;
 
-  const where: Parameters<typeof db.student.findMany>[0]["where"] = {
+  const where: NonNullable<Parameters<typeof db.student.findMany>[0]>["where"] = {
     tenantId: tenant.id,
     ...(status && { status }),
     ...(search && { OR: [

@@ -28,7 +28,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   const search = searchParams.q?.trim() ?? "";
   const activeFilter = searchParams.active === "false" ? false : searchParams.active === "true" ? true : undefined;
 
-  const where: Parameters<typeof db.instructor.findMany>[0]["where"] = {
+  const where: NonNullable<Parameters<typeof db.instructor.findMany>[0]>["where"] = {
     tenantId: tenant.id,
     ...(activeFilter !== undefined && { isActive: activeFilter }),
     ...(search && { OR: [

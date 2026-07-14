@@ -5,7 +5,7 @@ import { api } from "@/lib/trpc";
 import { AttendanceStatus } from "@prisma/client";
 
 export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }) {
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0]!;
   const [dateStr, setDateStr] = useState<string>(today);
   const [groupId, setGroupId] = useState<string>(initialGroupId || "");
 

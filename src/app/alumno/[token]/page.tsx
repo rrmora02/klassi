@@ -43,7 +43,7 @@ function getMonday(date: Date): Date {
 }
 
 function dateToDay(date: Date): string {
-  return DAY_ORDER[date.getUTCDay() === 0 ? 6 : date.getUTCDay() - 1];
+  return DAY_ORDER[date.getUTCDay() === 0 ? 6 : date.getUTCDay() - 1]!;
 }
 
 const MONTH_SHORT: Record<number, string> = {
