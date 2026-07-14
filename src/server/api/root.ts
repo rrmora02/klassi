@@ -10,6 +10,8 @@ import { tenantsRouter }        from "./routers/tenants";
 import { teamRouter }           from "./routers/team";
 import { announcementsRouter }  from "./routers/announcements";
 import { reportsRouter }        from "./routers/reports";
+import { notificationsRouter }  from "./routers/notifications";
+import { portalRouter }         from "./routers/portal";
 
 export const appRouter = createTRPCRouter({
   students:      studentsRouter,
@@ -23,6 +25,8 @@ export const appRouter = createTRPCRouter({
   team:          teamRouter,
   announcements: announcementsRouter,
   reports:       reportsRouter,
+  notifications: notificationsRouter,
+  portal:        portalRouter,
 });
 
 export type AppRouter = typeof appRouter;

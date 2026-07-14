@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
+import {
+  createNotifications,
+  dispatchPendingDeliveries,
+  resolveAnnouncementRecipients,
+} from "@/server/services/notification.service";
 
 export const announcementsRouter = createTRPCRouter({
 
@@ -51,10 +56,34 @@ export const announcementsRouter = createTRPCRouter({
       if (!announcement) throw new TRPCError({ code: "NOT_FOUND" });
       if (announcement.sentAt)  throw new TRPCError({ code: "BAD_REQUEST", message: "Este comunicado ya fue enviado" });
 
-      return ctx.db.announcement.update({
+      // Fan-out: padres de los alumnos destinatarios reciben la notificación
+      // por los canales disponibles (in-app, push, email). Outbox + despacho inline.
+      const recipientIds = await resolveAnnouncementRecipients(
+        ctx.tenantId,
+        announcement.targetAll,
+        (announcement.targetGroups as string[]) ?? [],
+      );
+
+      const { created } = await createNotifications({
+        tenantId: ctx.tenantId,
+        userIds:  recipientIds,
+        type:     "announcement",
+        title:    announcement.title,
+        body:     announcement.body,
+        data:     { url: "/portal/notificaciones", announcementId: announcement.id },
+      });
+
+      const updated = await ctx.db.announcement.update({
         where: { id: input.id },
         data:  { sentAt: new Date() },
       });
+
+      // Entrega inline; si algo falla, el cron dispatch-notifications reintenta
+      await dispatchPendingDeliveries().catch((err) => {
+        console.error("[announcements.send] dispatch error:", err);
+      });
+
+      return { ...updated, recipients: created };
     }),
 
   delete: tenantProcedure

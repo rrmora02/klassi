@@ -109,16 +109,17 @@ model Tenant {
   updatedAt        DateTime         @updatedAt
 
   // Relaciones
-  members       TenantUser[]
-  activeUsers   User[]           @relation("ActiveTenant")
-  invitations   TeamInvitation[]
-  disciplines   Discipline[]
-  students      Student[]
-  instructors   Instructor[]
-  groups        Group[]
-  payments      Payment[]
-  announcements Announcement[]
-  subscription  Subscription[]
+  members           TenantUser[]
+  activeUsers       User[]             @relation("ActiveTenant")
+  invitations       TeamInvitation[]
+  disciplines       Discipline[]
+  students          Student[]
+  instructors       Instructor[]
+  groups            Group[]
+  payments          Payment[]
+  announcements     Announcement[]
+  subscription      Subscription[]
+  parentInvitations ParentInvitation[]
 
   @@index([slug])
 }
@@ -156,11 +157,14 @@ model User {
   updatedAt      DateTime @updatedAt
 
   // Relaciones
-  memberships     TenantUser[]
-  instructors     Instructor[]
-  parentOf        ParentStudent[]
-  attendanceLogs  Attendance[]
-  invitationsSent TeamInvitation[] @relation("SentInvitations")
+  memberships       TenantUser[]
+  instructors       Instructor[]
+  parentOf          ParentStudent[]
+  attendanceLogs    Attendance[]
+  invitationsSent   TeamInvitation[]         @relation("SentInvitations")
+  notifications     Notification[]
+  pushSubscriptions PushSubscription[]
+  notificationPrefs NotificationPreference[]
 
   @@index([clerkId])
   @@index([email])
@@ -232,7 +236,7 @@ model Instructor {
   id        String   @id @default(cuid())
   tenantId  String
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userId    String   
+  userId    String
   user      User     @relation(fields: [userId], references: [id])
   bio       String?
   phone     String?
@@ -268,8 +272,8 @@ model Group {
   capacity     Int         @default(20)
   room         String?
   schedule     Json
-  monthlyFee   Int?        // Mensualidad en centavos (ej. 50000 = $500.00 MXN)
-  billingDay   Int?        // Día del mes para generar cobros (1-28)
+  monthlyFee   Int? // Mensualidad en centavos (ej. 50000 = $500.00 MXN)
+  billingDay   Int? // Día del mes para generar cobros (1-28)
   isActive     Boolean     @default(true)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -294,11 +298,11 @@ model Student {
   gender    String?
   phone     String?
   email     String?
-  avatarUrl   String?
-  status      StudentStatus @default(ACTIVE)
-  notes       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  avatarUrl String?
+  status    StudentStatus @default(ACTIVE)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 
   enrollments Enrollment[]
   parents     ParentStudent[]
@@ -423,6 +427,101 @@ model Payment {
   @@index([tenantId, dueDate])
   @@index([studentId, status])
   @@index([tenantId, paidAt])
+}
+
+// ─── Notificaciones (outbox multicanal) ──────────────────────────
+// Ver docs/arquitectura-pwa-notificaciones.md §4
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+  IN_APP
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  tenantId  String
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String // "announcement" | "payment.reminder" | "message.new" ...
+  title     String
+  body      String
+  data      Json      @default("{}") // deep-link: { url, announcementId, ... }
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  deliveries NotificationDelivery[]
+
+  @@index([userId, readAt])
+  @@index([tenantId, createdAt])
+}
+
+model NotificationDelivery {
+  id             String              @id @default(cuid())
+  notificationId String
+  notification   Notification        @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  channel        NotificationChannel
+  status         DeliveryStatus      @default(PENDING)
+  attempts       Int                 @default(0)
+  lastError      String?
+  sentAt         DateTime?
+
+  @@index([status])
+  @@index([notificationId])
+}
+
+model PushSubscription {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint   String    @unique // URL del push service del navegador
+  p256dh     String
+  auth       String
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+
+  @@index([userId])
+}
+
+model NotificationPreference {
+  id       String              @id @default(cuid())
+  userId   String
+  user     User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenantId String
+  type     String // mismo vocabulario que Notification.type, o "*"
+  channel  NotificationChannel
+  enabled  Boolean             @default(true)
+
+  @@unique([userId, tenantId, type, channel])
+}
+
+// ─── Invitación a Padres / Tutores ───────────────────────────────
+// La vinculación se hace siempre por token, nunca por email/phone
+
+model ParentInvitation {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email      String? // al menos uno de email/phone
+  phone      String?
+  name       String? // "Rosa Martínez"
+  studentIds Json     @default("[]") // alumnos a vincular al aceptar
+  token      String   @unique
+  status     String   @default("PENDING") // PENDING, ACCEPTED, REVOKED
+  invitedBy  String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId, status])
+  @@index([email])
 }
 
 // ─── Comunicados ──────────────────────────────────────────────────
