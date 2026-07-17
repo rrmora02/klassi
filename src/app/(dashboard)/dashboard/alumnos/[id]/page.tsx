@@ -8,6 +8,7 @@ import { StudentActions } from "@/components/alumnos/student-actions";
 import { StudentEnrollmentsSection } from "@/components/alumnos/student-enrollments-section";
 import { StudentShareButton } from "@/components/alumnos/student-share-button";
 import { AssignFirstBeltSection } from "@/components/alumnos/assign-first-belt-section";
+import { FamilyAccessCard } from "@/components/alumnos/family-access-card";
 
 export default async function AlumnoDetailPage({ params }: { params: { id: string } }) {
   // Identidad compartida del request (deduplicada con layout/TopBar)
@@ -158,6 +159,9 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
             </div>
           ))}
         </div>
+
+        {/* Acceso de la familia al portal (PWA) — enlace mágico por tutor */}
+        <FamilyAccessCard studentId={student.id} />
 
         {/* 🥋 Asignar primera cinta (solo si no tiene cinta y tiene grupo Karate) */}
         {!student.currentBeltColor && hasActiveKarateGroup && (

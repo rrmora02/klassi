@@ -8,6 +8,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
   "/alumno(.*)",
   "/evento(.*)", // respuesta de invitación a eventos (link de WhatsApp para papás)
+  "/portal/acceso(.*)", // enlace mágico de acceso al portal (el ticket autentica)
   // tRPC gestiona su propia auth por procedure (public/protected/tenant);
   // sin esto, los procedures públicos (ej. confirmar asistencia a evento,
   // aceptar invitación) rebotan al sign-in de Clerk.

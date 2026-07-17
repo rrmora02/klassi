@@ -248,6 +248,8 @@ export const studentsRouter = createTRPCRouter({
 
       const { tutorName, tutorPhone, tutorEmail, tutorRelationship, ...studentData } = input;
 
+      let tutorUserId: string | null = null;
+
       // Alumno + tutor en una transacción: si el tutor falla, no queda un
       // alumno a medias sin contacto registrado.
       const student = await db.$transaction(async (tx) => {
@@ -281,6 +283,8 @@ export const studentsRouter = createTRPCRouter({
             });
           }
 
+          tutorUserId = parentUser.id;
+
           // Idempotence: Check if parentStudent already exists
           const existingParent = await tx.parentStudent.findFirst({
             where: {
@@ -303,6 +307,16 @@ export const studentsRouter = createTRPCRouter({
 
         return created;
       });
+
+      // Cuenta real de Clerk para el tutor (mejor esfuerzo): sin contraseña,
+      // entra por enlace mágico desde la ficha del alumno. Si Clerk falla
+      // aquí, generar el enlace después la crea de todas formas.
+      if (tutorUserId && tutorEmail) {
+        const { ensureParentClerkAccount } = await import("@/server/services/parent-access.service");
+        await ensureParentClerkAccount(tutorUserId).catch((err) => {
+          console.error("[students.create] No se pudo crear la cuenta Clerk del tutor:", err);
+        });
+      }
 
       return { ...student, _isIdempotent: false };
     }),

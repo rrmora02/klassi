@@ -41,6 +41,21 @@ async function handleUserCreated(data: ClerkUserData) {
     return;
   }
 
+  // Tutores dados de alta por la escuela: existen localmente con clerkId
+  // "pending_..." — reclamar esa fila (conserva vínculos ParentStudent)
+  // en lugar de crear un duplicado.
+  const pending = await db.user.findFirst({
+    where: { email, clerkId: { startsWith: "pending_" } },
+  });
+  if (pending) {
+    const claimed = await db.user.update({
+      where: { id: pending.id },
+      data:  { clerkId: data.id, avatar: data.image_url ?? null },
+    });
+    console.log(`[clerk-webhook] Usuario pendiente reclamado: ${claimed.name} (${claimed.email})`);
+    return;
+  }
+
   const user = await db.user.create({
     data: {
       clerkId: data.id,
