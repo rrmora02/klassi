@@ -81,6 +81,13 @@ enum DayOfWeek {
   SUN
 }
 
+enum EventStatus {
+  PENDING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
 enum GroupLevel {
   BEGINNER
   INTERMEDIATE
@@ -88,25 +95,86 @@ enum GroupLevel {
   PROFESSIONAL
 }
 
+enum BeltColor {
+  WHITE
+  YELLOW
+  ORANGE
+  GREEN
+  BLUE
+  BROWN
+  BLACK
+}
+
+enum BillingFrequency {
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  VIEW
+  EXPORT
+}
+
+enum LogSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum BusinessEventType {
+  PAYMENT_CREATED
+  PAYMENT_MARKED_AS_PAID
+  PAYMENT_CANCELLED
+  DISCOUNT_APPLIED
+  STUDENT_ENROLLED
+  STUDENT_UNENROLLED
+  STUDENT_CREATED
+  STUDENT_UPDATED
+  STUDENT_DELETED
+  ATTENDANCE_RECORDED
+  USER_INVITED
+  USER_ROLE_CHANGED
+  GROUP_CREATED
+  GROUP_UPDATED
+  EVENT_CREATED
+  EVENT_CANCELLED
+}
+
 // ─── Tenant (Escuela) ─────────────────────────────────────────────
 
 model Tenant {
-  id               String           @id @default(cuid())
-  name             String
-  slug             String           @unique // subdomain: slug.klassi.io
-  logo             String? // URL en Supabase Storage
-  primaryColor     String?          @default("#1D3557")
-  phone            String?
-  email            String?
-  address          String?
-  plan             SubscriptionPlan @default(STARTER)
-  status           TenantStatus     @default(TRIAL)
-  stripeCustomerId String?          @unique
-  stripeSubId      String?          @unique // Stripe subscription ID
-  trialEndsAt      DateTime?
-  currentPeriodEnd DateTime?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
+  id                     String            @id @default(cuid())
+  name                   String
+  slug                   String            @unique // subdomain: slug.klassi.io
+  logo                   String? // URL en Supabase Storage
+  primaryColor           String?           @default("#1D3557")
+  phone                  String?
+  email                  String?
+  address                String?
+  plan                   SubscriptionPlan  @default(STARTER)
+  status                 TenantStatus      @default(TRIAL)
+  stripeCustomerId       String?           @unique
+  stripeSubId            String?           @unique // Stripe subscription ID
+  trialEndsAt            DateTime?
+  currentPeriodEnd       DateTime?
+  pendingPlan            SubscriptionPlan?
+  pendingPlanAt          DateTime?
+  effectivePlanCache     SubscriptionPlan? // Cache del plan efectivo (parent.plan si existe), TTL 5 min
+  effectivePlanCacheAt   DateTime? // Timestamp del cache, invalida si > 5 min
+  blockChildWrites       Boolean           @default(false) // Si true, bloquea inserts en este child tenant
+  blockChildWritesReason String? // Motivo del bloqueo (ej: "Parent downgraded to PRO")
+  parentTenantId         String? // escuela padre (Enterprise multi-escuela)
+  parentTenant           Tenant?           @relation("TenantChildren", fields: [parentTenantId], references: [id])
+  childTenants           Tenant[]          @relation("TenantChildren")
+  createdByUserId        String? // usuario que creó esta escuela
+  createdByUser          User?             @relation("CreatedTenants", fields: [createdByUserId], references: [id])
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
 
   // Relaciones
   members           TenantUser[]
@@ -119,9 +187,15 @@ model Tenant {
   payments          Payment[]
   announcements     Announcement[]
   subscription      Subscription[]
+  events            Event[]
+  auditLogs         AuditLog[]
+  errorLogs         ErrorLog[]
+  businessEvents    BusinessEvent[]
   parentInvitations ParentInvitation[]
 
   @@index([slug])
+  @@index([parentTenantId])
+  @@index([createdByUserId])
 }
 
 // ─── Suscripción (historial de pagos al SaaS) ─────────────────────
@@ -131,7 +205,7 @@ model Subscription {
   tenantId        String
   tenant          Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   plan            SubscriptionPlan
-  stripeInvoiceId String?
+  stripeInvoiceId String?          @unique
   amount          Int // en centavos
   currency        String           @default("usd")
   status          String // paid | unpaid | void
@@ -140,6 +214,13 @@ model Subscription {
   createdAt       DateTime         @default(now())
 
   @@index([tenantId])
+}
+
+// Registro de eventos de Stripe ya procesados (idempotencia del webhook)
+model StripeEvent {
+  id          String   @id // event.id de Stripe (evt_...)
+  type        String
+  processedAt DateTime @default(now())
 }
 
 // ─── Usuario ──────────────────────────────────────────────────────
@@ -153,6 +234,7 @@ model User {
   name           String
   phone          String?
   avatar         String?
+  isSuperAdmin   Boolean  @default(false)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
@@ -162,6 +244,8 @@ model User {
   parentOf          ParentStudent[]
   attendanceLogs    Attendance[]
   invitationsSent   TeamInvitation[]         @relation("SentInvitations")
+  auditLogs         AuditLog[]
+  createdTenants    Tenant[]                 @relation("CreatedTenants")
   notifications     Notification[]
   pushSubscriptions PushSubscription[]
   notificationPrefs NotificationPreference[]
@@ -259,31 +343,36 @@ enum GroupType {
 }
 
 model Group {
-  id           String      @id @default(cuid())
-  tenantId     String
-  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  disciplineId String
-  discipline   Discipline  @relation(fields: [disciplineId], references: [id])
-  instructorId String?
-  instructor   Instructor? @relation(fields: [instructorId], references: [id])
-  name         String
-  type         GroupType   @default(FIXED)
-  level        GroupLevel  @default(BEGINNER)
-  capacity     Int         @default(20)
-  room         String?
-  schedule     Json
-  monthlyFee   Int? // Mensualidad en centavos (ej. 50000 = $500.00 MXN)
-  billingDay   Int? // Día del mes para generar cobros (1-28)
-  isActive     Boolean     @default(true)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  id                 String           @id @default(cuid())
+  tenantId           String
+  tenant             Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  disciplineId       String
+  discipline         Discipline       @relation(fields: [disciplineId], references: [id])
+  instructorId       String?
+  instructor         Instructor?      @relation(fields: [instructorId], references: [id])
+  name               String
+  type               GroupType        @default(FIXED)
+  level              GroupLevel       @default(BEGINNER)
+  capacity           Int              @default(20)
+  room               String?
+  schedule           Json
+  monthlyFee         Int? // Monto en centavos (ej. 50000 = $500.00 MXN)
+  billingFrequency   BillingFrequency @default(MONTHLY) // WEEKLY, BIWEEKLY, o MONTHLY
+  billingDay         Int? // Para MONTHLY: día del mes (1-28)
+  billingDayOfWeek   String? // Para WEEKLY: día de la semana (MON-SUN)
+  billingWeekOfMonth Int? // Para BIWEEKLY: 1=primera quincena, 2=segunda quincena
+  isActive           Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   enrollments Enrollment[]
   sessions    ClassSession[]
+  events      Event[]        @relation("EventToGroup")
 
   @@index([tenantId])
   @@index([disciplineId])
   @@index([tenantId, isActive])
+  @@index([tenantId, updatedAt])
 }
 
 // ─── Alumno ───────────────────────────────────────────────────────
@@ -301,17 +390,27 @@ model Student {
   avatarUrl String?
   status    StudentStatus @default(ACTIVE)
   notes     String?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
 
-  enrollments Enrollment[]
-  parents     ParentStudent[]
-  payments    Payment[]
+  // 🥋 Karate belt system
+  currentBeltColor BeltColor? // ⚪ Blanca, 🟡 Amarilla, etc (solo si es Karate)
+  beltUpdatedAt    DateTime? // Cuándo cambió de cinta
+
+  // Token opaco para el link público de historial (revocable; null = sin link)
+  shareToken String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  enrollments   Enrollment[]
+  parents       ParentStudent[]
+  payments      Payment[]
+  eventPayments EventPayment[]
 
   @@index([tenantId])
   @@index([tenantId, lastName])
   @@index([tenantId, status])
   @@index([tenantId, createdAt])
+  @@index([tenantId, updatedAt])
 }
 
 // ─── Padre / Tutor <-> Alumno ─────────────────────────────────────
@@ -373,9 +472,11 @@ model ClassSession {
 
   attendances Attendance[]
 
+  // Una sesión por grupo y fecha: sin esto, dos usuarios marcando asistencia
+  // a la vez creaban sesiones duplicadas y la asistencia se repartía entre ambas.
+  @@unique([groupId, date])
   @@index([groupId])
   @@index([date])
-  @@index([groupId, date])
 }
 
 // ─── Asistencia ───────────────────────────────────────────────────
@@ -403,23 +504,25 @@ model Attendance {
 // Separado de los pagos de suscripción al SaaS
 
 model Payment {
-  id         String        @id @default(cuid())
-  tenantId   String
-  tenant     Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  studentId  String
-  student    Student       @relation(fields: [studentId], references: [id])
-  concept    String // "Mensualidad Enero 2026"
-  amount     Int // en centavos para evitar flotantes
-  currency   String        @default("MXN")
-  method     PaymentMethod @default(CASH)
-  status     PaymentStatus @default(PENDING)
-  dueDate    DateTime?
-  paidAt     DateTime?
-  receiptUrl String? // URL en Supabase Storage
-  reference  String?
-  notes      String?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  tenantId       String
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        Student       @relation(fields: [studentId], references: [id])
+  groupId        String? // grupo que originó el cobro automático (dedupe del cron)
+  concept        String // "Mensualidad Enero 2026"
+  amount         Int // en centavos para evitar flotantes
+  discountAmount Int           @default(0) // descuento en centavos
+  currency       String        @default("MXN")
+  method         PaymentMethod @default(CASH)
+  status         PaymentStatus @default(PENDING)
+  dueDate        DateTime?
+  paidAt         DateTime?
+  receiptUrl     String? // URL en Supabase Storage
+  reference      String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@index([tenantId])
   @@index([studentId])
@@ -427,6 +530,7 @@ model Payment {
   @@index([tenantId, dueDate])
   @@index([studentId, status])
   @@index([tenantId, paidAt])
+  @@index([studentId, groupId, dueDate])
 }
 
 // ─── Notificaciones (outbox multicanal) ──────────────────────────
@@ -538,4 +642,144 @@ model Announcement {
   createdAt    DateTime  @default(now())
 
   @@index([tenantId])
+}
+
+// ─── Evento (Día del niño, Convivio, etc) ─────────────────────────
+
+model Event {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name           String // "Día del Niño", "Convivio", etc
+  description    String?
+  date           DateTime
+  paymentDueDate DateTime?
+
+  // Múltiples grupos o toda la escuela
+  isSchoolWide Boolean @default(false)
+  groups       Group[] @relation("EventToGroup")
+
+  amount      Int // en centavos
+  status      EventStatus @default(PENDING) // PENDING, ONGOING, COMPLETED, CANCELLED
+  completedAt DateTime? // fecha de cuando se marcó como completado
+
+  eventPayments EventPayment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([date])
+  @@index([tenantId, status])
+}
+
+// ─── Pago de Evento (Aparte de mensualidad) ───────────────────────
+
+model EventPayment {
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  studentId String
+  student   Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  amount         Int // en centavos
+  discountAmount Int @default(0) // descuento en centavos
+
+  // PENDING, PAID, NOT_ATTENDING, CANCELLED
+  status String        @default("PENDING")
+  method PaymentMethod @default(CASH)
+
+  // Token para enlace público de confirmación
+  token String @unique @default(cuid())
+
+  // Confirmación de asistencia (null = sin confirmar)
+  willAttend   Boolean?
+  confirmedAt  DateTime?
+  confirmedVia String? // "admin" o "whatsapp_link"
+
+  dueDate      DateTime
+  paidAt       DateTime?
+  receiptUrl   String? // URL en Supabase Storage
+  reference    String?
+  notes        String?
+  whatsappSent Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId])
+  @@index([studentId])
+  @@index([status])
+  @@index([eventId, status])
+}
+
+// ─── Auditoría de Cambios ────────────────────────────────────────
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  tenantId    String? // null para super admin logs
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId      String? // quién hizo el cambio (sin FK - puede estar en Clerk pero no en DB)
+  user        User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      AuditAction
+  entity      String // "Payment", "Student", "Enrollment"
+  entityId    String // ID del recurso afectado
+  oldValues   Json? // valores antes del cambio
+  newValues   Json? // valores después del cambio
+  description String? // descripción legible del cambio
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime    @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([entity])
+  @@index([entityId])
+  @@index([createdAt])
+  @@index([tenantId, createdAt])
+}
+
+// ─── Log de Errores ──────────────────────────────────────────────
+
+model ErrorLog {
+  id         String      @id @default(cuid())
+  tenantId   String? // null para errores del sistema
+  tenant     Tenant?     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  errorType  String // ValidationError, NotFoundError, etc
+  message    String
+  stack      String? // stack trace
+  context    Json? // contexto adicional
+  severity   LogSeverity @default(MEDIUM)
+  resolved   Boolean     @default(false)
+  resolvedAt DateTime?
+  resolvedBy String? // quién resolvió el error
+  createdAt  DateTime    @default(now())
+
+  @@index([tenantId])
+  @@index([severity])
+  @@index([resolved])
+  @@index([createdAt])
+}
+
+// ─── Eventos de Negocio ──────────────────────────────────────────
+
+model BusinessEvent {
+  id         String            @id @default(cuid())
+  tenantId   String
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId     String? // quién triggereó el evento (sin FK)
+  eventType  BusinessEventType
+  entityType String // "Payment", "Student", "Enrollment"
+  entityId   String // ID del recurso
+  metadata   Json? // info adicional específica del evento
+  createdAt  DateTime          @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@index([tenantId, createdAt])
+  @@index([entityType, entityId])
 }

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, adminProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
 // Definición de un campo extendido de disciplina
@@ -32,7 +32,7 @@ export const disciplinesRouter = createTRPCRouter({
       return resp;
     }),
 
-  create: tenantProcedure
+  create: adminProcedure
     .input(z.object({
       name:           z.string().min(1),
       description:    z.string().optional(),
@@ -40,18 +40,22 @@ export const disciplinesRouter = createTRPCRouter({
       extraFieldsDef: z.array(extraFieldDefSchema).default([]),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Idempotence: Check if discipline with same name already exists
       const exists = await ctx.db.discipline.findFirst({
         where: { tenantId: ctx.tenantId, name: input.name },
       });
-      if (exists) throw new TRPCError({ code: "CONFLICT", message: "Ya existe una disciplina con ese nombre" });
+      if (exists) {
+        return exists;
+      }
+
       return ctx.db.discipline.create({
         data: { ...input, tenantId: ctx.tenantId },
       });
     }),
 
-  update: tenantProcedure
+  update: adminProcedure
     .input(z.object({
-      id:             z.string(),
+      id:             z.string().cuid(),
       name:           z.string().min(1).optional(),
       description:    z.string().optional(),
       color:          z.string().optional(),
@@ -66,8 +70,8 @@ export const disciplinesRouter = createTRPCRouter({
       return ctx.db.discipline.update({ where: { id }, data });
     }),
 
-  delete: tenantProcedure
-    .input(z.object({ id: z.string() }))
+  delete: adminProcedure
+    .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const groupCount = await ctx.db.group.count({
         where: { disciplineId: input.id, tenantId: ctx.tenantId },

@@ -8,15 +8,16 @@ import { formatCurrency, formatDate, fullName } from "@/lib/utils";
 import type { PaymentStatus, PaymentMethod } from "@prisma/client";
 
 interface Payment {
-  id:        string;
-  concept:   string;
-  amount:    number;
-  currency:  string;
-  method:    PaymentMethod;
-  status:    PaymentStatus;
-  dueDate:   Date | null;
-  paidAt:    Date | null;
-  reference: string | null;
+  id:             string;
+  concept:        string;
+  amount:         number;
+  currency:       string;
+  method:         PaymentMethod;
+  status:         PaymentStatus;
+  dueDate:        Date | null;
+  paidAt:         Date | null;
+  reference:      string | null;
+  discountAmount: number | null;
   student: { firstName: string; lastName: string };
 }
 
@@ -25,13 +26,16 @@ interface Student { id: string; firstName: string; lastName: string; }
 interface Props {
   payments: Payment[];
   students: Student[];
+  /** Escuela hija bloqueada: no se pueden registrar ni marcar pagos */
+  readOnly?: boolean;
+  readOnlyReason?: string | null;
 }
 
 const METHOD_LABELS: Record<string, string> = {
   CASH: "Efectivo", TRANSFER: "Transferencia", CARD: "Tarjeta", OXXO: "OXXO", SPEI: "SPEI",
 };
 
-export function PaymentsClient({ payments, students }: Props) {
+export function PaymentsClient({ payments, students, readOnly = false, readOnlyReason }: Props) {
   const [markingId, setMarkingId] = useState<string | null>(null);
   const [showNew, setShowNew]     = useState(false);
 
@@ -40,18 +44,24 @@ export function PaymentsClient({ payments, students }: Props) {
   return (
     <>
       <button
-        onClick={() => setShowNew(true)}
-        style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, border: "none", cursor: "pointer" }}
+        onClick={() => !readOnly && setShowNew(true)}
+        disabled={readOnly}
+        title={readOnly ? (readOnlyReason || "Escuela en modo solo lectura") : undefined}
+        style={{
+          background: readOnly ? "#94a3b8" : "#00754A",
+          color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500,
+          border: "none", cursor: readOnly ? "not-allowed" : "pointer", opacity: readOnly ? 0.7 : 1,
+        }}
       >
-        + Nuevo pago
+        {readOnly ? "🔒 Nuevo pago" : "+ Nuevo pago"}
       </button>
 
       <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto", marginTop: 16 }}>
-        <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse", fontSize: 13 }}>
+        <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse" }} className="text-xs sm:text-sm">
           <thead>
             <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
               {["Alumno", "Concepto", "Monto", "Método", "Vencimiento", "Estado", ""].map(h => (
-                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>{h}</th>
+                <th key={h} style={{ padding: "8px 10px", textAlign: "left", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }} className="sm:px-3.5 sm:py-2.5 text-xs sm:text-xs">{h}</th>
               ))}
             </tr>
           </thead>
@@ -65,33 +75,33 @@ export function PaymentsClient({ payments, students }: Props) {
             )}
             {payments.map(p => (
               <tr key={p.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                <td style={{ padding: "11px 14px", fontWeight: 500, color: "var(--color-text-primary)" }}>
+                <td style={{ padding: "8px 10px", fontWeight: 500, color: "var(--color-text-primary)" }} className="sm:px-3.5 sm:py-2.5">
                   {fullName(p.student.firstName, p.student.lastName)}
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", maxWidth: 200 }}>
+                <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", maxWidth: 150 }} className="sm:max-w-xs">
                   <span style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {p.concept}
                   </span>
                 </td>
-                <td style={{ padding: "11px 14px", fontWeight: 500, color: "var(--color-text-primary)", whiteSpace: "nowrap" }}>
-                  {formatCurrency(p.amount, p.currency)}
+                <td style={{ padding: "8px 10px", fontWeight: 500, color: "var(--color-text-primary)", whiteSpace: "nowrap" }} className="sm:px-3.5 sm:py-2.5">
+                  {p.status === "PAID" && p.discountAmount ? formatCurrency(p.amount - p.discountAmount, p.currency) : formatCurrency(p.amount, p.currency)}
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)" }}>
+                <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)" }} className="sm:px-3.5 sm:py-2.5">
                   {METHOD_LABELS[p.method] ?? p.method}
                 </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>
+                <td style={{ padding: "8px 10px", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }} className="sm:px-3.5 sm:py-2.5">
                   {p.paidAt ? formatDate(p.paidAt) : (p.dueDate ? formatDate(p.dueDate) : "—")}
                 </td>
-                <td style={{ padding: "11px 14px" }}>
+                <td style={{ padding: "8px 10px" }} className="sm:px-3.5 sm:py-2.5">
                   <PaymentStatusBadge status={p.status} />
                 </td>
-                <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  {(p.status === "PENDING" || p.status === "OVERDUE") && (
+                <td style={{ padding: "8px 10px", textAlign: "right" }} className="sm:px-3.5 sm:py-2.5">
+                  {(p.status === "PENDING" || p.status === "OVERDUE") && !readOnly && (
                     <button
                       onClick={() => setMarkingId(p.id)}
-                      className="inline-flex items-center rounded-full border border-sb-accent/40 dark:border-sb-light/30 bg-sb-light/40 dark:bg-sb-uplift px-2.5 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light hover:bg-sb-light dark:hover:bg-sb-house transition-colors cursor-pointer"
+                      className="inline-flex items-center rounded-full border border-sb-accent/40 dark:border-sb-light/30 bg-sb-light/40 dark:bg-sb-uplift px-2 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light hover:bg-sb-light dark:hover:bg-sb-house transition-colors cursor-pointer whitespace-nowrap"
                     >
-                      Marcar pagado
+                      Pagar
                     </button>
                   )}
                 </td>
@@ -105,7 +115,8 @@ export function PaymentsClient({ payments, students }: Props) {
         <MarkAsPaidModal
           paymentId={markingPayment.id}
           concept={markingPayment.concept}
-          amount={formatCurrency(markingPayment.amount, markingPayment.currency)}
+          amount={String(markingPayment.amount)}
+          studentName={fullName(markingPayment.student.firstName, markingPayment.student.lastName)}
           onClose={() => setMarkingId(null)}
         />
       )}

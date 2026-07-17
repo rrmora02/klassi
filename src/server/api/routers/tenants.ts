@@ -1,40 +1,11 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure, protectedProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, adminProcedure, protectedProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 
+// NOTA: la creación de escuelas vive únicamente en el server action de
+// /onboarding, que valida el límite de escuelas del plan (canAddSchool).
+
 export const tenantsRouter = createTRPCRouter({
-
-  createTenant: protectedProcedure
-    .input(z.object({
-      name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
-    }))
-    .mutation(async ({ ctx, input }) => {
-      // Create new tenant
-      const tenant = await ctx.db.tenant.create({
-        data: {
-          name: input.name,
-          slug: input.name.toLowerCase().replace(/\s+/g, "-"),
-          primaryColor: "#00754A",
-        }
-      });
-
-      // Add user as ADMIN to the tenant
-      await ctx.db.tenantUser.create({
-        data: {
-          tenantId: tenant.id,
-          userId: ctx.dbUser!.id,
-          role: "ADMIN"
-        }
-      });
-
-      // Set as active tenant for the user
-      await ctx.db.user.update({
-        where: { id: ctx.dbUser!.id },
-        data: { activeTenantId: tenant.id }
-      });
-
-      return tenant;
-    }),
 
   getMyTenant: tenantProcedure
     .query(async ({ ctx }) => {
@@ -55,7 +26,7 @@ export const tenantsRouter = createTRPCRouter({
       return tenant;
     }),
 
-  updateMyTenant: tenantProcedure
+  updateMyTenant: adminProcedure
     .input(z.object({
       name:         z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
       primaryColor: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Debe ser código hexadecimal ej. #1D3557").optional().or(z.literal("")),
@@ -76,5 +47,39 @@ export const tenantsRouter = createTRPCRouter({
           address:      input.address || null,
         }
       });
-    })
+    }),
+
+  getAllTenants: protectedProcedure
+    .query(async ({ ctx }) => {
+      const memberships = await ctx.db.tenantUser.findMany({
+        where: { userId: ctx.dbUser!.id },
+        include: {
+          tenant: {
+            select: {
+              id: true,
+              name: true,
+              plan: true,
+              blockChildWrites: true,
+              blockChildWritesReason: true,
+              parentTenantId: true,
+              parentTenant: { select: { name: true } },
+            },
+          },
+        },
+        orderBy: [
+          { tenant: { parentTenantId: "asc" } },
+          { tenant: { name: "asc" } },
+        ],
+      });
+
+      return memberships.map(m => ({
+        tenantId: m.tenant.id,
+        name: m.tenant.name,
+        plan: m.tenant.plan,
+        isBlocked: m.tenant.blockChildWrites,
+        blockReason: m.tenant.blockChildWritesReason,
+        isChild: !!m.tenant.parentTenantId,
+        parentName: m.tenant.parentTenant?.name || null,
+      }));
+    }),
 });

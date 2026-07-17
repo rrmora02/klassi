@@ -12,15 +12,17 @@ const schema = z.object({
   method:    z.enum(["CASH", "TRANSFER", "CARD", "OXXO", "SPEI"] as [PaymentMethod, ...PaymentMethod[]]),
   reference: z.string().max(100, "Máximo 100 caracteres").optional(),
   paidAt:    z.string().refine(v => !v || !isNaN(Date.parse(v)), "Fecha inválida").optional(),
+  discountAmount: z.coerce.number().min(0).default(0),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 interface Props {
-  paymentId:  string;
-  concept:    string;
-  amount:     string;
-  onClose:    () => void;
+  paymentId:    string;
+  concept:      string;
+  amount:       string;
+  studentName?: string;
+  onClose:      () => void;
 }
 
 const METHOD_LABELS: Record<string, string> = {
@@ -35,14 +37,52 @@ const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255
 const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
 const dateCls = `${inputCls} [color-scheme:light] dark:[color-scheme:dark]`;
 
-export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) {
+export function MarkAsPaidModal({ paymentId, concept, amount, studentName, onClose }: Props) {
   const router  = useRouter();
   const markPaid = api.payments.markAsPaid.useMutation();
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountInputValue, setDiscountInputValue] = useState("");
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { method: "CASH", reference: "", paidAt: new Date().toISOString().slice(0, 10) },
+    defaultValues: { method: "CASH", reference: "", paidAt: new Date().toISOString().slice(0, 10), discountAmount: 0 },
   });
+
+  const amountInCents = parseInt(amount) || 0;
+
+  // Calcular descuento basado en el input actual para sincronización inmediata
+  const calculatedDiscountAmount = (() => {
+    if (discountInputValue === "" || discountInputValue === ".") {
+      return 0;
+    }
+    const parsed = parseFloat(discountInputValue);
+    if (!isNaN(parsed) && parsed >= 0) {
+      const discountInCents = Math.round(parsed * 100);
+      return Math.min(amountInCents, discountInCents);
+    }
+    return 0;
+  })();
+
+  const discountPercentage = amountInCents > 0 ? ((calculatedDiscountAmount / amountInCents) * 100).toFixed(1) : "0";
+  const totalToPay = amountInCents - calculatedDiscountAmount;
+  const discountExceedsAmount = amountInCents > 0 && calculatedDiscountAmount > amountInCents;
+
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputVal = e.target.value;
+    setDiscountInputValue(inputVal);
+
+    if (inputVal === "" || inputVal === ".") {
+      setDiscountAmount(0);
+      return;
+    }
+
+    const parsed = parseFloat(inputVal);
+    if (!isNaN(parsed) && parsed >= 0) {
+      const discountInCents = Math.round(parsed * 100);
+      const maxDiscount = Math.min(amountInCents, discountInCents);
+      setDiscountAmount(maxDiscount);
+    }
+  };
 
   const onSubmit = async (data: FormValues) => {
     await markPaid.mutateAsync({
@@ -50,6 +90,7 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
       method:    data.method,
       reference: data.reference || undefined,
       paidAt:    data.paidAt ? new Date(data.paidAt) : new Date(),
+      discountAmount: calculatedDiscountAmount,
     });
     router.refresh();
     onClose();
@@ -64,11 +105,65 @@ export function MarkAsPaidModal({ paymentId, concept, amount, onClose }: Props) 
         <h2 style={{ fontSize: 17, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
           Registrar pago recibido
         </h2>
+        {studentName && (
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 4px" }}>
+            {studentName}
+          </p>
+        )}
         <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 20px" }}>
-          {concept} — <strong>{amount}</strong>
+          {concept} — <strong>${(amountInCents / 100).toFixed(2)}</strong>
         </p>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-secondary)" }}>
+              <span>Monto original:</span>
+              <strong>${(amountInCents / 100).toFixed(2)}</strong>
+            </div>
+            <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
+                  Descuento (MXN)
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={discountInputValue}
+                  onChange={handleDiscountChange}
+                  onBlur={(e) => {
+                    const val = e.target.value.trim();
+                    if (val === "" || val === ".") {
+                      setDiscountInputValue("");
+                    } else {
+                      const num = parseFloat(val);
+                      if (!isNaN(num) && num >= 0 && num <= (amountInCents / 100)) {
+                        setDiscountInputValue(num.toFixed(2));
+                      }
+                    }
+                  }}
+                  className={inputCls}
+                  placeholder="0.00"
+                  maxLength={10}
+                  autoComplete="off"
+                />
+              </div>
+              <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
+                <span style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)" }}>
+                  {discountPercentage}%
+                </span>
+              </div>
+            </div>
+            {discountExceedsAmount && (
+              <p style={{ fontSize: 12, color: "#b91c1c", margin: 0 }}>
+                El descuento no puede ser mayor al monto
+              </p>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
+              <span>Total a pagar:</span>
+              <strong>${(totalToPay / 100).toFixed(2)}</strong>
+            </div>
+          </div>
+
           <div>
             <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
               Método de pago

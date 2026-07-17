@@ -1,44 +1,48 @@
+// En modo test (PLAN_TEST_MODE=true en .env.local) se usan límites bajos
+// para poder probar las validaciones sin crear cientos de registros.
+const TEST = process.env.PLAN_TEST_MODE === "true";
+
 export const PLANS = {
   STARTER: {
     name:           "Starter",
-    maxStudents:    80,
-    maxDisciplines: 2,
-    maxGroups:      10,
-    maxUsers:       3,
-    parentPortal:   false,
-    multiSede:      false,
-    priceId:        process.env.STRIPE_STARTER_PRICE_ID!,
-    price:          29,
+    maxStudents:    TEST ? 3  : 100,
+    maxGroups:      TEST ? 1  : 5,
+    maxInstructors: TEST ? 1  : 5,
+    maxDisciplines: Infinity,
+    maxUsers:       Infinity,
+    schools:        1,
+    priceId:        process.env.STRIPE_PRICE_STARTER!,
+    priceMXN:       199,
   },
   PRO: {
-    name:           "Pro",
-    maxStudents:    300,
+    name:           "PRO",
+    maxStudents:    TEST ? 6  : 200,
+    maxGroups:      TEST ? 2  : 10,
+    maxInstructors: TEST ? 2  : 10,
     maxDisciplines: Infinity,
-    maxGroups:      50,
-    maxUsers:       10,
-    parentPortal:   true,
-    multiSede:      false,
-    priceId:        process.env.STRIPE_PRO_PRICE_ID!,
-    price:          79,
+    maxUsers:       Infinity,
+    schools:        1,
+    priceId:        process.env.STRIPE_PRICE_PRO!,
+    priceMXN:       349,
   },
   ENTERPRISE: {
     name:           "Enterprise",
-    maxStudents:    Infinity,
+    maxStudents:    TEST ? 6  : 200,  // por escuela
+    maxGroups:      TEST ? 2  : 10,   // por escuela
+    maxInstructors: TEST ? 2  : 10,   // por escuela
     maxDisciplines: Infinity,
-    maxGroups:      Infinity,
     maxUsers:       Infinity,
-    parentPortal:   true,
-    multiSede:      true,
-    priceId:        process.env.STRIPE_ENTERPRISE_PRICE_ID!,
-    price:          199,
+    schools:        TEST ? 2  : 5,
+    priceId:        process.env.STRIPE_PRICE_ENTERPRISE!,
+    priceMXN:       699,
   },
 } as const;
 
 export type Plan = keyof typeof PLANS;
 
 export const APP_CONFIG = {
-  name:       "Klassi",
-  url:        process.env.NEXT_PUBLIC_APP_URL ?? "https://klassi.io",
+  name:         "Klassi",
+  url:          process.env.NEXT_PUBLIC_APP_URL ?? "https://klassi.io",
   supportEmail: "soporte@klassi.io",
-  trialDays:  14,
+  trialDays:    TEST ? 0 : 30,
 } as const;

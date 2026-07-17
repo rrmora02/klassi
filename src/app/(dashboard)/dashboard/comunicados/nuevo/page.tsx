@@ -25,15 +25,15 @@ export default async function NuevoComunicadoPage() {
   ]);
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 12, paddingRight: 12 }} className="sm:px-4 lg:px-0">
       {/* Breadcrumb */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)", flexWrap: "wrap" }}>
         <Link href="/dashboard/comunicados" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>Comunicados</Link>
         <span>/</span>
         <span style={{ color: "var(--color-text-primary)" }}>Nuevo comunicado</span>
       </div>
 
-      <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", marginBottom: 6 }}>
+      <h1 style={{ fontSize: 20, fontWeight: 500, color: "var(--color-text-primary)", marginBottom: 6 }} className="sm:text-2xl">
         Nuevo comunicado
       </h1>
       <p style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: 24 }}>

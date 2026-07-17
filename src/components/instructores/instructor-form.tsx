@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { instructorFormSchema, type InstructorFormValues, instructorFormDefaults } from "@/lib/schemas/instructor.schema";
+import { useToast } from "@/hooks/use-toast";
 
 const sanitizePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
   e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -26,16 +28,42 @@ export function InstructorForm({
   onCancel,
   submitLabel,
 }: InstructorFormProps) {
+  const { toast } = useToast();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const form = useForm<InstructorFormValues>({
     resolver: zodResolver(instructorFormSchema),
     defaultValues: initialData,
   });
 
-  const { formState: { errors, isSubmitting } } = form;
+  const { formState: { errors } } = form;
+
+  async function handleFormSubmit(data: InstructorFormValues) {
+    setIsSubmitting(true);
+    setServerError(null);
+    try {
+      await onSubmit(data);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error inesperado al guardar.";
+      setServerError(msg);
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      setIsSubmitting(false);
+    }
+  }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+    <form onSubmit={form.handleSubmit(handleFormSubmit)} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+      {serverError && (
+        <div style={{
+          background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)", borderRadius: 8,
+          padding: "10px 14px", fontSize: 13, color: "#ef4444",
+        }}>
+          {serverError}
+        </div>
+      )}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 24 }} className="sm:grid-cols-2">
 
         {/* Nombre */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>

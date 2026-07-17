@@ -60,6 +60,11 @@ export const studentFormSchema = z.object({
     .max(500, "Máximo 500 caracteres")
     .optional()
     .or(z.literal("")),
+
+  // 🥋 Karate belt (optional, only for Karate disciplines)
+  currentBeltColor: z
+    .enum(["WHITE", "YELLOW", "ORANGE", "GREEN", "BLUE", "BROWN", "BLACK"])
+    .optional(),
 });
 
 export type StudentFormValues = z.infer<typeof studentFormSchema>;
@@ -74,6 +79,7 @@ export const studentFormDefaults: Partial<StudentFormValues> = {
   tutorName:         "",
   tutorPhone:        "",
   tutorEmail:        "",
-  tutorRelationship: undefined,
+  tutorRelationship: "madre",
   notes:             "",
+  currentBeltColor:  undefined,
 };

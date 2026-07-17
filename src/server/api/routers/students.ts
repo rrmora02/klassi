@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { StudentStatus } from "@prisma/client";
 import { canAddStudent } from "@/server/services/tenant.service";
@@ -68,6 +68,9 @@ export const studentCreateSchema = z.object({
 
   notes: z.string().max(500, "Las notas no pueden exceder 500 caracteres").optional(),
   avatarUrl: z.string().url("URL de avatar inválida").optional().or(z.literal("")),
+
+  // 🥋 Karate belt system
+  currentBeltColor: z.enum(["WHITE", "YELLOW", "ORANGE", "GREEN", "BLUE", "BROWN", "BLACK"]).optional(),
 });
 
 export const studentUpdateSchema = studentCreateSchema.partial().extend({
@@ -85,9 +88,9 @@ export const studentsRouter = createTRPCRouter({
 
   list: tenantProcedure
     .input(z.object({
-      search:       z.string().optional(),
+      search:       z.string().max(100).optional(),
       status:       z.nativeEnum(StudentStatus).optional(),
-      disciplineId: z.string().optional(),
+      disciplineId: z.string().cuid().optional(),
       page:         z.number().int().min(1).default(1),
       pageSize:     z.number().int().min(1).max(100).default(20),
     }))
@@ -122,10 +125,11 @@ export const studentsRouter = createTRPCRouter({
           where,
           skip,
           take: input.pageSize,
-          orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
+          orderBy: [{ updatedAt: "desc" }, { lastName: "asc" }, { firstName: "asc" }],
           include: {
             enrollments: {
               where:   { status: "ACTIVE" },
+              take:    5,
               include: { group: { include: { discipline: true } } },
             },
             _count: {
@@ -153,6 +157,7 @@ export const studentsRouter = createTRPCRouter({
         where: { id: input.id, tenantId: ctx.tenantId },
         include: {
           enrollments: {
+            take: 20,
             include: {
               group: {
                 include: {
@@ -185,10 +190,52 @@ export const studentsRouter = createTRPCRouter({
 
   // ── Crear alumno ──────────────────────────────────────────────
 
-  create: tenantProcedure
+  create: staffProcedure
     .input(studentCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
+
+      // Check if this tenant is a blocked child tenant (parent downgraded below ENTERPRISE)
+      const tenant = await db.tenant.findUnique({
+        where: { id: tenantId },
+        select: { blockChildWrites: true, blockChildWritesReason: true, name: true, parentTenantId: true },
+      });
+
+      if (tenant?.blockChildWrites) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: tenant.blockChildWritesReason || `No puedes agregar alumnos a "${tenant?.name}" porque su plan no soporta múltiples escuelas. Cambia a tu escuela principal o actualiza el plan a Enterprise.`,
+        });
+      }
+
+      // Idempotence: Check if student already exists by email
+      if (input.email) {
+        const existing = await db.student.findFirst({
+          where: { tenantId, email: input.email, status: { not: "INACTIVE" } },
+        });
+        if (existing) {
+          throw new TRPCError({
+            code:    "CONFLICT",
+            message: `Ya existe un alumno activo con el correo ${input.email}`,
+          });
+        }
+      }
+
+      // Idempotence: Check if student exists by firstName + lastName + birthDate
+      if (input.birthDate) {
+        const existing = await db.student.findFirst({
+          where: {
+            tenantId,
+            firstName: input.firstName,
+            lastName: input.lastName,
+            birthDate: input.birthDate,
+            status: { not: "INACTIVE" },
+          },
+        });
+        if (existing) {
+          return { ...existing, _isIdempotent: true };
+        }
+      }
 
       // Verificar límite del plan
       const allowed = await canAddStudent(tenantId);
@@ -199,70 +246,73 @@ export const studentsRouter = createTRPCRouter({
         });
       }
 
-      // Verificar email duplicado dentro del tenant
-      if (input.email) {
-        const dup = await db.student.findFirst({
-          where: { tenantId, email: input.email, status: { not: "INACTIVE" } },
-        });
-        if (dup) {
-          throw new TRPCError({
-            code:    "CONFLICT",
-            message: `Ya existe un alumno activo con el correo ${input.email}`,
-          });
-        }
-      }
-
       const { tutorName, tutorPhone, tutorEmail, tutorRelationship, ...studentData } = input;
 
-      const student = await db.student.create({
-        data: {
-          ...studentData,
-          email:    studentData.email   || null,
-          phone:    studentData.phone   || null,
-          avatarUrl: studentData.avatarUrl || null,
-          tenantId,
-        },
-      });
+      // Alumno + tutor en una transacción: si el tutor falla, no queda un
+      // alumno a medias sin contacto registrado.
+      const student = await db.$transaction(async (tx) => {
+        const created = await tx.student.create({
+          data: {
+            ...studentData,
+            email:    studentData.email   || null,
+            phone:    studentData.phone   || null,
+            avatarUrl: studentData.avatarUrl || null,
+            tenantId,
+          },
+        });
 
-      // Crear o vincular tutor si se proporcionaron datos
-      if (tutorName || tutorEmail || tutorPhone) {
-        const contactEmail = tutorEmail || `tutor_${student.id}@klassi.local`;
-        const contactName = tutorName || "Tutor de " + student.firstName;
+        // Crear o vincular tutor si se proporcionaron datos
+        if (tutorName || tutorEmail || tutorPhone) {
+          const contactEmail = tutorEmail || `tutor_${created.id}@klassi.local`;
+          const contactName = tutorName || "Tutor de " + created.firstName;
 
-        let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
-        if (!parentUser) {
-          parentUser = await db.user.create({
-            data: {
-              clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
-              email: contactEmail,
-              name: contactName,
-              phone: tutorPhone || null,
-            }
+          let parentUser = await tx.user.findFirst({ where: { email: contactEmail } });
+          if (!parentUser) {
+            const { randomUUID } = await import("crypto");
+            parentUser = await tx.user.create({
+              data: {
+                // Placeholder hasta que el tutor se registre en Clerk; UUID
+                // criptográfico para no colisionar con el unique de clerkId.
+                clerkId: `pending_${randomUUID()}`,
+                email: contactEmail,
+                name: contactName,
+                phone: tutorPhone || null,
+              }
+            });
+          }
+
+          // Idempotence: Check if parentStudent already exists
+          const existingParent = await tx.parentStudent.findFirst({
+            where: {
+              userId: parentUser.id,
+              studentId: created.id,
+            },
           });
+
+          if (!existingParent) {
+            await tx.parentStudent.create({
+              data: {
+                userId: parentUser.id,
+                studentId: created.id,
+                relationship: tutorRelationship,
+                isPrimary: true,
+              }
+            });
+          }
         }
 
-        await db.parentStudent.create({
-          data: {
-            userId: parentUser.id,
-            studentId: student.id,
-            relationship: tutorRelationship,
-            isPrimary: true,
-          }
-        });
-      }
+        return created;
+      });
 
-      // Crear primera mensualidad automáticamente si tiene grupo
-      // (se hace desde el módulo de inscripciones, no aquí)
-
-      return student;
+      return { ...student, _isIdempotent: false };
     }),
 
   // ── Actualizar alumno ─────────────────────────────────────────
 
-  update: tenantProcedure
+  update: staffProcedure
     .input(studentUpdateSchema)
     .mutation(async ({ ctx, input }) => {
-      const { id, tutorName, tutorPhone, tutorEmail, tutorRelationship, ...data } = input;
+      const { id, tutorName, tutorPhone, tutorEmail, tutorRelationship, currentBeltColor, ...data } = input;
       const { tenantId, db } = ctx;
 
       const existing = await db.student.findFirst({
@@ -300,6 +350,7 @@ export const studentsRouter = createTRPCRouter({
           email:    data.email    || null,
           phone:    data.phone    || null,
           avatarUrl: data.avatarUrl || null,
+          ...(currentBeltColor && { currentBeltColor, beltUpdatedAt: new Date() }),
         },
       });
 
@@ -334,9 +385,10 @@ export const studentsRouter = createTRPCRouter({
 
             let parentUser = await db.user.findFirst({ where: { email: contactEmail } });
             if (!parentUser) {
+              const { randomUUID } = await import("crypto");
               parentUser = await db.user.create({
                 data: {
-                  clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
+                  clerkId: `pending_${randomUUID()}`,
                   email: contactEmail,
                   name: contactName,
                   phone: tutorPhone || null,
@@ -359,7 +411,7 @@ export const studentsRouter = createTRPCRouter({
 
   // ── Cambiar estado (activar / desactivar / suspender) ─────────
 
-  setStatus: tenantProcedure
+  setStatus: staffProcedure
     .input(z.object({
       id:     z.string().cuid("ID inválido"),
       status: z.nativeEnum(StudentStatus),
@@ -373,6 +425,18 @@ export const studentsRouter = createTRPCRouter({
       });
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Alumno no encontrado" });
+      }
+
+      // Reactivar cuenta contra el límite del plan igual que crear (sin esto,
+      // crear→desactivar→crear→reactivar permite superar cualquier plan).
+      if (input.status === "ACTIVE" && existing.status !== "ACTIVE") {
+        const allowed = await canAddStudent(ctx.tenantId);
+        if (!allowed) {
+          throw new TRPCError({
+            code:    "FORBIDDEN",
+            message: "Has alcanzado el límite de alumnos de tu plan. Actualiza tu suscripción para activar más.",
+          });
+        }
       }
 
       // Al desactivar: cancelar inscripciones activas
@@ -391,7 +455,7 @@ export const studentsRouter = createTRPCRouter({
 
   // ── Eliminar permanentemente (solo sin historial) ─────────────
 
-  delete: tenantProcedure
+  delete: staffProcedure
     .input(z.object({ id: z.string().cuid("ID inválido") }))
     .mutation(async ({ ctx, input }) => {
       const student = await ctx.db.student.findFirst({
@@ -430,7 +494,7 @@ export const studentsRouter = createTRPCRouter({
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const [totalClasses, presentCount, payments] = await Promise.all([
+      const [totalClasses, presentCount, paid] = await Promise.all([
         db.attendance.count({
           where: { enrollment: { studentId: input.id } },
         }),
@@ -438,24 +502,50 @@ export const studentsRouter = createTRPCRouter({
           where: { enrollment: { studentId: input.id }, status: "PRESENT" },
         }),
         db.payment.aggregate({
-          where:  { studentId: input.id },
-          _sum:   { amount: true },
-          _count: true,
+          where:  { studentId: input.id, status: "PAID" },
+          _sum:   { amount: true, discountAmount: true },
+          _count: { _all: true },
         }),
       ]);
 
       const attendance = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : null;
+      const totalPaid = (paid._sum.amount ?? 0) - (paid._sum.discountAmount ?? 0);
 
       return {
         attendanceRate: attendance,
         totalClasses,
-        totalPaid:      payments._sum.amount ?? 0,
-        totalPayments:  payments._count,
+        totalPaid,
+        totalPayments:  paid._count._all,
       };
     }),
 
   // ── Generar enlace público compartible ───────────────────────────
-  generateShareLink: tenantProcedure
+  generateShareLink: staffProcedure
+    .input(z.object({ id: z.string().cuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { db, tenantId } = ctx;
+
+      const student = await db.student.findFirst({
+        where: { id: input.id, tenantId },
+        select: { id: true, shareToken: true },
+      });
+      if (!student) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Token opaco dedicado (NO el id del alumno, que aparece en URLs internas
+      // y respuestas de la API). Revocable poniéndolo en null.
+      if (student.shareToken) return { shareToken: student.shareToken };
+
+      const { randomBytes } = await import("crypto");
+      const token = randomBytes(32).toString("hex");
+      await db.student.update({
+        where: { id: student.id },
+        data:  { shareToken: token },
+      });
+      return { shareToken: token };
+    }),
+
+  // ── Revocar enlace público (invalida el link compartido) ─────────
+  revokeShareLink: staffProcedure
     .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const { db, tenantId } = ctx;
@@ -466,7 +556,57 @@ export const studentsRouter = createTRPCRouter({
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND" });
 
-      // El CUID del alumno es el token — 25 chars aleatorios, imposible de adivinar
-      return { shareToken: student.id };
+      await db.student.update({
+        where: { id: student.id },
+        data:  { shareToken: null },
+      });
+      return { success: true };
+    }),
+
+  // ── Obtener cintas de estudiantes (para asistencia) ───────────────────────────
+  getStudentBelts: tenantProcedure
+    .input(z.object({ studentIds: z.array(z.string().cuid()) }))
+    .query(async ({ ctx, input }) => {
+      if (input.studentIds.length === 0) return {};
+
+      const students = await ctx.db.student.findMany({
+        where: {
+          id: { in: input.studentIds },
+          tenantId: ctx.tenantId
+        },
+        select: {
+          id: true,
+          currentBeltColor: true
+        }
+      });
+
+      // Retornar objeto mapeado: { studentId: beltColor }
+      const result: Record<string, string | null> = {};
+      students.forEach(s => {
+        result[s.id] = s.currentBeltColor;
+      });
+      return result;
+    }),
+
+  // ── Actualizar solo cinta (para asignación rápida) ───────────────────────────
+  updateBeltColor: tenantProcedure
+    .input(z.object({
+      studentId: z.string().cuid(),
+      beltColor: z.enum(["WHITE", "YELLOW", "ORANGE", "GREEN", "BLUE", "BROWN", "BLACK"]),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const student = await ctx.db.student.findFirst({
+        where: { id: input.studentId, tenantId: ctx.tenantId },
+      });
+      if (!student) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const updated = await ctx.db.student.update({
+        where: { id: input.studentId },
+        data: {
+          currentBeltColor: input.beltColor,
+          beltUpdatedAt: new Date(),
+        },
+      });
+      return updated;
     }),
 });

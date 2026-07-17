@@ -36,6 +36,7 @@ export function StudentShareButton({ studentId }: Props) {
     <>
       <button
         onClick={handleOpen}
+        title="Compartir historial"
         style={{
           display: "flex", alignItems: "center", gap: 6,
           padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500,
@@ -43,18 +44,19 @@ export function StudentShareButton({ studentId }: Props) {
           background: "transparent", color: "var(--color-text-secondary)",
           cursor: "pointer",
         }}
+        className="sm:flex"
       >
         <Share2 size={14} />
-        Compartir historial
+        <span className="hidden sm:inline">Compartir historial</span>
       </button>
 
       {open && (
         <div style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999,
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16,
         }}>
           <div style={{
-            background: "var(--color-background-primary)", width: 480, borderRadius: 14,
+            background: "var(--color-background-primary)", width: "100%", maxWidth: 480, borderRadius: 14,
             padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.15)",
           }}>
             {/* Header */}

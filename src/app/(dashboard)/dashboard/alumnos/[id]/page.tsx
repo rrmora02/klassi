@@ -1,84 +1,85 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { fullName, formatDate, calcAge, formatCurrency, translatePaymentStatus } from "@/lib/utils";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
 import { StudentActions } from "@/components/alumnos/student-actions";
-import { EnrollToGroupModal } from "@/components/alumnos/enroll-to-group-modal";
-import { TransferGroupModal } from "@/components/alumnos/transfer-group-modal";
+import { StudentEnrollmentsSection } from "@/components/alumnos/student-enrollments-section";
 import { StudentShareButton } from "@/components/alumnos/student-share-button";
+import { AssignFirstBeltSection } from "@/components/alumnos/assign-first-belt-section";
 
 export default async function AlumnoDetailPage({ params }: { params: { id: string } }) {
-  const { userId } = await auth();
-  if (!userId) return null;
+  // Identidad compartida del request (deduplicada con layout/TopBar)
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenantId = ctx.activeTenant.id;
 
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
-  if (!tenant) return null;
-
-  const student = await db.student.findFirst({
-    where: { id: params.id, tenantId: tenant.id },
-    include: {
-      enrollments: {
-        orderBy: { startDate: "desc" },
-        include: {
-          group: {
-            include: {
-              discipline: true,
-              instructor: { include: { user: true } },
+  // Estadísticas de asistencia agregadas en la BD (evita traer todas las
+  // filas de asistencia solo para contarlas), en paralelo con el alumno.
+  const [student, attendanceByStatus] = await Promise.all([
+    db.student.findFirst({
+      where: { id: params.id, tenantId },
+      include: {
+        enrollments: {
+          orderBy: { startDate: "desc" },
+          include: {
+            group: {
+              include: {
+                discipline: true,
+                instructor: { include: { user: true } },
+              },
             },
           },
         },
+        payments: { orderBy: { dueDate: "desc" }, take: 10 },
+        parents: { include: { user: true } },
       },
-      payments: { orderBy: { dueDate: "desc" }, take: 10 },
-      parents: { include: { user: true } },
-    },
-  });
+    }),
+    db.attendance.groupBy({
+      by: ["status"],
+      where: { enrollment: { studentId: params.id, student: { tenantId } } },
+      _count: { _all: true },
+    }),
+  ]);
 
   if (!student) notFound();
 
-  // Estadísticas de asistencia
-  const attendances = await db.attendance.findMany({
-    where: { enrollment: { studentId: student.id } },
-    select: { status: true },
-  });
-
-  const totalClasses = attendances.length;
-  const presentCount = attendances.filter(a => a.status === "PRESENT").length;
+  const totalClasses = attendanceByStatus.reduce((sum, g) => sum + g._count._all, 0);
+  const presentCount = attendanceByStatus.find(g => g.status === "PRESENT")?._count._all ?? 0;
   const attendanceRate = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : null;
 
   const activeEnrollments = student.enrollments.filter(e => e.status === "ACTIVE");
+  const hasActiveKarateGroup = activeEnrollments.some(e => e.group.discipline?.name.toLowerCase().includes("karate"));
   const totalPaid = student.payments
     .filter(p => p.status === "PAID")
-    .reduce((sum, p) => sum + p.amount, 0);
+    .reduce((sum, p) => sum + (p.amount - (p.discountAmount || 0)), 0);
   const overduePayments = student.payments.filter(p => p.status === "OVERDUE");
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto" }}>
+    <div style={{ maxWidth: 860, margin: "0 auto", paddingLeft: 12, paddingRight: 12 }} className="sm:px-4 lg:px-0">
 
       {/* Breadcrumb */}
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)", flexWrap: "wrap" }}>
         <Link href="/dashboard/alumnos" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>Alumnos</Link>
         <span>/</span>
-        <span style={{ color: "var(--color-text-primary)" }}>{fullName(student.firstName, student.lastName)}</span>
+        <span style={{ color: "var(--color-text-primary)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>{fullName(student.firstName, student.lastName)}</span>
       </div>
 
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#d4e9e2", color: "#006241", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 500 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }} className="sm:flex-row sm:items-flex-start sm:justify-between">
+        <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }} className="sm:gap-4">
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: "#d4e9e2", color: "#006241", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 500, flexShrink: 0 }}>
             {student.firstName[0]}{student.lastName[0]}
           </div>
-          <div>
-            <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>
+          <div style={{ minWidth: 0 }}>
+            <h1 style={{ fontSize: 20, fontWeight: 500, color: "var(--color-text-primary)", margin: 0, wordBreak: "break-word" }} className="sm:text-2xl">
               {fullName(student.firstName, student.lastName)}
             </h1>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
               <StudentStatusBadge status={student.status} />
               {student.birthDate && (
-                <span style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>
+                <span style={{ fontSize: 12, color: "var(--color-text-secondary)" }} className="sm:text-sm">
                   {calcAge(student.birthDate)} años · {formatDate(student.birthDate)}
                 </span>
               )}
@@ -87,7 +88,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
         </div>
 
         {/* Acciones */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", width: "100%", justifyContent: "flex-end" }} className="sm:w-auto">
           <StudentShareButton studentId={student.id} />
           <StudentActions
             studentId={student.id}
@@ -98,7 +99,7 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
       </div>
 
       {/* KPIs */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, marginBottom: 24 }} className="sm:grid-cols-4">
         {[
           { label: "Disciplinas activas", value: String(activeEnrollments.length) },
           { label: "Asistencia", value: attendanceRate !== null ? `${attendanceRate}%` : "—", alert: attendanceRate !== null && attendanceRate < 70 },
@@ -106,19 +107,25 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
           { label: "Total pagado", value: formatCurrency(totalPaid), alert: overduePayments.length > 0 },
         ].map(k => (
           <div key={k.label} style={{ background: k.alert ? "rgba(220,38,38,0.08)" : "var(--color-background-primary)", border: `0.5px solid ${k.alert ? "rgba(220,38,38,0.30)" : "var(--color-border-tertiary)"}`, borderRadius: 10, padding: "12px 14px" }}>
-            <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: 0 }}>{k.label}</p>
-            <p style={{ fontSize: 22, fontWeight: 500, color: k.alert ? "#b91c1c" : "var(--color-text-primary)", margin: "4px 0 0" }}>{k.value}</p>
+            <p style={{ fontSize: 11, color: "var(--color-text-secondary)", margin: 0, lineHeight: 1.3 }} className="sm:text-xs">
+              {k.label}
+            </p>
+            <p style={{ fontSize: 16, fontWeight: 500, color: k.alert ? "#b91c1c" : "var(--color-text-primary)", margin: "4px 0 0", wordBreak: "break-word" }} className="sm:text-xl md:text-2xl">
+              {k.value}
+            </p>
           </div>
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }} className="sm:grid-cols-2">
 
         {/* Datos personales */}
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }} className="sm:flex-row sm:justify-between sm:items-center">
             <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Datos personales</h2>
-            <Link href={`/dashboard/alumnos/${student.id}/editar`} style={{ fontSize: 12, color: "#006241", textDecoration: "none" }}>Editar</Link>
+            <Link href={`/dashboard/alumnos/${student.id}/editar`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer", width: "100%" }} className="sm:w-auto sm:justify-center">
+              Editar →
+            </Link>
           </div>
           {[
             { label: "Email", value: student.email ?? "—" },
@@ -126,9 +133,9 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
             { label: "Género", value: student.gender ?? "—" },
             { label: "Alta", value: formatDate(student.createdAt) },
           ].map(row => (
-            <div key={row.label} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "0.5px solid var(--color-border-tertiary)", fontSize: 13 }}>
-              <span style={{ color: "var(--color-text-secondary)" }}>{row.label}</span>
-              <span style={{ color: "var(--color-text-primary)" }}>{row.value}</span>
+            <div key={row.label} style={{ display: "flex", flexDirection: "column", gap: 2, padding: "7px 0", borderBottom: "0.5px solid var(--color-border-tertiary)", fontSize: 13 }} className="sm:flex-row sm:justify-between">
+              <span style={{ color: "var(--color-text-secondary)", fontWeight: 500 }}>{row.label}</span>
+              <span style={{ color: "var(--color-text-primary)", wordBreak: "break-word" }}>{row.value}</span>
             </div>
           ))}
           {student.notes && (
@@ -145,49 +152,68 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
             <p style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>Sin tutores registrados</p>
           )}
           {student.parents.map(p => (
-            <div key={p.id} style={{ padding: "10px 0", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              <p style={{ fontWeight: 500, fontSize: 13, margin: 0 }}>{p.user.name}</p>
-              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{p.relationship ?? ""} · {p.user.phone ?? "—"}</p>
+            <div key={p.id} style={{ padding: "10px 0", borderBottom: "0.5px solid var(--color-border-tertiary)", minWidth: 0 }}>
+              <p style={{ fontWeight: 500, fontSize: 13, margin: 0, wordBreak: "break-word" }}>{p.user.name}</p>
+              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "2px 0 0", wordBreak: "break-word" }}>{p.relationship ?? ""} {p.relationship && p.user.phone ? "·" : ""} {p.user.phone ?? "—"}</p>
             </div>
           ))}
         </div>
 
-        {/* Inscripciones activas */}
-        <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Inscripciones activas</h2>
-            <EnrollToGroupModal studentId={student.id} />
-          </div>
-          {activeEnrollments.length === 0 && (
-            <p style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>Sin inscripciones activas</p>
-          )}
-          {activeEnrollments.map(e => (
-            <div key={e.id} style={{ padding: "10px 0", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <span style={{ background: "#d4e9e2", color: "#006241", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>{e.group.discipline.name}</span>
-                  <p style={{ fontWeight: 500, fontSize: 13, margin: "4px 0 0" }}>{e.group.name}</p>
-                  <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>
-                    {e.group.instructor?.user.name ?? "Sin instructor"} · Desde {formatDate(e.startDate)}
-                  </p>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-                  {e.discount > 0 && (
-                    <span style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b", borderRadius: 20, padding: "2px 8px", fontSize: 11 }}>{e.discount}% desc.</span>
-                  )}
-                  <TransferGroupModal studentId={student.id} currentEnrollmentId={e.id} />
-                </div>
-              </div>
+        {/* 🥋 Asignar primera cinta (solo si no tiene cinta y tiene grupo Karate) */}
+        {!student.currentBeltColor && hasActiveKarateGroup && (
+          <AssignFirstBeltSection
+            studentId={student.id}
+            studentName={fullName(student.firstName, student.lastName)}
+          />
+        )}
+
+        {/* 🥋 Karate Belt (mostrar cuando ya tiene cinta asignada) */}
+        {student.currentBeltColor && hasActiveKarateGroup && (
+          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }} className="sm:flex-row sm:justify-between sm:items-center">
+              <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>🥋 Cinta de Karate</h2>
+              <Link href={`/dashboard/alumnos/${student.id}/editar`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer", width: "100%" }} className="sm:w-auto sm:justify-center">
+                Editar →
+              </Link>
             </div>
-          ))}
-        </div>
+            {(() => {
+              const beltNames: Record<string, string> = {
+                WHITE: "⚪ Blanca",
+                YELLOW: "🟡 Amarilla",
+                ORANGE: "🟠 Naranja",
+                GREEN: "🟢 Verde",
+                BLUE: "🔵 Azul",
+                BROWN: "🟤 Marrón",
+                BLACK: "⚫ Negra",
+              };
+              return (
+                <>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "8px 0", fontSize: 13 }} className="sm:flex-row sm:justify-between sm:items-center">
+                    <span style={{ color: "var(--color-text-secondary)" }}>Cinta actual</span>
+                    <span style={{ color: "var(--color-text-primary)", fontWeight: 500, fontSize: 16 }}>
+                      {beltNames[student.currentBeltColor] || student.currentBeltColor}
+                    </span>
+                  </div>
+                  {student.beltUpdatedAt && (
+                    <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: "6px 0 0" }}>
+                      Última actualización: {formatDate(student.beltUpdatedAt)}
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Inscripciones activas */}
+        <StudentEnrollmentsSection studentId={student.id} activeEnrollments={activeEnrollments} />
 
         {/* Últimos pagos */}
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 14 }} className="sm:flex-row sm:justify-between sm:items-center">
             <h2 style={{ fontSize: 14, fontWeight: 500, margin: 0 }}>Últimos pagos</h2>
-            <Link href={`/dashboard/pagos?student=${student.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
-              Ver todos <ArrowRight className="h-3 w-3" />
+            <Link href={`/dashboard/pagos?student=${student.id}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 6, border: "0.5px solid var(--color-border-secondary)", background: "transparent", padding: "6px 12px", fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", textDecoration: "none", cursor: "pointer", width: "100%" }} className="sm:w-auto sm:justify-center">
+              Ver todos →
             </Link>
           </div>
           {student.payments.length === 0 && (
@@ -200,16 +226,16 @@ export default async function AlumnoDetailPage({ params }: { params: { id: strin
               OVERDUE: { bg: "#fff1f2", color: "#be123c" },
               CANCELLED: { bg: "rgba(100,116,139,0.10)", color: "#94a3b8" },
             };
-            const c = colors[p.status] ?? { bg: "rgba(245,158,11,0.12)", color: "#f59e0b" };
+            const c = colors[p.status] ?? colors["PENDING"]!;
             return (
-              <div key={p.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "0.5px solid var(--color-border-tertiary)", fontSize: 13 }}>
-                <div>
-                  <p style={{ margin: 0, fontWeight: 500 }}>{p.concept}</p>
+              <div key={p.id} style={{ display: "flex", flexDirection: "column", gap: 4, padding: "8px 0", borderBottom: "0.5px solid var(--color-border-tertiary)", fontSize: 13 }} className="sm:flex-row sm:justify-between sm:items-center">
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ margin: 0, fontWeight: 500, wordBreak: "break-word" }}>{p.concept}</p>
                   <p style={{ margin: 0, fontSize: 11, color: "var(--color-text-tertiary)" }}>{formatDate(p.dueDate)}</p>
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div style={{ textAlign: "left", display: "flex", justifyContent: "space-between", gap: 10 }} className="sm:text-right sm:flex-col sm:items-end">
                   <p style={{ margin: 0, fontWeight: 500 }}>{formatCurrency(p.amount, p.currency)}</p>
-                  <span style={{ background: c.bg, color: c.color, borderRadius: 20, padding: "1px 8px", fontSize: 11 }}>{translatePaymentStatus(p.status)}</span>
+                  <span style={{ background: c.bg, color: c.color, borderRadius: 20, padding: "1px 8px", fontSize: 11, whiteSpace: "nowrap" }}>{translatePaymentStatus(p.status)}</span>
                 </div>
               </div>
             );

@@ -23,32 +23,40 @@ export function GroupEditClient({ group, disciplines, instructors }: Props) {
   const schedule = group.schedule as unknown as ScheduleSlot[];
 
   const defaultValues: Partial<GroupFormValues> = {
-    name:         group.name,
-    disciplineId: group.disciplineId,
-    instructorId: group.instructorId ?? "",
-    level:        group.level,
-    capacity:     group.capacity,
-    room:         group.room ?? "",
-    schedule:     schedule.length > 0
+    name:              group.name,
+    disciplineId:      group.disciplineId,
+    instructorId:      group.instructorId ?? "",
+    level:             group.level,
+    capacity:          group.capacity,
+    room:              group.room ?? "",
+    schedule:          schedule.length > 0
       ? schedule
       : [{ day: "MON", startTime: "", endTime: "" }],
-    monthlyFee:   group.monthlyFee ?? null,
-    billingDay:   group.billingDay ?? null,
+    monthlyFee:        group.monthlyFee ? Math.round(group.monthlyFee / 100) : null,
+    billingFrequency:  group.billingFrequency || "MONTHLY",
+    billingDay:        group.billingDay ?? null,
+    billingDayOfWeek:  (group.billingDayOfWeek as "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | null | undefined) ?? null,
+    billingWeekOfMonth: group.billingWeekOfMonth ?? null,
   };
 
   async function handleSubmit(data: GroupFormValues) {
     await update.mutateAsync({
       id: group.id,
       ...data,
-      instructorId: data.instructorId || undefined,
-      room:         data.room         || undefined,
+      schedule:          data.schedule as any,
+      instructorId:      data.instructorId || undefined,
+      room:              data.room         || undefined,
+      billingFrequency:  data.billingFrequency,
+      billingDay:        data.billingDay   || undefined,
+      billingDayOfWeek:  data.billingDayOfWeek || undefined,
+      billingWeekOfMonth: data.billingWeekOfMonth || undefined,
     });
     router.push(`/dashboard/grupos/${group.id}`);
     router.refresh();
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
       {/* Breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
         <Link href="/dashboard/grupos" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>Grupos</Link>

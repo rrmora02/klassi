@@ -2,12 +2,37 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import { fullName, calcAge } from "@/lib/utils";
 import Link from "next/link";
+import { LockedButton } from "@/components/shared/locked-button";
 import { redirect } from "next/navigation";
-import { ArrowRight } from "lucide-react";
-import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
+import { Suspense } from "react";
+import { StudentRow } from "@/components/alumnos/student-row";
+import { StudentTable } from "@/components/alumnos/student-table";
 
 interface PageProps {
   searchParams: { q?: string; status?: string; disc?: string; page?: string; };
+}
+
+async function StudentTableSection({ students, pages, page, pageSize, total, buildUrl }: any) {
+  return (
+    <>
+      {/* Tabla */}
+      <StudentTable students={students} StudentRow={StudentRow} />
+
+      {/* Paginación */}
+      {pages > 1 && (
+        <div style={{ marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
+          <p style={{ margin: "0 0 12px" }}>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</p>
+          <div style={{ display: "flex", gap: 4, overflowX: "auto" }} className="flex-wrap sm:flex-nowrap">
+            {page > 1 && <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>← Ant</Link>}
+            {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
+              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#006241" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)", whiteSpace: "nowrap" }}>{p}</Link>
+            ))}
+            {page < pages && <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)", whiteSpace: "nowrap" }}>Sig →</Link>}
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 export default async function AlumnosPage({ searchParams }: PageProps) {
@@ -26,12 +51,12 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
   }
 
   const page     = Math.max(1, Number(searchParams.page ?? 1));
-  const pageSize = 20;
+  const pageSize = 10;
   const search   = searchParams.q?.trim() ?? "";
   const status   = searchParams.status as "ACTIVE" | "INACTIVE" | "SUSPENDED" | undefined;
   const discId   = searchParams.disc;
 
-  const where: NonNullable<Parameters<typeof db.student.findMany>[0]>["where"] = {
+  const where: any = {
     tenantId: tenant.id,
     ...(status && { status }),
     ...(search && { OR: [
@@ -39,15 +64,35 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
       { lastName:  { contains: search, mode: "insensitive" } },
       { email:     { contains: search, mode: "insensitive" } },
       { phone:     { contains: search } },
+      { parents: { some: { user: { name: { contains: search, mode: "insensitive" } } } } },
     ]}),
     ...(discId && { enrollments: { some: { status: "ACTIVE", group: { disciplineId: discId } } } }),
   };
 
+  // Fetch data in parallel
   const [students, total, disciplines, counts] = await Promise.all([
     db.student.findMany({
       where, skip: (page - 1) * pageSize, take: pageSize,
       orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
-      include: { enrollments: { where: { status: "ACTIVE" }, include: { group: { include: { discipline: true } } } } },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        birthDate: true,
+        email: true,
+        phone: true,
+        status: true,
+        enrollments: {
+          where: { status: "ACTIVE" },
+          take: 3,
+          include: { group: { include: { discipline: true } } }
+        },
+        parents: {
+          take: 2,
+          include: { user: true },
+          orderBy: { isPrimary: "desc" }
+        }
+      }
     }),
     db.student.count({ where }),
     db.discipline.findMany({ where: { tenantId: tenant.id, isActive: true }, orderBy: { sortOrder: "asc" } }),
@@ -65,19 +110,29 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+    <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+        <span>Alumnos</span>
+      </div>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Alumnos</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{total} {total === 1 ? "alumno" : "alumnos"}</p>
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>{total} {total === 1 ? "alumno" : "alumnos"}</p>
         </div>
-        <Link href="/dashboard/alumnos/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
-          + Nuevo alumno
-        </Link>
+        {tenant.blockChildWrites ? (
+          <LockedButton label="+ Nuevo alumno" reason={tenant.blockChildWritesReason} />
+        ) : (
+          <Link href="/dashboard/alumnos/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 20px", fontSize: 13, fontWeight: 500, textDecoration: "none", whiteSpace: "nowrap" }}>
+            + Nuevo alumno
+          </Link>
+        )}
       </div>
 
       {/* Tabs */}
-      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+      <div style={{ display: "flex", gap: 0, marginBottom: 16, borderBottom: "0.5px solid var(--color-border-tertiary)", overflowX: "auto" }} className="scrollbar-hide">
         {[
           { label: "Todos", value: undefined, count: Object.values(countMap).reduce((a: number, b: number) => a + b, 0) },
           { label: "Activos", value: "ACTIVE", count: countMap.ACTIVE ?? 0 },
@@ -86,12 +141,12 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
           const active = tab.value === status || (!tab.value && !status);
           return (
             <Link key={tab.label} href={buildUrl({ status: tab.value, page: "1" })} style={{
-              padding: "8px 16px", fontSize: 13, textDecoration: "none",
+              padding: "8px 12px", fontSize: 12, textDecoration: "none", whiteSpace: "nowrap",
               color: active ? "#006241" : "var(--color-text-secondary)",
               fontWeight: active ? 500 : 400,
               borderBottom: active ? "2px solid #006241" : "2px solid transparent",
               marginBottom: -1,
-            }}>
+            }} className="sm:px-4 sm:text-sm">
               {tab.label} <span style={{ fontSize: 11 }}>{tab.count}</span>
             </Link>
           );
@@ -100,80 +155,29 @@ export default async function AlumnosPage({ searchParams }: PageProps) {
 
       {/* Filtros */}
       <div style={{ display: "flex", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
-        <form style={{ flex: 1, minWidth: 200, maxWidth: 320 }}>
-          <input name="q" defaultValue={search} placeholder="Buscar nombre, email, teléfono..." className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-[rgba(255,255,255,0.08)] text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors" />
+        <form style={{ flex: 1, minWidth: 200 }} className="sm:max-w-sm">
+          <input name="q" defaultValue={search} placeholder="Buscar alumno o tutor..." className="w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-[rgba(255,255,255,0.08)] text-gray-900 dark:text-gray-50 placeholder-gray-500 dark:placeholder-gray-400 px-3.5 py-2 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors" />
         </form>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
           {[{ id: undefined, name: "Todas" }, ...disciplines].map(d => (
-            <Link key={d.id ?? "all"} href={buildUrl({ disc: d.id, page: "1" })} style={{ padding: "6px 14px", borderRadius: 20, fontSize: 12, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: discId === d.id || (!discId && !d.id) ? "#00754A" : "var(--color-background-primary)", color: discId === d.id || (!discId && !d.id) ? "#fff" : "var(--color-text-secondary)" }}>
+            <Link key={d.id ?? "all"} href={buildUrl({ disc: d.id, page: "1" })} style={{ padding: "6px 12px", borderRadius: 20, fontSize: 12, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: discId === d.id || (!discId && !d.id) ? "#00754A" : "var(--color-background-primary)", color: discId === d.id || (!discId && !d.id) ? "#fff" : "var(--color-text-secondary)" }}>
               {d.name}
             </Link>
           ))}
         </div>
       </div>
 
-      {/* Tabla */}
-      <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-        <table style={{ width: "100%", minWidth: 640, borderCollapse: "collapse", fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-              {["Alumno", "Edad", "Disciplinas", "Contacto", "Estado", ""].map(h => (
-                <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 11, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--color-text-secondary)" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {students.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: "center", padding: "48px 0", color: "var(--color-text-tertiary)" }}>No se encontraron alumnos</td></tr>
-            )}
-            {students.map(s => (
-              <tr key={s.id} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                <td style={{ padding: "11px 14px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#d4e9e2", color: "#006241", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 500, flexShrink: 0 }}>
-                      {s.firstName[0]}{s.lastName[0]}
-                    </div>
-                    <div>
-                      <Link href={`/dashboard/alumnos/${s.id}`} style={{ fontWeight: 500, color: "var(--color-text-primary)", textDecoration: "none" }}>{fullName(s.firstName, s.lastName)}</Link>
-                      {s.email && <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", margin: 0 }}>{s.email}</p>}
-                    </div>
-                  </div>
-                </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)" }}>{calcAge(s.birthDate) ?? "—"}</td>
-                <td style={{ padding: "11px 14px" }}>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                    {s.enrollments.length === 0 && <span style={{ fontSize: 12, color: "var(--color-text-tertiary)" }}>Sin grupo</span>}
-                    {s.enrollments.map(e => (
-                      <span key={e.id} style={{ background: "#d4e9e2", color: "#006241", borderRadius: 20, padding: "2px 8px", fontSize: 11, fontWeight: 500 }}>{e.group.discipline.name}</span>
-                    ))}
-                  </div>
-                </td>
-                <td style={{ padding: "11px 14px", color: "var(--color-text-secondary)", fontSize: 12 }}>{s.phone ?? s.email ?? "—"}</td>
-                <td style={{ padding: "11px 14px" }}><StudentStatusBadge status={s.status} /></td>
-                <td style={{ padding: "11px 14px", textAlign: "right" }}>
-                  <Link href={`/dashboard/alumnos/${s.id}`} className="inline-flex items-center gap-1 rounded-md border border-sb-light bg-sb-light/30 px-2.5 py-1.5 text-xs font-medium text-sb-accent transition-colors hover:bg-sb-light/50 hover:border-sb-accent dark:border-sb-uplift dark:bg-sb-house dark:text-sb-light dark:hover:bg-sb-uplift dark:hover:border-sb-light">
-                    Ver <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Paginación */}
-      {pages > 1 && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, fontSize: 13, color: "var(--color-text-secondary)" }}>
-          <span>Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} de {total}</span>
-          <div style={{ display: "flex", gap: 4 }}>
-            {page > 1 && <Link href={buildUrl({ page: String(page - 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>← Ant</Link>}
-            {Array.from({ length: Math.min(pages, 5) }, (_, i) => i + Math.max(1, page - 2)).filter(p => p <= pages).map(p => (
-              <Link key={p} href={buildUrl({ page: String(p) })} style={{ padding: "5px 10px", borderRadius: 6, textDecoration: "none", border: "0.5px solid var(--color-border-secondary)", background: p === page ? "#00754A" : "transparent", color: p === page ? "#fff" : "var(--color-text-secondary)" }}>{p}</Link>
-            ))}
-            {page < pages && <Link href={buildUrl({ page: String(page + 1) })} style={{ padding: "5px 12px", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, textDecoration: "none", color: "var(--color-text-secondary)" }}>Sig →</Link>}
-          </div>
-        </div>
-      )}
+      {/* Table with Suspense boundary */}
+      <Suspense fallback={<div style={{ padding: "20px", textAlign: "center", color: "var(--color-text-secondary)" }}>Cargando tabla...</div>}>
+        <StudentTableSection 
+          students={students} 
+          pages={pages} 
+          page={page} 
+          pageSize={pageSize} 
+          total={total} 
+          buildUrl={buildUrl} 
+        />
+      </Suspense>
     </div>
   );
 }

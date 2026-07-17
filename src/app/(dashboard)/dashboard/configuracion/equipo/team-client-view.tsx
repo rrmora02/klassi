@@ -6,6 +6,18 @@ import { formatDate } from "@/lib/utils";
 import { InviteUserModal } from "./invite-user-modal";
 import { Toast } from "@/components/shared/toast";
 
+// Traducción de roles
+function translateRole(role: string): string {
+  const roleMap: { [key: string]: string } = {
+    ADMIN: "Administrador",
+    INSTRUCTOR: "Instructor",
+    RECEPTIONIST: "Recepcionista",
+    SUPER_ADMIN: "Super Admin",
+    PARENT: "Padre/Tutor",
+  };
+  return roleMap[role] || role;
+}
+
 export function TeamClientView() {
   const { data: members, isLoading: loadingMembers, refetch: refetchMembers } = api.team.getMembers.useQuery();
   const { data: invitations, isLoading: loadingInvites, refetch: refetchInvites } = api.team.getInvitations.useQuery();
@@ -130,19 +142,23 @@ export function TeamClientView() {
                 </td>
                 <td style={tdStyle}>
                   <span style={{ background: m.role === "ADMIN" ? "#d4e9e2" : (m.role === "INSTRUCTOR" ? "rgba(0,117,74,0.12)" : "#f0fdf4"), color: m.role === "ADMIN" ? "#006241" : (m.role === "INSTRUCTOR" ? "#00754A" : "#15803d"), padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 500 }}>
-                    {m.role}
+                    {translateRole(m.role)}
                   </span>
                 </td>
                 <td style={tdStyle}>
                   {formatDate(m.createdAt)}
                 </td>
                 <td style={{ ...tdStyle, textAlign: "right" }}>
-                  <button 
-                    onClick={() => handleRemove(m.id, m.user.name ?? "Usuario")}
-                    style={{ background: "transparent", border: "none", color: "#e53e3e", cursor: "pointer", fontSize: 13, textDecoration: "underline" }}
-                  >
-                    Revocar
-                  </button>
+                  {m.role !== "ADMIN" ? (
+                    <button
+                      onClick={() => handleRemove(m.id, m.user.name ?? "Usuario")}
+                      style={{ background: "transparent", border: "none", color: "#e53e3e", cursor: "pointer", fontSize: 13, textDecoration: "underline" }}
+                    >
+                      Revocar
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>—</span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -173,7 +189,7 @@ export function TeamClientView() {
             ) : invitations?.map(inv => (
               <tr key={inv.id}>
                 <td style={{ ...tdStyle, fontWeight: 500 }}>{inv.email}</td>
-                <td style={tdStyle}>{inv.role}</td>
+                <td style={tdStyle}>{translateRole(inv.role)}</td>
                 <td style={tdStyle}>{formatDate(inv.expiresAt)}</td>
                 <td style={{ ...tdStyle }}>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>

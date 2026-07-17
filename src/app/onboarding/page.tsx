@@ -2,80 +2,96 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/server/db";
 import { School } from "lucide-react";
+import Link from "next/link";
+import { canAddSchool } from "@/server/services/tenant.service";
 
 async function createTenantAction(formData: FormData) {
   "use server";
   const { userId } = await auth();
   if (!userId) throw new Error("No autenticado");
 
-  const schoolName = formData.get("schoolName") as string;
+  const schoolName     = formData.get("schoolName") as string;
   const invitationToken = formData.get("invitationToken") as string | null;
 
   if (!schoolName || schoolName.trim().length < 3) {
     throw new Error("El nombre de la escuela es muy corto");
   }
 
-  // 1. Encontrar o crear al usuario basándose en clerkId
+  // 1. Encontrar o crear usuario
   let user = await db.user.findUnique({ where: { clerkId: userId } });
   if (!user) {
     const { clerkClient } = await import("@clerk/nextjs/server");
-    const client = await clerkClient();
-    const clerkUserObj = await client.users.getUser(userId);
-    const email = clerkUserObj.emailAddresses[0]?.emailAddress || "no-email@klassi.io";
-    const name = [clerkUserObj.firstName, clerkUserObj.lastName].filter(Boolean).join(" ") || email;
+    const client        = await clerkClient();
+    const clerkUserObj  = await client.users.getUser(userId);
+    const email         = clerkUserObj.emailAddresses[0]?.emailAddress ?? "no-email@klassi.io";
+    const name          = [clerkUserObj.firstName, clerkUserObj.lastName].filter(Boolean).join(" ") || email;
     user = await db.user.create({
-      data: {
-        clerkId: userId,
-        email,
-        name,
-        avatar: clerkUserObj.imageUrl,
-      }
+      data: { clerkId: userId, email, name, avatar: clerkUserObj.imageUrl },
     });
   }
 
-  // 2. Crear Tenant en BD
-  const base = schoolName.toLowerCase().trim().replace(/\s+/g, "-");
-  const slug = `${base}-${Math.random().toString(36).slice(2, 6)}`;
+  // 2. Determinar si es primera escuela o escuela adicional (Enterprise)
+  const isAdditionalSchool = !!user.activeTenantId;
+  let parentTenantId: string | null = null;
+  let newPlan: "STARTER" | "ENTERPRISE" = "STARTER";
 
-  const tenant = await db.tenant.create({
-    data: {
-      name: schoolName.trim(),
-      slug,
-      plan: "STARTER",
-      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+  if (isAdditionalSchool) {
+    // Validar que el plan permite agregar más escuelas
+    const check = await canAddSchool(user.id);
+    if (!check.allowed) {
+      throw new Error(check.reason ?? "No puedes agregar más escuelas con tu plan actual");
     }
+    parentTenantId = user.activeTenantId;
+    newPlan        = "ENTERPRISE";
+  }
+
+  // 3-5. Crear Tenant + membresía ADMIN + activeTenantId en una transacción:
+  // un fallo a medias dejaría una escuela huérfana sin administrador.
+  const base = schoolName.toLowerCase().trim().replace(/\s+/g, "-");
+  const slug  = `${base}-${Math.random().toString(36).slice(2, 6)}`;
+
+  const tenant = await db.$transaction(async (tx) => {
+    const created = await tx.tenant.create({
+      data: {
+        name:           schoolName.trim(),
+        slug,
+        plan:           newPlan,
+        status:         isAdditionalSchool ? "ACTIVE" : "TRIAL",
+        trialEndsAt:    isAdditionalSchool ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        parentTenantId,
+        createdByUserId: user.id,
+      },
+    });
+
+    await tx.tenantUser.create({
+      data: { userId: user.id, tenantId: created.id, role: "ADMIN" },
+    });
+
+    await tx.user.update({
+      where: { id: user.id },
+      data:  { activeTenantId: created.id },
+    });
+
+    return created;
   });
 
-  // 3. Crear organización en Clerk
-  let clerkOrgId = null;
+  // El contexto tRPC cachea el usuario (TTL 10 min); invalidar para que
+  // las siguientes llamadas operen sobre la escuela recién creada.
+  const { invalidateUserCache } = await import("@/server/cache/userAuthCache");
+  invalidateUserCache(userId);
+
+  // Crear organización en Clerk (best-effort, fuera de la transacción)
   try {
     const { clerkClient } = await import("@clerk/nextjs/server");
     const client = await clerkClient();
-    const clerkOrg = await client.organizations.createOrganization({
-      name: schoolName.trim(),
+    await client.organizations.createOrganization({
+      name:      schoolName.trim(),
       createdBy: userId,
     });
-    clerkOrgId = clerkOrg.id;
   } catch (error) {
     console.error("Error creating Clerk organization:", error);
   }
 
-  // 4. Vincular Usuario <-> Tenant como ADMIN
-  await db.tenantUser.create({
-    data: {
-      userId: user.id,
-      tenantId: tenant.id,
-      role: "ADMIN"
-    }
-  });
-
-  // 5. Actualizar activeTenantId del usuario
-  await db.user.update({
-    where: { id: user.id },
-    data: { activeTenantId: tenant.id }
-  });
-
-  // 6. Si viene de una invitación, redirigir a aceptar invitación
   if (invitationToken) {
     redirect(`/aceptar-invitacion?token=${invitationToken}`);
   }
@@ -93,6 +109,13 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
 
   const invitationToken = searchParams.token;
 
+  // Determinar si es una escuela adicional para ajustar el copy
+  const user = await db.user.findUnique({
+    where:  { clerkId: userId },
+    select: { activeTenantId: true },
+  });
+  const isAdditionalSchool = !!user?.activeTenantId;
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
@@ -101,10 +124,14 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
           <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-sb-light/50">
             <School className="h-6 w-6 text-sb-accent" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Bienvenido a Klassi</h1>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {isAdditionalSchool ? "Agregar nueva escuela" : "Bienvenido a Klassi"}
+          </h1>
           <p className="mt-2 text-sm text-gray-500">
             {invitationToken
               ? "Crea tu institución y luego podrás aceptar la invitación"
+              : isAdditionalSchool
+              ? "Ingresa el nombre de la nueva escuela. Estará activa inmediatamente bajo tu plan Enterprise."
               : "Para comenzar, necesitamos saber el nombre de tu institución deportiva o escuela."}
           </p>
         </div>
@@ -134,9 +161,16 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
             type="submit"
             className="flex w-full justify-center rounded-xl bg-sb-accent px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sb-green focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
           >
-            Comenzar periodo de prueba
+            {isAdditionalSchool ? "Crear escuela" : "Comenzar periodo de prueba"}
           </button>
         </form>
+
+        <Link
+          href="/dashboard"
+          className="mt-4 flex w-full justify-center rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-900 focus:ring-offset-2"
+        >
+          Cancelar
+        </Link>
 
       </div>
     </main>

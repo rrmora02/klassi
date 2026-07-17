@@ -1,8 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
 import Link from "next/link";
+import { LockedButton } from "@/components/shared/locked-button";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { AdminInstructorBanner } from "@/components/instructores/admin-instructor-banner";
 
 interface PageProps {
   searchParams: { q?: string; active?: string; page?: string; };
@@ -15,20 +17,20 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   const tenant = user?.activeTenant;
   if (!tenant) return null;
 
-  // Solo ADMIN
+  // Solo ADMIN o INSTRUCTOR
   const tenantUser = await db.tenantUser.findFirst({
     where: { tenantId: tenant.id, userId: user.id }
   });
-  if (tenantUser?.role !== "ADMIN") {
+  if (tenantUser?.role !== "ADMIN" && tenantUser?.role !== "INSTRUCTOR") {
     redirect("/dashboard");
   }
 
   const page = Math.max(1, Number(searchParams.page ?? 1));
-  const pageSize = 20;
+  const pageSize = 10;
   const search = searchParams.q?.trim() ?? "";
   const activeFilter = searchParams.active === "false" ? false : searchParams.active === "true" ? true : undefined;
 
-  const where: NonNullable<Parameters<typeof db.instructor.findMany>[0]>["where"] = {
+  const where: any = {
     tenantId: tenant.id,
     ...(activeFilter !== undefined && { isActive: activeFilter }),
     ...(search && { OR: [
@@ -55,6 +57,11 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   const countMap = Object.fromEntries(counts.map(c => [String(c.isActive), c._count]));
   const totalAll = (countMap["true"] ?? 0) + (countMap["false"] ?? 0);
 
+  // Verificar si el usuario actual es instructor
+  const currentUserInstructor = await db.instructor.findFirst({
+    where: { tenantId: tenant.id, userId: user.id }
+  });
+
   function buildUrl(params: Record<string, string | undefined>) {
     const sp = new URLSearchParams();
     const merged = { q: search || undefined, active: activeFilter !== undefined ? String(activeFilter) : undefined, ...params };
@@ -63,15 +70,24 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div>
+    <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
+      <AdminInstructorBanner
+        isAdmin={tenantUser.role === "ADMIN"}
+        isAlreadyInstructor={!!currentUserInstructor}
+      />
+
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Instructores</h1>
           <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>{total} {total === 1 ? "instructor" : "instructores"}</p>
         </div>
-        <Link href="/dashboard/instructores/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
-          + Nuevo instructor
-        </Link>
+        {tenant.blockChildWrites ? (
+          <LockedButton label="+ Nuevo instructor" reason={tenant.blockChildWritesReason} />
+        ) : (
+          <Link href="/dashboard/instructores/nuevo" style={{ background: "#00754A", color: "#fff", borderRadius: 8, padding: "8px 18px", fontSize: 13, fontWeight: 500, textDecoration: "none" }}>
+            + Nuevo instructor
+          </Link>
+        )}
       </div>
 
       {/* Tabs */}

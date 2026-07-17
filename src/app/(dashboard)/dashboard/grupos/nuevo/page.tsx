@@ -16,6 +16,7 @@ export default function NuevoGrupoPage() {
   async function handleSubmit(data: GroupFormValues) {
     await create.mutateAsync({
       ...data,
+      schedule: data.schedule as any,
       instructorId: data.instructorId || undefined,
       room:         data.room         || undefined,
     });
@@ -32,7 +33,7 @@ export default function NuevoGrupoPage() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 12, paddingRight: 12 }} className="sm:px-4 lg:px-0">
       {/* Breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
         <Link href="/dashboard/grupos" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>Grupos</Link>

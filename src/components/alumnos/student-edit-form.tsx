@@ -31,6 +31,7 @@ export function StudentEditForm({ student }: Props) {
     tutorEmail: primaryParent?.user.email ?? "",
     tutorPhone: primaryParent?.user.phone ?? "",
     tutorRelationship: (primaryParent?.relationship as any) ?? undefined,
+    currentBeltColor: student.currentBeltColor ?? undefined,
   };
 
   async function handleSubmit(data: StudentFormValues) {
@@ -41,6 +42,7 @@ export function StudentEditForm({ student }: Props) {
       email:     data.email    || undefined,
       phone:     data.phone    || undefined,
       notes:     data.notes    || undefined,
+      currentBeltColor: data.currentBeltColor || undefined,
     });
     router.push(`/dashboard/alumnos/${student.id}`);
     router.refresh();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/trpc";
 import Link from "next/link";
@@ -18,6 +18,20 @@ export function StudentActions({ studentId, studentName, status }: Props) {
   const [showMenu,   setShowMenu]   = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    if (showMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [showMenu]);
 
   const setStatus = api.students.setStatus.useMutation({
     onSuccess: () => { router.refresh(); setShowMenu(false); },
@@ -28,26 +42,26 @@ export function StudentActions({ studentId, studentName, status }: Props) {
     onError:   (e) => setDeleteError(e.message),
   });
 
-  const allStatusOptions: { label: string; value: StudentStatus; }[] = [
-    { label: "Activar",    value: "ACTIVE"    },
-    { label: "Desactivar", value: "INACTIVE"  },
-    { label: "Suspender",  value: "SUSPENDED" },
-  ];
-  const statusOptions = allStatusOptions.filter(o => o.value !== status);
+  const statusOptions: { label: string; value: StudentStatus; }[] = [
+    { label: "Activar",    value: "ACTIVE" as const    },
+    { label: "Desactivar", value: "INACTIVE" as const  },
+    { label: "Suspender",  value: "SUSPENDED" as const },
+  ].filter(o => o.value !== status);
 
   return (
     <>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", position: "relative" }}>
+      <div ref={menuRef} style={{ display: "flex", gap: 6, alignItems: "center", position: "relative" }}>
         <Link
           href={`/dashboard/alumnos/${studentId}/editar`}
-          style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "7px 16px", fontSize: 13, color: "var(--color-text-secondary)", textDecoration: "none", background: "var(--color-background-primary)" }}
+          style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "6px 12px", fontSize: 12, color: "var(--color-text-secondary)", textDecoration: "none", background: "var(--color-background-primary)", whiteSpace: "nowrap" }}
+          className="sm:text-sm sm:px-4"
         >
           Editar
         </Link>
 
         <button
           onClick={() => setShowMenu(m => !m)}
-          style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "7px 12px", fontSize: 13, color: "var(--color-text-secondary)", background: "var(--color-background-primary)", cursor: "pointer" }}
+          style={{ border: "0.5px solid var(--color-border-secondary)", borderRadius: 8, padding: "6px 8px", fontSize: 13, color: "var(--color-text-secondary)", background: "var(--color-background-primary)", cursor: "pointer", flexShrink: 0 }}
         >
           ···
         </button>
@@ -77,8 +91,8 @@ export function StudentActions({ studentId, studentName, status }: Props) {
 
       {/* Overlay de confirmación de borrado */}
       {showDelete && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 14, padding: 28, width: 420, maxWidth: "90vw" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: 16 }}>
+          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 14, padding: 28, width: "100%", maxWidth: 420 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
               <div style={{ width: 40, height: 40, borderRadius: "50%", background: "rgba(220,38,38,0.08)", border: "0.5px solid rgba(220,38,38,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, color: "#ef4444", flexShrink: 0 }}>!</div>
               <div>

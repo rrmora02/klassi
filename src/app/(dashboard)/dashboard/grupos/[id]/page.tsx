@@ -3,7 +3,7 @@ import { db } from "@/server/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatBillingInfo } from "@/lib/utils";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 import { GroupActions } from "@/components/grupos/group-actions";
 import { StudentStatusBadge } from "@/components/alumnos/student-status-badge";
@@ -52,7 +52,7 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
   const activeCount  = group._count.enrollments;
 
   return (
-    <div style={{ maxWidth: 860, margin: "0 auto" }}>
+    <div style={{ maxWidth: 860, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
 
       {/* Breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
@@ -169,21 +169,21 @@ export default async function GrupoDetailPage({ params }: { params: { id: string
         </div>
       </div>
 
-      {/* Cobro mensual */}
-      {(group.monthlyFee || group.billingDay) && (
+      {/* Configuración de cobro */}
+      {(group.monthlyFee || group.billingFrequency) && (
         <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: 20, marginBottom: 24 }}>
-          <h2 style={{ fontSize: 14, fontWeight: 500, margin: "0 0 14px" }}>Cobro mensual</h2>
+          <h2 style={{ fontSize: 14, fontWeight: 500, margin: "0 0 14px" }}>Configuración de cobro</h2>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div>
-              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 4px" }}>Mensualidad</p>
+              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 4px" }}>Monto</p>
               <p style={{ fontSize: 16, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>
-                {group.monthlyFee ? `$${group.monthlyFee.toLocaleString("es-MX")} MXN` : "—"}
+                {group.monthlyFee ? `${(group.monthlyFee / 100).toLocaleString("es-MX", { style: "currency", currency: "MXN" })}` : "—"}
               </p>
             </div>
             <div>
-              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 4px" }}>Día de cobro</p>
+              <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 4px" }}>Fecha de cobro</p>
               <p style={{ fontSize: 16, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>
-                {group.billingDay ? `${group.billingDay}° de cada mes` : "—"}
+                {formatBillingInfo(group.billingFrequency, group.billingDay, group.billingDayOfWeek, group.billingWeekOfMonth)}
               </p>
             </div>
           </div>

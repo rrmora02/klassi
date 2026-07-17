@@ -11,18 +11,13 @@ export default function NuevoInstructorPage() {
   const create = api.instructors.create.useMutation();
 
   async function handleSubmit(data: InstructorFormValues) {
-    try {
-        await create.mutateAsync(data);
-        router.push("/dashboard/instructores");
-        router.refresh();
-    } catch (error: any) {
-        // Podríamos manejar el error visualmente, pero se alinea con el resto de CRUDs
-        console.error(error.message || "Ocurrió un error al crear el instructor.");
-    }
+    await create.mutateAsync(data);
+    router.push("/dashboard/instructores");
+    router.refresh();
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: "0 auto" }}>
+    <div style={{ maxWidth: 720, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
       {/* Breadcrumb */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
         <Link href="/dashboard/instructores" style={{ color: "var(--color-text-secondary)", textDecoration: "none" }}>Instructores</Link>

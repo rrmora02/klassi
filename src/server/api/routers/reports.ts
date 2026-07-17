@@ -1,25 +1,32 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, adminProcedure } from "@/server/api/trpc";
+import { mxMonthRange } from "@/lib/dates";
 
 export const reportsRouter = createTRPCRouter({
 
-  monthlyRevenue: tenantProcedure
+  monthlyRevenue: adminProcedure
     .input(z.object({ year: z.number() }))
     .query(async ({ ctx, input }) => {
+      // Agregación en la BD: antes se traían todas las filas PAID del año
+      // a Node solo para sumarlas.
       const results = await Promise.all(
         Array.from({ length: 12 }, (_, i) => {
-          const from = new Date(input.year, i, 1);
-          const to   = new Date(input.year, i + 1, 0, 23, 59, 59);
+          const { from, to } = mxMonthRange(input.year, i + 1);
           return ctx.db.payment.aggregate({
-            where: { tenantId: ctx.tenantId, status: "PAID", paidAt: { gte: from, lte: to } },
-            _sum: { amount: true }, _count: true,
-          }).then(r => ({ month: i + 1, total: r._sum.amount ?? 0, count: r._count }));
+            where:  { tenantId: ctx.tenantId, status: "PAID", paidAt: { gte: from, lte: to } },
+            _sum:   { amount: true, discountAmount: true },
+            _count: { _all: true },
+          }).then(agg => ({
+            month: i + 1,
+            total: (agg._sum.amount ?? 0) - (agg._sum.discountAmount ?? 0),
+            count: agg._count._all,
+          }));
         })
       );
       return results;
     }),
 
-  byDiscipline: tenantProcedure
+  byDiscipline: adminProcedure
     .input(z.object({ year: z.number(), month: z.number().min(1).max(12).optional() }))
     .query(async ({ ctx, input }) => {
       const from = input.month
@@ -53,7 +60,7 @@ export const reportsRouter = createTRPCRouter({
       }));
     }),
 
-  attendanceSummary: tenantProcedure
+  attendanceSummary: adminProcedure
     .input(z.object({ from: z.date(), to: z.date() }))
     .query(async ({ ctx, input }) => {
       const [present, absent, justified, late] = await Promise.all([
@@ -66,7 +73,7 @@ export const reportsRouter = createTRPCRouter({
       return { present, absent, justified, late, total, rate: total > 0 ? Math.round((present / total) * 100) : 0 };
     }),
 
-  paymentCollectionRate: tenantProcedure
+  paymentCollectionRate: adminProcedure
     .input(z.object({ year: z.number(), month: z.number().min(1).max(12) }))
     .query(async ({ ctx, input }) => {
       const from = new Date(input.year, input.month - 1, 1);

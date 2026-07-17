@@ -1,7 +1,10 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, adminProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { instructorFormSchema } from "@/lib/schemas/instructor.schema";
+import { sendInstructorInvitation } from "@/server/services/email.service";
+import { canAddInstructor } from "@/server/services/tenant.service";
+import { randomBytes, randomUUID } from "crypto";
 
 export const instructorsUpdateSchema = instructorFormSchema.partial().extend({
   id: z.string().cuid("ID inválido"),
@@ -12,7 +15,7 @@ export const instructorsRouter = createTRPCRouter({
   // ── Listar Instructores (Paginación + Buscador) ─────────────────
   list: tenantProcedure
     .input(z.object({
-      search:   z.string().optional(),
+      search:   z.string().max(100).optional(),
       isActive: z.boolean().optional(),
       page:     z.number().int().min(1).default(1),
       pageSize: z.number().int().min(1).max(100).default(20),
@@ -40,7 +43,7 @@ export const instructorsRouter = createTRPCRouter({
           take: input.pageSize,
           orderBy: { user: { name: "asc" } },
           include: {
-            user: true,
+            user: { select: { id: true, name: true, email: true, avatar: true } },
             _count: {
               select: { groups: { where: { isActive: true } } },
             },
@@ -64,10 +67,10 @@ export const instructorsRouter = createTRPCRouter({
       const instructor = await ctx.db.instructor.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
         include: {
-          user: true,
+          user: { select: { id: true, name: true, email: true, avatar: true } },
           groups: {
             include: {
-              discipline: true,
+              discipline: { select: { name: true, color: true } },
               _count: { select: { enrollments: { where: { status: "ACTIVE" } } } }
             },
             orderBy: { name: "asc" },
@@ -86,10 +89,44 @@ export const instructorsRouter = createTRPCRouter({
     }),
 
   // ── Crear Instructor ─────────────────────────────────────────────
-  create: tenantProcedure
+  create: adminProcedure
     .input(instructorFormSchema)
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
+
+      // Check if this tenant is a blocked child tenant
+      const tenant = await db.tenant.findUnique({
+        where: { id: tenantId },
+        select: { blockChildWrites: true, blockChildWritesReason: true, name: true },
+      });
+
+      if (tenant?.blockChildWrites) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: tenant.blockChildWritesReason || `No puedes agregar instructores a "${tenant?.name}" porque su plan no soporta múltiples escuelas. Cambia a tu escuela principal o actualiza el plan a Enterprise.`,
+        });
+      }
+
+      // Verificar límite de plan
+      const allowed = await canAddInstructor(tenantId);
+      if (!allowed) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: "Has alcanzado el límite de instructores de tu plan. Actualiza tu suscripción para agregar más.",
+        });
+      }
+
+      // Idempotence: Check if instructor already exists by email in this tenant
+      const existingInstructorByEmail = await db.instructor.findFirst({
+        where: {
+          tenantId,
+          user: { email: input.email }
+        },
+        include: { user: true }
+      });
+      if (existingInstructorByEmail) {
+        return { ...existingInstructorByEmail, _isIdempotent: true };
+      }
 
       // Buscar si el correo ya existe en sistema
       let user = await db.user.findFirst({
@@ -97,16 +134,16 @@ export const instructorsRouter = createTRPCRouter({
       });
 
       if (!user) {
-        // Crear usuario pendiente
+        // Crear usuario pendiente (UUID criptográfico: clerkId es unique)
         user = await db.user.create({
           data: {
-            clerkId: `pending_${Math.random().toString(36).substring(2, 10)}`,
+            clerkId: `pending_${randomUUID()}`,
             email: input.email,
             name: input.name,
           }
         });
       } else {
-        // Comprobar si ya existe como instructor en este tenant
+        // Comprobar si ya existe como instructor en este tenant (double-check)
         const existingInstructor = await db.instructor.findFirst({
           where: { tenantId, userId: user.id }
         });
@@ -130,11 +167,51 @@ export const instructorsRouter = createTRPCRouter({
         include: { user: true },
       });
 
-      return instructor;
+      // Crear invitación y enviar email
+      try {
+        const token = randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 días
+
+        await db.teamInvitation.upsert({
+          where: { tenantId_email: { tenantId, email: input.email } },
+          create: {
+            tenantId,
+            email: input.email,
+            role: "INSTRUCTOR",
+            status: "PENDING",
+            token,
+            invitedBy: ctx.dbUser?.id,
+            expiresAt,
+          },
+          update: {
+            role: "INSTRUCTOR",
+            status: "PENDING",
+            token,
+            invitedBy: ctx.dbUser?.id,
+            expiresAt,
+          },
+        });
+
+        const tenant = await db.tenant.findUnique({ where: { id: tenantId } });
+        const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL}/aceptar-invitacion?token=${token}`;
+
+        await sendInstructorInvitation({
+          to: input.email,
+          instructorName: input.name,
+          schoolName: tenant?.name || "tu escuela",
+          inviteUrl,
+        });
+      } catch (emailError) {
+        console.error("Error creating invitation or sending email:", emailError);
+        // No lanzamos error aquí - el instructor se creó exitosamente
+        // pero no se pudo enviar la invitación. El admin puede intentar reinvitar después.
+      }
+
+      return { ...instructor, _isIdempotent: false };
     }),
 
   // ── Actualizar Instructor ────────────────────────────────────────
-  update: tenantProcedure
+  update: adminProcedure
     .input(instructorsUpdateSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, name, email, ...data } = input;
@@ -194,7 +271,7 @@ export const instructorsRouter = createTRPCRouter({
     }),
 
   // ── Modificar Status Rápidamente ─────────────────────────────────
-  setStatus: tenantProcedure
+  setStatus: adminProcedure
     .input(z.object({
       id: z.string().cuid("ID inválido"),
       isActive: z.boolean(),
@@ -203,9 +280,20 @@ export const instructorsRouter = createTRPCRouter({
       const existing = await ctx.db.instructor.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
       });
-      
+
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Instructor no encontrado" });
+      }
+
+      // Reactivar cuenta contra el límite del plan igual que crear
+      if (input.isActive && !existing.isActive) {
+        const allowed = await canAddInstructor(ctx.tenantId);
+        if (!allowed) {
+          throw new TRPCError({
+            code:    "FORBIDDEN",
+            message: "Has alcanzado el límite de instructores de tu plan. Actualiza tu suscripción para activar más.",
+          });
+        }
       }
 
       return ctx.db.instructor.update({
@@ -215,12 +303,13 @@ export const instructorsRouter = createTRPCRouter({
     }),
 
   // ── Eliminar Instructor ──────────────────────────────────────────
-  delete: tenantProcedure
+  delete: adminProcedure
     .input(z.object({ id: z.string().cuid("ID inválido") }))
     .mutation(async ({ ctx, input }) => {
       const instructor = await ctx.db.instructor.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
         include: {
+          user: true,
           _count: { select: { groups: true } },
         },
       });
@@ -236,6 +325,59 @@ export const instructorsRouter = createTRPCRouter({
         });
       }
 
+      // Retirar la membresía SOLO si su rol es INSTRUCTOR y no es uno mismo:
+      // un ADMIN/RECEPTIONIST que además daba clases no debe perder su acceso
+      // a la escuela al borrar su registro de instructor.
+      if (instructor.userId !== ctx.dbUser!.id) {
+        await ctx.db.tenantUser.deleteMany({
+          where: { tenantId: ctx.tenantId, userId: instructor.userId, role: "INSTRUCTOR" },
+        });
+      }
+
       return ctx.db.instructor.delete({ where: { id: input.id } });
+    }),
+
+  // ── Admin se registra como Instructor ────────────────────────────
+  registerAdminAsInstructor: adminProcedure
+    .mutation(async ({ ctx }) => {
+      // Verify user is ADMIN
+      const adminUser = await ctx.db.tenantUser.findFirst({
+        where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id }
+      });
+
+      if (adminUser?.role !== "ADMIN") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Solo administradores pueden registrarse como instructores"
+        });
+      }
+
+      // Idempotence: Check if already registered as instructor
+      const existingInstructor = await ctx.db.instructor.findFirst({
+        where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id },
+        include: { user: true }
+      });
+
+      if (existingInstructor) {
+        return existingInstructor;
+      }
+
+      // Respetar el límite de instructores del plan también por esta vía
+      const allowed = await canAddInstructor(ctx.tenantId);
+      if (!allowed) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: "Has alcanzado el límite de instructores de tu plan. Actualiza tu suscripción para agregar más.",
+        });
+      }
+
+      // Create instructor record
+      return ctx.db.instructor.create({
+        data: {
+          tenantId: ctx.tenantId,
+          userId: ctx.dbUser!.id
+        },
+        include: { user: true }
+      });
     }),
 });

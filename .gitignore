@@ -53,3 +53,4 @@ dist/
 # macOS
 .AppleDouble
 .AppleDS_Store
+.claude/worktrees/

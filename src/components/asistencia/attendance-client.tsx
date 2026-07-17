@@ -1,75 +1,192 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { api } from "@/lib/trpc";
 import { AttendanceStatus } from "@prisma/client";
 
 export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }) {
-  const today = new Date().toISOString().split("T")[0]!;
-  const [dateStr, setDateStr] = useState<string>(today);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const [dateStr, setDateStr] = useState<string>(today || "");
   const [groupId, setGroupId] = useState<string>(initialGroupId || "");
 
-  const { data: groups, isLoading: loadingGroups } = api.attendance.getGroups.useQuery();
+  const { data: groups, isLoading: loadingGroups } = api.attendance.getGroups.useQuery({ dateString: dateStr });
 
   const { data: rosterData, isLoading: loadingRoster, refetch } = api.attendance.getSessionRoster.useQuery(
     { groupId, dateString: dateStr },
     { enabled: !!groupId && !!dateStr }
   );
 
-  const markMutation = api.attendance.markAttendance.useMutation();
+  // Memoize student IDs to prevent unnecessary re-fetches of belts
+  const memoizedStudentIds = useMemo(
+    () => rosterData?.enrollments?.map(e => e.student.id) || [],
+    [rosterData?.enrollments]
+  );
+
+  // Obtener cintas de los estudiantes (solo si es Karate)
+  const { data: studentBelts = {} } = api.students.getStudentBelts.useQuery(
+    { studentIds: memoizedStudentIds },
+    { enabled: !!rosterData?.isKarate && memoizedStudentIds.length > 0 }
+  );
+
+  const queryClient = api.useUtils();
+  const createSessionMutation = api.attendance.createSession.useMutation();
+  const markMutation = api.attendance.markAttendance.useMutation({
+    onMutate: async (variables) => {
+      // Optimistic update: update the UI immediately
+      const key = api.attendance.getSessionRoster.getQueryKey({ groupId, dateString: dateStr });
+      const oldData = queryClient.attendance.getSessionRoster.getData({ groupId, dateString: dateStr });
+
+      if (oldData) {
+        queryClient.attendance.getSessionRoster.setData(
+          { groupId, dateString: dateStr },
+          {
+            ...oldData,
+            enrollments: oldData.enrollments.map(e =>
+              e.enrollmentId === variables.enrollmentId
+                ? { ...e, attendance: { ...e.attendance, status: variables.status } }
+                : e
+            ),
+          }
+        );
+      }
+
+      return { oldData };
+    },
+    onError: (err, variables, context) => {
+      // Revert on error
+      if (context?.oldData) {
+        queryClient.attendance.getSessionRoster.setData(
+          { groupId, dateString: dateStr },
+          context.oldData
+        );
+      }
+      alert("Error registrando asistencia. Por favor intenta de nuevo.");
+    },
+  });
 
   const handleMark = async (enrollmentId: string, status: AttendanceStatus) => {
-    if (!rosterData?.session?.id) return;
-    
-    // Optimizamos temporalmente local
-    const ogRoster = rosterData;
-    
+    if (!groupId || !dateStr) return;
+
+    // If session doesn't exist, create it first
+    let sessionId = rosterData?.session?.id;
+    if (!sessionId) {
+      try {
+        const newSession = await createSessionMutation.mutateAsync({
+          groupId,
+          dateString: dateStr,
+        });
+        sessionId = newSession.id;
+        // Update roster with new session
+        queryClient.attendance.getSessionRoster.setData(
+          { groupId, dateString: dateStr },
+          (old) => old ? { ...old, session: newSession } : undefined
+        );
+      } catch (err) {
+        console.error("Error creating session:", err);
+        alert("Error al crear la sesión.");
+        return;
+      }
+    }
+
     try {
         await markMutation.mutateAsync({
-           sessionId: rosterData.session.id,
+           sessionId,
            enrollmentId,
            status,
         });
-        // Refrescamos en background tras éxito
-        refetch();
     } catch(err) {
-        // En caso de fallo
-        alert("Ocurrió un error al registrar la asistencia.");
+        console.error("Attendance error:", err);
     }
   };
 
-  const StatusButton = ({ 
-      enrId, label, val, color, currentStatus 
-  }: { 
-      enrId: string, label: string, val: AttendanceStatus, color: string, currentStatus?: AttendanceStatus 
+  const StatusButton = ({
+      enrId, label, val, color, currentStatus
+  }: {
+      enrId: string, label: string, val: AttendanceStatus, color: string, currentStatus?: AttendanceStatus
   }) => {
       const isSelected = currentStatus === val;
       return (
         <button
           onClick={() => handleMark(enrId, val)}
           style={{
-            padding: "6px 12px", borderRadius: 8, fontSize: 12, fontWeight: 500,
+            padding: "4px 8px", borderRadius: 6, fontSize: 11, fontWeight: 500,
             cursor: "pointer", transition: "all 0.2s",
             background: isSelected ? color : "transparent",
             color: isSelected ? "#fff" : "var(--color-text-secondary)",
             border: isSelected ? `1px solid ${color}` : "1px solid var(--color-border-secondary)",
           }}
+          className="sm:px-3 sm:py-1.5 sm:text-xs"
         >
           {label}
         </button>
       )
   };
 
+  const statusBadges = [
+    { symbol: "✓", label: "Presente", color: "#10b981", bgColor: "rgba(16, 185, 129, 0.1)" },
+    { symbol: "✗", label: "Ausente", color: "#ef4444", bgColor: "rgba(239, 68, 68, 0.1)" },
+    { symbol: "↓", label: "Tardío", color: "#f59e0b", bgColor: "rgba(245, 158, 11, 0.1)" },
+    { symbol: "⊘", label: "Justificado", color: "#64748b", bgColor: "rgba(100, 116, 139, 0.1)" },
+  ];
+
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      {/* Breadcrumb */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 20, fontSize: 13, color: "var(--color-text-secondary)" }}>
+        <span>Asistencia</span>
+      </div>
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Pase de lista</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>Registra la asistencia en tiempo real.</p>
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>Registra la asistencia en tiempo real.</p>
         </div>
       </div>
 
-      <div style={{ background: "var(--color-background-primary)", padding: 20, borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", gap: 20, alignItems: "center" }}>
+      {/* Legend / Badges */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap" }} className="flex-col sm:flex-row sm:items-center">
+        {statusBadges.map((badge) => (
+          <div
+            key={badge.label}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 12px",
+              borderRadius: 8,
+              background: badge.bgColor,
+              border: `1px solid ${badge.color}`,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 28,
+                height: 28,
+                borderRadius: 6,
+                background: badge.color,
+                color: "#fff",
+                fontSize: 14,
+                fontWeight: 600,
+              }}
+            >
+              {badge.symbol}
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-primary)" }}>
+                {badge.label}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filtros */}
+      <div style={{ background: "var(--color-background-primary)", borderRadius: 12, border: "0.5px solid var(--color-border-tertiary)", marginBottom: 24, display: "flex", gap: 12 }} className="flex-col lg:flex-row p-4 sm:p-5 lg:items-center lg:gap-5">
          <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Fecha</label>
            <input
@@ -80,7 +197,7 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
            />
          </div>
 
-         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 2 }}>
+         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
            <label style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Grupo a calificar</label>
            {loadingGroups ? (
               <div style={{ padding: "8px 12px", fontSize: 14, color: "var(--color-text-secondary)" }}>Cargando grupos...</div>
@@ -113,32 +230,58 @@ export function AttendanceClient({ initialGroupId }: { initialGroupId?: string }
 
       {groupId && rosterData && (
          <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, overflowX: "auto" }}>
-             <table style={{ width: "100%", minWidth: 600, borderCollapse: "collapse" }}>
+             <table style={{ width: "100%", borderCollapse: "collapse" }} className="text-xs sm:text-sm">
                <thead>
                  <tr style={{ background: "var(--color-background-secondary)", borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                   <th style={{ padding: "12px 20px", textAlign: "left", fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Alumno</th>
-                   <th style={{ padding: "12px 20px", textAlign: "right", fontSize: 11, fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }}>Estado para esta clase</th>
+                   <th style={{ padding: "10px 12px", textAlign: "left", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 text-xs">Alumno</th>
+                   {rosterData.isKarate && (
+                     <th style={{ padding: "10px 12px", textAlign: "center", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 text-xs">🥋 Cinta</th>
+                   )}
+                   <th style={{ padding: "10px 8px", textAlign: "center", fontWeight: 500, color: "var(--color-text-secondary)", textTransform: "uppercase" }} className="sm:px-5 sm:py-3 sm:text-right text-xs">Estado</th>
                  </tr>
                </thead>
                <tbody>
                   {rosterData.enrollments.length === 0 && (
-                     <tr><td colSpan={2} style={{ textAlign: "center", padding: 40, color: "var(--color-text-tertiary)", fontSize: 13 }}>No hay alumnos inscritos en este grupo de momento.</td></tr>
+                     <tr><td colSpan={rosterData.isKarate ? 3 : 2} style={{ textAlign: "center", padding: 40, color: "var(--color-text-tertiary)", fontSize: 13 }}>No hay alumnos inscritos en este grupo de momento.</td></tr>
                   )}
-                  {rosterData.enrollments.map((enr) => (
-                    <tr key={enr.enrollmentId} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
-                       <td style={{ padding: "12px 20px" }}>
-                          <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }}>{enr.student.lastName} {enr.student.firstName}</span>
-                       </td>
-                       <td style={{ padding: "12px 20px", textAlign: "right" }}>
-                           <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-                              <StatusButton enrId={enr.enrollmentId} label="Presente" val="PRESENT" color="#10b981" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="Ausente" val="ABSENT" color="#ef4444" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="Retardo" val="LATE" color="#f59e0b" currentStatus={enr.attendance?.status} />
-                              <StatusButton enrId={enr.enrollmentId} label="Justificado" val="JUSTIFIED" color="#64748b" currentStatus={enr.attendance?.status} />
-                           </div>
-                       </td>
-                    </tr>
-                  ))}
+                  {rosterData.enrollments.map((enr) => {
+                    const beltEmojis: Record<string, string> = {
+                      WHITE: "⚪",
+                      YELLOW: "🟡",
+                      ORANGE: "🟠",
+                      GREEN: "🟢",
+                      BLUE: "🔵",
+                      BROWN: "🟤",
+                      BLACK: "⚫",
+                    };
+                    const studentBelt = studentBelts[enr.student.id];
+                    return (
+                      <tr key={enr.enrollmentId} style={{ borderBottom: "0.5px solid var(--color-border-tertiary)" }}>
+                         <td style={{ padding: "10px 12px" }} className="sm:px-5 sm:py-3">
+                            <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary)" }} className="text-xs sm:text-sm">{enr.student.lastName} {enr.student.firstName}</span>
+                         </td>
+                         {rosterData.isKarate && (
+                           <td style={{ padding: "10px 12px", textAlign: "center" }} className="sm:px-5 sm:py-3">
+                             {studentBelt ? (
+                               <span style={{ fontSize: 18 }}>
+                                 {beltEmojis[studentBelt] || "—"}
+                               </span>
+                             ) : (
+                               <span style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>—</span>
+                             )}
+                           </td>
+                         )}
+                         <td style={{ padding: "10px 4px" }} className="sm:px-5 sm:py-3">
+                             <div style={{ display: "flex", gap: 3, justifyContent: "center" }} className="sm:gap-2 sm:justify-end flex-wrap">
+                                <StatusButton enrId={enr.enrollmentId} label="✓" val="PRESENT" color="#10b981" currentStatus={enr.attendance?.status} />
+                                <StatusButton enrId={enr.enrollmentId} label="✗" val="ABSENT" color="#ef4444" currentStatus={enr.attendance?.status} />
+                                <StatusButton enrId={enr.enrollmentId} label="↓" val="LATE" color="#f59e0b" currentStatus={enr.attendance?.status} />
+                                <StatusButton enrId={enr.enrollmentId} label="⊘" val="JUSTIFIED" color="#64748b" currentStatus={enr.attendance?.status} />
+                             </div>
+                         </td>
+                      </tr>
+                    );
+                  })}
                </tbody>
              </table>
          </div>

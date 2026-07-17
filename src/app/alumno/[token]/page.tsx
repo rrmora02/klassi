@@ -96,7 +96,7 @@ export async function generateMetadata(
   { params }: { params: { token: string } }
 ): Promise<Metadata> {
   const student = await db.student.findUnique({
-    where: { id: params.token },
+    where: { shareToken: params.token },
     select: { firstName: true, lastName: true, tenant: { select: { name: true } } },
   });
   if (!student) return { title: "Perfil no encontrado" };
@@ -109,8 +109,10 @@ export async function generateMetadata(
 // ─── Página ───────────────────────────────────────────────────────
 
 export default async function AlumnoPublicPage({ params }: { params: { token: string } }) {
+  // Lookup por el token opaco de compartir — nunca por el id del alumno,
+  // que circula en URLs internas y respuestas de la API.
   const student = await db.student.findUnique({
-    where: { id: params.token },
+    where: { shareToken: params.token },
     select: {
       firstName:  true,
       lastName:   true,

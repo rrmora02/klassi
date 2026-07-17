@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import {
   createNotifications,
@@ -9,7 +9,7 @@ import {
 
 export const announcementsRouter = createTRPCRouter({
 
-  list: tenantProcedure
+  list: staffProcedure
     .input(z.object({
       page:     z.number().default(1),
       pageSize: z.number().default(20),
@@ -28,12 +28,12 @@ export const announcementsRouter = createTRPCRouter({
       return { announcements, total, pages: Math.ceil(total / input.pageSize) };
     }),
 
-  create: tenantProcedure
+  create: staffProcedure
     .input(z.object({
-      title:        z.string().min(1, "El título es requerido"),
-      body:         z.string().min(1, "El cuerpo es requerido"),
+      title:        z.string().min(1, "El título es requerido").max(200),
+      body:         z.string().min(1, "El cuerpo es requerido").max(5000),
       targetAll:    z.boolean().default(true),
-      targetGroups: z.array(z.string()).default([]),
+      targetGroups: z.array(z.string().cuid()).default([]),
     }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.announcement.create({
@@ -47,8 +47,8 @@ export const announcementsRouter = createTRPCRouter({
       });
     }),
 
-  send: tenantProcedure
-    .input(z.object({ id: z.string() }))
+  send: staffProcedure
+    .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const announcement = await ctx.db.announcement.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
@@ -86,8 +86,8 @@ export const announcementsRouter = createTRPCRouter({
       return { ...updated, recipients: created };
     }),
 
-  delete: tenantProcedure
-    .input(z.object({ id: z.string() }))
+  delete: staffProcedure
+    .input(z.object({ id: z.string().cuid() }))
     .mutation(async ({ ctx, input }) => {
       const announcement = await ctx.db.announcement.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { studentFormSchema, studentFormDefaults, type StudentFormValues } from "@/lib/schemas/student.schema";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const sanitizePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
   e.target.value = e.target.value.replace(/\D/g, "").slice(0, 10);
@@ -77,6 +78,7 @@ interface StudentFormProps {
   onCancel:       () => void;
   submitLabel?:   string;
   isEdit?:        boolean;
+  showKarateSection?: boolean;
 }
 
 // ─── Componente principal ─────────────────────────────────────────
@@ -87,7 +89,9 @@ export function StudentForm({
   onCancel,
   submitLabel = "Guardar alumno",
   isEdit = false,
+  showKarateSection = false,
 }: StudentFormProps) {
+  const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -113,6 +117,7 @@ export function StudentForm({
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error inesperado";
       setServerError(msg);
+      toast({ title: "Error", description: msg, variant: "destructive" });
       setIsSubmitting(false);
     }
   }
@@ -132,7 +137,7 @@ export function StudentForm({
 
       {/* ── Datos personales ─────────────────────────── */}
       <SectionTitle>Datos personales</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }} className="sm:grid-cols-2">
         <Field label="Nombre" required error={errors.firstName?.message}>
           <Input
             {...register("firstName")}
@@ -150,7 +155,7 @@ export function StudentForm({
         </Field>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-3">
         <Field label="Fecha de nacimiento" error={errors.birthDate?.message}>
           <Input
             {...register("birthDate")}
@@ -193,7 +198,7 @@ export function StudentForm({
 
       {/* ── Tutor / Responsable ──────────────────────── */}
       <SectionTitle>Tutor / Responsable</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 16 }} className="sm:grid-cols-2">
         <Field label="Nombre del tutor" required error={errors.tutorName?.message}>
           <Input
             {...register("tutorName")}
@@ -213,7 +218,7 @@ export function StudentForm({
         </Field>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
         <Field label="Teléfono del tutor" required error={errors.tutorPhone?.message}>
           <Input
             {...register("tutorPhone", { onChange: sanitizePhone })}
@@ -266,6 +271,27 @@ export function StudentForm({
           </p>
         </Field>
       </div>
+
+      {/* ── Sistema de Karate ────────────────────────── */}
+      {isEdit && showKarateSection && (
+        <>
+          <SectionTitle>🥋 Sistema de Karate</SectionTitle>
+          <div style={{ marginBottom: 28 }}>
+            <Field label="Cinta actual" error={errors.currentBeltColor?.message}>
+              <Select {...register("currentBeltColor")} error={!!errors.currentBeltColor}>
+                <option value="">Sin cinta asignada</option>
+                <option value="WHITE">⚪ Blanca</option>
+                <option value="YELLOW">🟡 Amarilla</option>
+                <option value="ORANGE">🟠 Naranja</option>
+                <option value="GREEN">🟢 Verde</option>
+                <option value="BLUE">🔵 Azul</option>
+                <option value="BROWN">🟤 Marrón</option>
+                <option value="BLACK">⚫ Negra</option>
+              </Select>
+            </Field>
+          </div>
+        </>
+      )}
 
       {/* ── Acciones ─────────────────────────────────── */}
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 16, borderTop: "0.5px solid var(--color-border-tertiary)" }}>

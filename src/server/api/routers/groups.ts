@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import { createTRPCRouter, tenantProcedure, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { GroupLevel, type Prisma } from "@prisma/client";
 
@@ -26,20 +26,31 @@ const scheduleSlotSchema = z.object({
 });
 
 const groupCreateSchema = z.object({
-  name:         z.string().min(2).max(80),
-  disciplineId: z.string().min(1),
-  instructorId: z.string().optional().or(z.literal("")),
-  level:        z.nativeEnum(GroupLevel),
-  capacity:     z.number().int().min(1).max(200),
-  room:         z.string().max(60).optional().or(z.literal("")),
-  schedule:     z.array(scheduleSlotSchema).min(1),
-  monthlyFee:   z.number().int().min(0).max(10_000_000).optional().nullable(),
-  billingDay:   z.number().int().min(1).max(28).optional().nullable(),
+  name:              z.string().min(2).max(80),
+  disciplineId:      z.string().min(1),
+  instructorId:      z.string().optional().or(z.literal("")),
+  level:             z.nativeEnum(GroupLevel),
+  capacity:          z.number().int().min(1).max(200),
+  room:              z.string().max(60).optional().or(z.literal("")),
+  schedule:          z.array(scheduleSlotSchema).min(1),
+  monthlyFee:        z.number().int().min(0).max(10_000_000).optional().nullable(),
+  billingFrequency:  z.enum(["WEEKLY", "BIWEEKLY", "MONTHLY"]).default("MONTHLY"),
+  billingDay:        z.number().int().min(1).max(28).optional().nullable(),
+  billingDayOfWeek:  z.enum(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]).optional().nullable(),
+  billingWeekOfMonth: z.number().int().min(1).max(2).optional().nullable(),
 });
 
 const groupUpdateSchema = groupCreateSchema.partial().extend({
   id: z.string().cuid("ID inválido"),
 });
+
+// ─── Helpers ──────────────────────────────────────────────────────
+
+// El formulario siempre envía el monto en pesos; en BD se guarda en centavos.
+function normalizeMonthlyFee(fee: number | null | undefined): number | null {
+  if (!fee || fee <= 0) return null;
+  return Math.round(fee * 100);
+}
 
 // ─── Router ───────────────────────────────────────────────────────
 
@@ -69,8 +80,8 @@ export const groupsRouter = createTRPCRouter({
 
   list: tenantProcedure
     .input(z.object({
-      search:       z.string().optional(),
-      disciplineId: z.string().optional(),
+      search:       z.string().max(100).optional(),
+      disciplineId: z.string().cuid().optional(),
       level:        z.nativeEnum(GroupLevel).optional(),
       isActive:     z.boolean().optional(),
       page:         z.number().int().min(1).default(1),
@@ -95,7 +106,7 @@ export const groupsRouter = createTRPCRouter({
           where,
           skip,
           take:    input.pageSize,
-          orderBy: { name: "asc" },
+          orderBy: [{ updatedAt: "desc" }, { name: "asc" }],
           include: {
             discipline: { select: { name: true, color: true } },
             instructor: { include: { user: { select: { name: true } } } },
@@ -163,10 +174,23 @@ export const groupsRouter = createTRPCRouter({
 
   // ── Crear grupo ───────────────────────────────────────────────
 
-  create: tenantProcedure
+  create: staffProcedure
     .input(groupCreateSchema)
     .mutation(async ({ ctx, input }) => {
       const { tenantId, db } = ctx;
+
+      // Check if this tenant is a blocked child tenant
+      const tenant = await db.tenant.findUnique({
+        where: { id: tenantId },
+        select: { blockChildWrites: true, blockChildWritesReason: true, name: true },
+      });
+
+      if (tenant?.blockChildWrites) {
+        throw new TRPCError({
+          code:    "FORBIDDEN",
+          message: tenant.blockChildWritesReason || `No puedes agregar grupos a "${tenant?.name}" porque su plan no soporta múltiples escuelas. Cambia a tu escuela principal o actualiza el plan a Enterprise.`,
+        });
+      }
 
       // Verificar límite del plan
       const allowed = await canAddGroup(tenantId);
@@ -198,22 +222,25 @@ export const groupsRouter = createTRPCRouter({
       return db.group.create({
         data: {
           tenantId,
-          name:         input.name,
-          disciplineId: input.disciplineId,
-          instructorId: input.instructorId || null,
-          level:        input.level,
-          capacity:     input.capacity,
-          room:         input.room || null,
-          schedule:     input.schedule as unknown as Prisma.InputJsonValue,
-          monthlyFee:   input.monthlyFee ?? null,
-          billingDay:   input.billingDay ?? null,
+          name:               input.name,
+          disciplineId:       input.disciplineId,
+          instructorId:       input.instructorId || null,
+          level:              input.level,
+          capacity:           input.capacity,
+          room:               input.room || null,
+          schedule:           input.schedule as unknown as Prisma.InputJsonValue,
+          monthlyFee:         normalizeMonthlyFee(input.monthlyFee),
+          billingFrequency:   input.billingFrequency || "MONTHLY",
+          billingDay:         input.billingDay ?? null,
+          billingDayOfWeek:   input.billingDayOfWeek ?? null,
+          billingWeekOfMonth: input.billingWeekOfMonth ?? null,
         },
       });
     }),
 
   // ── Actualizar grupo ──────────────────────────────────────────
 
-  update: tenantProcedure
+  update: staffProcedure
     .input(groupUpdateSchema)
     .mutation(async ({ ctx, input }) => {
       const { id, ...data } = input;
@@ -256,8 +283,11 @@ export const groupsRouter = createTRPCRouter({
       if (data.capacity !== undefined) updateData.capacity = data.capacity;
       if (data.room !== undefined) updateData.room = data.room || null;
       if (data.schedule !== undefined) updateData.schedule = data.schedule as unknown as Prisma.InputJsonValue;
-      if (data.monthlyFee !== undefined) updateData.monthlyFee = data.monthlyFee ?? null;
+      if (data.monthlyFee !== undefined) updateData.monthlyFee = normalizeMonthlyFee(data.monthlyFee);
+      if (data.billingFrequency !== undefined) updateData.billingFrequency = data.billingFrequency;
       if (data.billingDay !== undefined) updateData.billingDay = data.billingDay ?? null;
+      if (data.billingDayOfWeek !== undefined) updateData.billingDayOfWeek = data.billingDayOfWeek ?? null;
+      if (data.billingWeekOfMonth !== undefined) updateData.billingWeekOfMonth = data.billingWeekOfMonth ?? null;
 
       return db.group.update({
         where: { id },
@@ -267,7 +297,7 @@ export const groupsRouter = createTRPCRouter({
 
   // ── Activar / Desactivar grupo ────────────────────────────────
 
-  setActive: tenantProcedure
+  setActive: staffProcedure
     .input(z.object({
       id:       z.string().cuid("ID inválido"),
       isActive: z.boolean(),
@@ -278,6 +308,17 @@ export const groupsRouter = createTRPCRouter({
       });
       if (!existing) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Grupo no encontrado" });
+      }
+
+      // Reactivar cuenta contra el límite del plan igual que crear
+      if (input.isActive && !existing.isActive) {
+        const allowed = await canAddGroup(ctx.tenantId);
+        if (!allowed) {
+          throw new TRPCError({
+            code:    "FORBIDDEN",
+            message: "Has alcanzado el límite de grupos de tu plan. Actualiza tu suscripción para activar más.",
+          });
+        }
       }
 
       // TODO: cuando el módulo de inscripciones esté listo,
@@ -291,7 +332,7 @@ export const groupsRouter = createTRPCRouter({
 
   // ── Eliminar grupo (solo sin inscripciones) ───────────────────
 
-  delete: tenantProcedure
+  delete: staffProcedure
     .input(z.object({ id: z.string().cuid("ID inválido") }))
     .mutation(async ({ ctx, input }) => {
       const group = await ctx.db.group.findFirst({
@@ -313,6 +354,7 @@ export const groupsRouter = createTRPCRouter({
 
       return ctx.db.group.delete({ where: { id: input.id } });
     }),
+
 });
 
 export type GroupsRouter = typeof groupsRouter;

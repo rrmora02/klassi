@@ -16,6 +16,7 @@ const schema = z.object({
   dueDate: z.string().refine(v => !v || !isNaN(Date.parse(v)), "Fecha inválida").optional(),
   markAsPaid: z.boolean().default(false),
   paidAt: z.string().optional(),
+  discountAmount: z.coerce.number().min(0).default(0),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -35,13 +36,40 @@ const dateCls = `${inputCls} [color-scheme:light] dark:[color-scheme:dark]`;
 
 export function NewPaymentModal({ students, onClose }: Props) {
   const router  = useRouter();
+  const utils   = api.useUtils();
   const create  = api.payments.create.useMutation();
   const markPaid = api.payments.markAsPaid.useMutation();
+  const [isCheckingMonthly, setIsCheckingMonthly] = useState(false);
 
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
   const [studentError,    setStudentError]    = useState("");
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountInputValue, setDiscountInputValue] = useState("");
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [existingMonthlyPayment, setExistingMonthlyPayment] = useState<any>(null);
+  const [pendingPaymentData, setPendingPaymentData] = useState<any>(null);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const today = new Date().toISOString().split('T')[0];
+
+  const handleDiscountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputVal = e.target.value;
+    setDiscountInputValue(inputVal);
+
+    if (inputVal === "" || inputVal === ".") {
+      setDiscountAmount(0);
+      return;
+    }
+
+    const parsed = parseFloat(inputVal);
+    if (!isNaN(parsed) && parsed >= 0) {
+      const amountInPesos = amount || 0;
+      const amountInCents = Math.round(amountInPesos * 100);
+      const discountInCents = Math.round(parsed * 100);
+      const maxDiscount = Math.min(amountInCents, discountInCents);
+      setDiscountAmount(maxDiscount);
+    }
+  };
 
   const { register, handleSubmit, watch, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -50,11 +78,76 @@ export function NewPaymentModal({ students, onClose }: Props) {
       dueDate: today,
       markAsPaid: false,
       paidAt: today,
+      discountAmount: 0,
     },
   });
 
   const markAsPaid = watch("markAsPaid");
   const paidAt = watch("paidAt");
+  const amount = watch("amount");
+
+  // Calcular descuento basado en el input actual para sincronización inmediata
+  const amountInCents = Math.round((amount || 0) * 100);
+  const calculatedDiscountAmount = (() => {
+    if (discountInputValue === "" || discountInputValue === ".") {
+      return 0;
+    }
+    const parsed = parseFloat(discountInputValue);
+    if (!isNaN(parsed) && parsed >= 0) {
+      const discountInCents = Math.round(parsed * 100);
+      return Math.min(amountInCents, discountInCents);
+    }
+    return 0;
+  })();
+
+  const discountExceedsAmount = amountInCents > 0 && calculatedDiscountAmount > amountInCents;
+
+  const createPayment = async (data: FormValues, force: boolean = false) => {
+    try {
+      setErrorMessage("");
+      if (force) {
+        setShowConfirmation(false);
+        setPendingPaymentData(null);
+      }
+
+      const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
+
+      const payment = await create.mutateAsync({
+        studentId: selectedStudent!.id,
+        concept:   data.concept,
+        amount:    Math.round(data.amount * 100),
+        method:    data.method,
+        dueDate:   paymentDate,
+        force,
+      });
+
+      if (data.markAsPaid && paidAt) {
+        await markPaid.mutateAsync({
+          id: payment.id,
+          method: data.method,
+          paidAt: new Date(paidAt),
+          discountAmount: calculatedDiscountAmount,
+        });
+      }
+
+      router.refresh();
+      onClose();
+    } catch (error: any) {
+      if (error?.data?.code === "BAD_REQUEST" && error?.message?.includes("Ya existe")) {
+        setShowConfirmation(true);
+        setPendingPaymentData(data);
+        setExistingMonthlyPayment({
+          concept: "Pago existente en este mes",
+          amount: 0,
+          status: "PENDING",
+          message: error?.message
+        });
+      } else {
+        const message = error?.message || "Error al crear el pago";
+        setErrorMessage(message);
+      }
+    }
+  };
 
   const onSubmit = async (data: FormValues) => {
     if (!selectedStudent) {
@@ -63,25 +156,30 @@ export function NewPaymentModal({ students, onClose }: Props) {
     }
     setStudentError("");
 
-    const payment = await create.mutateAsync({
-      studentId: selectedStudent.id,
-      concept:   data.concept,
-      amount:    Math.round(data.amount * 100),
-      method:    data.method,
-      dueDate:   data.dueDate ? new Date(data.dueDate) : undefined,
-    });
+    setIsCheckingMonthly(true);
+    try {
+      const paymentDate = data.dueDate ? new Date(data.dueDate) : new Date();
+      const month = paymentDate.getMonth() + 1;
+      const year = paymentDate.getFullYear();
 
-    // Si se marca como pagado inmediatamente
-    if (data.markAsPaid && paidAt) {
-      await markPaid.mutateAsync({
-        id: payment.id,
-        method: data.method,
-        paidAt: new Date(paidAt),
+      const result = await utils.payments.checkMonthlyPaymentExists.fetch({
+        studentId: selectedStudent.id,
+        month,
+        year,
       });
+
+      if (result.exists && result.payment) {
+        setShowConfirmation(true);
+        setPendingPaymentData(data);
+        return;
+      }
+    } catch (error) {
+      console.error("Error checking payment:", error);
+    } finally {
+      setIsCheckingMonthly(false);
     }
 
-    router.refresh();
-    onClose();
+    await createPayment(data);
   };
 
   return (
@@ -147,34 +245,171 @@ export function NewPaymentModal({ students, onClose }: Props) {
           </div>
 
           {markAsPaid && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
-                  Fecha de pago
-                </label>
-                <input type="date" {...register("paidAt")} className={dateCls} />
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 6 }}>
+                    Fecha de pago
+                  </label>
+                  <input type="date" {...register("paidAt")} className={dateCls} />
+                </div>
               </div>
+
+              {!amount || amount <= 0 ? (
+                <div style={{ background: "rgba(251, 146, 60, 0.1)", borderRadius: 8, padding: 12, border: "1px solid rgba(251, 146, 60, 0.3)" }}>
+                  <p style={{ fontSize: 13, color: "#ea580c", margin: 0 }}>
+                    Ingresa un monto válido para aplicar descuento
+                  </p>
+                </div>
+              ) : (
+                <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-secondary)" }}>
+                    <span>Monto:</span>
+                    <strong>${(amount || 0).toFixed(2)}</strong>
+                  </div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ fontSize: 12, fontWeight: 500, color: "var(--color-text-secondary)", display: "block", marginBottom: 4 }}>
+                        Descuento (MXN)
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={discountInputValue}
+                        onChange={handleDiscountChange}
+                        onBlur={(e) => {
+                          const val = e.target.value.trim();
+                          if (val === "" || val === ".") {
+                            setDiscountInputValue("");
+                          } else {
+                            const num = parseFloat(val);
+                            if (!isNaN(num) && num >= 0 && num <= ((amount || 0))) {
+                              setDiscountInputValue(num.toFixed(2));
+                            }
+                          }
+                        }}
+                        className={inputCls}
+                        placeholder="0.00"
+                        maxLength={10}
+                        autoComplete="off"
+                      />
+                    </div>
+                    <div style={{ textAlign: "right", marginBottom: 10, minWidth: 40 }}>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: amountInCents > 0 ? "var(--color-text-secondary)" : "var(--color-text-tertiary)" }}>
+                        {(amountInCents > 0 ? ((calculatedDiscountAmount / amountInCents) * 100).toFixed(1) : "0")}%
+                      </span>
+                    </div>
+                  </div>
+                  {discountExceedsAmount && (
+                    <p style={{ fontSize: 12, color: "#b91c1c", margin: 0 }}>
+                      El descuento no puede ser mayor al monto
+                    </p>
+                  )}
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--color-text-primary)", fontWeight: 500, paddingTop: 8, borderTop: "1px solid var(--color-border-secondary)" }}>
+                    <span>Total a pagar:</span>
+                    <strong>${((amountInCents - calculatedDiscountAmount) / 100).toFixed(2)}</strong>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {errorMessage && (
+            <div style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+              <p style={{ fontSize: 13, color: "#b91c1c", margin: 0 }}>
+                {errorMessage}
+              </p>
             </div>
           )}
 
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 8 }}>
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end", marginTop: 16 }}>
             <button type="button" onClick={onClose} style={{
               padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
               background: "transparent", fontSize: 13, cursor: "pointer",
             }}>
               Cancelar
             </button>
-            <button type="submit" disabled={create.isLoading || markPaid.isLoading} style={{
+            <button type="submit" disabled={create.isLoading || markPaid.isLoading || !!errorMessage} style={{
               padding: "8px 18px", borderRadius: 8, border: "none",
               background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
-              cursor: (create.isLoading || markPaid.isLoading) ? "not-allowed" : "pointer",
-              opacity: (create.isLoading || markPaid.isLoading) ? 0.6 : 1,
+              cursor: (create.isLoading || markPaid.isLoading || errorMessage) ? "not-allowed" : "pointer",
+              opacity: (create.isLoading || markPaid.isLoading || errorMessage) ? 0.6 : 1,
             }}>
               {create.isLoading ? "Creando..." : markPaid.isLoading ? "Guardando pago..." : "Crear pago"}
             </button>
           </div>
         </form>
       </div>
+
+      {showConfirmation && existingMonthlyPayment && pendingPaymentData && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10000,
+        }}>
+          <div style={{ background: "var(--color-background-primary)", width: 420, borderRadius: 12, padding: 28, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
+              ⚠️ Pago ya existe en este mes
+            </h2>
+            <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "0 0 16px" }}>
+              Este estudiante ya tiene un pago registrado para el mismo mes. ¿Deseas continuar creando otro pago?
+            </p>
+
+            {existingMonthlyPayment.message ? (
+              <div style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                <p style={{ fontSize: 13, color: "#b91c1c", margin: 0 }}>
+                  {existingMonthlyPayment.message}
+                </p>
+              </div>
+            ) : (
+              <div style={{ background: "var(--color-background-secondary)", borderRadius: 8, padding: 12, marginBottom: 16 }}>
+                <p style={{ fontSize: 12, color: "var(--color-text-secondary)", margin: "0 0 8px" }}>
+                  <strong>Pago existente:</strong>
+                </p>
+                <p style={{ fontSize: 13, color: "var(--color-text-primary)", margin: "0 0 4px" }}>
+                  {existingMonthlyPayment.concept}
+                </p>
+                <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: 0 }}>
+                  Monto: ${(existingMonthlyPayment.amount / 100).toFixed(2)} · Estado: <strong>{existingMonthlyPayment.status}</strong>
+                </p>
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfirmation(false);
+                  setPendingPaymentData(null);
+                }}
+                disabled={isCheckingMonthly || create.isLoading}
+                style={{
+                  padding: "8px 18px", borderRadius: 8, border: "1px solid var(--color-border-secondary)",
+                  background: "transparent", fontSize: 13, cursor: "pointer",
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await createPayment(pendingPaymentData, true);
+                  setShowConfirmation(false);
+                  setPendingPaymentData(null);
+                }}
+                disabled={isCheckingMonthly || create.isLoading}
+                style={{
+                  padding: "8px 18px", borderRadius: 8, border: "none",
+                  background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500,
+                  cursor: (isCheckingMonthly || create.isLoading) ? "not-allowed" : "pointer",
+                  opacity: (isCheckingMonthly || create.isLoading) ? 0.6 : 1,
+                }}
+              >
+                {isCheckingMonthly ? "Verificando..." : create.isLoading ? "Creando..." : "Continuar de todas formas"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

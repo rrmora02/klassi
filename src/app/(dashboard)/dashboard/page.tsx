@@ -1,8 +1,11 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { formatCurrency, formatDate, fullName, initials } from "@/lib/utils";
+import { mxCurrentMonthRange } from "@/lib/dates";
 import { StatCard } from "@/components/shared";
+import { ClassAttendanceIndicator } from "@/components/dashboard/class-attendance-indicator";
+import { EventSummaryClient } from "@/components/dashboard/event-summary-client";
 import {
   Users,
   BookOpen,
@@ -16,9 +19,8 @@ import {
 // ─── Data ────────────────────────────────────────────────────────
 
 async function getDashboardData(tenantId: string, userRole?: string, userId?: string) {
-  const now        = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+  const now = new Date();
+  const { from: monthStart, to: monthEnd } = mxCurrentMonthRange();
 
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
@@ -28,7 +30,8 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
   const [
     totalStudents,
     activeGroups,
-    monthRevenue,
+    monthPaymentResult,
+    monthEventPaymentResult,
     overdueCount,
     overduePayments,
     recentStudents,
@@ -40,7 +43,16 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
 
     db.payment.aggregate({
       where: { tenantId, status: "PAID", paidAt: { gte: monthStart, lte: monthEnd } },
-      _sum: { amount: true },
+      _sum: { amount: true, discountAmount: true },
+    }),
+
+    db.eventPayment.aggregate({
+      where: {
+        event: { tenantId },
+        status: "PAID",
+        paidAt: { gte: monthStart, lte: monthEnd },
+      },
+      _sum: { amount: true, discountAmount: true },
     }),
 
     db.payment.count({ where: { tenantId, status: "OVERDUE" } }),
@@ -73,8 +85,12 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
       include: {
         discipline: { select: { name: true, color: true } },
         instructor: { select: { user: { select: { name: true } } } },
+        // Conteo de inscritos aquí mismo: evita una query tRPC por grupo
+        // desde el cliente solo para mostrar "N alumnos".
+        _count: { select: { enrollments: { where: { status: "ACTIVE" } } } },
       },
-      orderBy: { name: "asc" }
+      orderBy: { name: "asc" },
+      take: 100
     }),
   ]);
 
@@ -86,18 +102,30 @@ async function getDashboardData(tenantId: string, userRole?: string, userId?: st
       const schedule = group.schedule as Array<{ day: string }>;
       return Array.isArray(schedule) && schedule.some(s => s.day === todayDayOfWeek);
     })
-    .map(group => ({
-      id: group.id,
-      name: group.name,
-      discipline: group.discipline,
-      instructor: group.instructor?.user.name,
-    }));
+    .map(group => {
+      const schedule = group.schedule as Array<{ day: string; startTime: string; endTime: string }>;
+      const todaySchedule = schedule.find(s => s.day === todayDayOfWeek);
+      return {
+        id: group.id,
+        name: group.name,
+        discipline: group.discipline,
+        instructor: group.instructor?.user.name,
+        startTime: todaySchedule?.startTime,
+        endTime: todaySchedule?.endTime,
+        studentCount: group._count.enrollments,
+      };
+    });
+
+  const monthlyPaymentRevenue = (monthPaymentResult._sum.amount || 0) - (monthPaymentResult._sum.discountAmount || 0);
+  const eventPaymentRevenue = (monthEventPaymentResult._sum.amount || 0) - (monthEventPaymentResult._sum.discountAmount || 0);
 
   return {
     stats: {
       totalStudents,
       activeGroups,
-      monthRevenue: monthRevenue._sum.amount ?? 0,
+      monthRevenue: monthlyPaymentRevenue,
+      eventPaymentsRevenue: eventPaymentRevenue,
+      totalRevenue: monthlyPaymentRevenue + eventPaymentRevenue,
       overdueCount,
     },
     overduePayments,
@@ -117,15 +145,10 @@ function trialDaysLeft(trialEndsAt: Date): number {
 // ─── Page ────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  let user;
+  // Identidad compartida del request (deduplicada con layout/TopBar)
+  let ctx;
   try {
-    user = await db.user.findUnique({
-      where: { clerkId: userId },
-      select: { id: true, activeTenantId: true, activeTenant: true }
-    });
+    ctx = await getCurrentContext();
   } catch (err) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-sm text-red-700">
@@ -137,20 +160,12 @@ export default async function DashboardPage() {
     );
   }
 
-  if (!user || !user.activeTenant) return null; // DashboardLayout redirects this to /onboarding
+  if (!ctx?.activeTenant) return null; // DashboardLayout redirects this to /onboarding
 
-  const tenant = user.activeTenant;
+  const tenant   = ctx.activeTenant;
+  const userRole = ctx.activeRole ?? "RECEPTIONIST";
 
-  // Get user role
-  const tenantUser = await db.tenantUser.findFirst({
-    where: {
-      userId: user.id,
-      tenantId: user.activeTenantId!
-    },
-  });
-  const userRole = tenantUser?.role || "RECEPTIONIST";
-
-  const { stats, overduePayments, recentStudents, groupsWithClassesToday } = await getDashboardData(tenant.id, userRole, user.id);
+  const { stats, overduePayments, recentStudents, groupsWithClassesToday } = await getDashboardData(tenant.id, userRole, ctx.user.id);
 
   const showTrialBanner =
     tenant.status === "TRIAL" && tenant.trialEndsAt && trialDaysLeft(tenant.trialEndsAt) >= 0;
@@ -159,7 +174,7 @@ export default async function DashboardPage() {
   // For INSTRUCTOR role, show simplified dashboard
   if (userRole === "INSTRUCTOR") {
     return (
-      <div className="space-y-6">
+      <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Inicio</h1>
@@ -212,7 +227,7 @@ export default async function DashboardPage() {
           ) : (
             <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
               {groupsWithClassesToday.map((group) => (
-                <li key={group.id} className="flex items-center gap-4 px-5 py-4">
+                <li key={group.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-4">
                   {/* Color indicator */}
                   <div
                     className="h-3 w-3 flex-shrink-0 rounded-full"
@@ -223,20 +238,33 @@ export default async function DashboardPage() {
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/dashboard/grupos/${group.id}`}
-                      className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
+                      className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light block truncate"
                     >
                       {group.name}
                     </Link>
-                    <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                      <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                      {group.startTime && group.endTime && (
+                        <>
+                          <span className="text-gray-300 dark:text-sb-light/30">•</span>
+                          <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-sb-light/60 whitespace-nowrap">
+                            <Clock className="h-3 w-3 flex-shrink-0" />
+                            {group.startTime} - {group.endTime}
+                          </div>
+                        </>
+                      )}
+                      <span className="text-gray-300 dark:text-sb-light/30">•</span>
+                      <ClassAttendanceIndicator count={group.studentCount} />
+                    </div>
                   </div>
 
                   {/* Attendance button */}
                   <Link
                     href={`/dashboard/asistencia?groupId=${group.id}`}
-                    className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green transition-colors"
+                    className="w-full sm:w-auto flex-shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg bg-sb-accent px-3 py-2 text-xs font-medium text-white hover:bg-sb-green transition-colors"
                   >
                     <Clock className="h-3.5 w-3.5" />
-                    Asistencia
+                    <span className="sm:inline">Asistencia</span>
                   </Link>
                 </li>
               ))}
@@ -252,12 +280,13 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <div style={{ maxWidth: 1200, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0 space-y-6">
 
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Inicio</h1>
-        <p className="mt-0.5 text-sm text-gray-500 dark:text-sb-light/70">{tenant.name}</p>
+        {/* Header */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 style={{ fontSize: 22, fontWeight: 500, color: "var(--color-text-primary)", margin: 0 }}>Inicio</h1>
+        <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "4px 0 0" }}>{tenant.name}</p>
       </div>
 
       {/* Trial banner */}
@@ -282,7 +311,7 @@ export default async function DashboardPage() {
       )}
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Alumnos activos"
           value={stats.totalStudents}
@@ -295,8 +324,8 @@ export default async function DashboardPage() {
         />
         <StatCard
           label="Ingresos del mes"
-          value={formatCurrency(stats.monthRevenue)}
-          hint="Pagos recibidos este mes"
+          value={formatCurrency(stats.totalRevenue)}
+          hint={`${formatCurrency(stats.monthRevenue)} mensualidades + ${formatCurrency(stats.eventPaymentsRevenue)} eventos`}
         />
         <StatCard
           label="Adeudos vencidos"
@@ -331,7 +360,7 @@ export default async function DashboardPage() {
         ) : (
           <ul className="divide-y divide-gray-50 dark:divide-[rgba(255,255,255,0.07)]">
             {groupsWithClassesToday.map((group) => (
-              <li key={group.id} className="flex items-center gap-4 px-5 py-4">
+              <li key={group.id} className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-5 sm:py-4">
                 {/* Color indicator */}
                 <div
                   className="h-3 w-3 flex-shrink-0 rounded-full"
@@ -342,16 +371,29 @@ export default async function DashboardPage() {
                 <div className="min-w-0 flex-1">
                   <Link
                     href={`/dashboard/grupos/${group.id}`}
-                    className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light"
+                    className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-sb-accent dark:hover:text-sb-light block truncate"
                   >
                     {group.name}
                   </Link>
-                  <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <p className="text-xs text-gray-500 dark:text-sb-light/60">{group.discipline.name}</p>
+                    {group.startTime && group.endTime && (
+                      <>
+                        <span className="text-gray-300 dark:text-sb-light/30">•</span>
+                        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-sb-light/60 whitespace-nowrap">
+                          <Clock className="h-3 w-3 flex-shrink-0" />
+                          {group.startTime} - {group.endTime}
+                        </div>
+                      </>
+                    )}
+                    <span className="text-gray-300 dark:text-sb-light/30">•</span>
+                    <ClassAttendanceIndicator count={group.studentCount} />
+                  </div>
                 </div>
 
                 {/* Instructor */}
                 {group.instructor && (
-                  <span className="flex-shrink-0 text-xs text-gray-500 dark:text-sb-light/60">
+                  <span className="text-xs text-gray-500 dark:text-sb-light/60 sm:flex-shrink-0">
                     {group.instructor}
                   </span>
                 )}
@@ -359,10 +401,10 @@ export default async function DashboardPage() {
                 {/* Attendance button */}
                 <Link
                   href={`/dashboard/asistencia?groupId=${group.id}`}
-                  className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg bg-sb-accent px-3 py-1.5 text-xs font-medium text-white hover:bg-sb-green transition-colors"
+                  className="w-full sm:w-auto flex-shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg bg-sb-accent px-3 py-2 text-xs font-medium text-white hover:bg-sb-green transition-colors"
                 >
                   <Clock className="h-3.5 w-3.5" />
-                  Asistencia
+                  <span className="sm:inline">Asistencia</span>
                 </Link>
               </li>
             ))}
@@ -513,6 +555,12 @@ export default async function DashboardPage() {
         </section>
       </div>
 
+      {/* Pagos de eventos */}
+      {(() => {
+        const now = new Date();
+        return <EventSummaryClient year={now.getFullYear()} month={now.getMonth() + 1} />;
+      })()}
+
       {/* Quick actions */}
       <section>
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-sb-light/50">
@@ -549,6 +597,7 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-    </div>
+      </div>
+    </>
   );
 }

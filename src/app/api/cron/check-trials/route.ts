@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/server/db";
 import { sendTrialExpiredEmail } from "@/server/services/email.service";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 /**
  * Cron job que verifica trials vencidos.
  * Configurar en vercel.json para correr diario a las 8am.
@@ -16,6 +19,13 @@ export async function GET(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (process.env.NODE_ENV === "production") {
+    const vercelEnv = req.headers.get("x-vercel-deployment-url");
+    const userAgent = req.headers.get("user-agent") ?? "";
+    if (!vercelEnv && !userAgent.includes("vercel-cron")) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   const now = new Date();
@@ -32,13 +42,13 @@ export async function GET(req: NextRequest) {
   });
 
   for (const tenant of trialExpiringSoon) {
-    // Obtener email del admin (la membresía vive en TenantUser)
-    const adminMembership = await db.tenantUser.findFirst({
-      where:   { tenantId: tenant.id, role: "ADMIN" },
+    // Obtener email del admin
+    const adminUser = await db.tenantUser.findFirst({
+      where: { tenantId: tenant.id, role: "ADMIN" },
       include: { user: { select: { email: true, name: true } } },
     });
-    if (adminMembership?.user.email) {
-      await sendTrialExpiredEmail(adminMembership.user.email, tenant.name, /* expiring soon */ false);
+    if (adminUser?.user?.email) {
+      await sendTrialExpiredEmail(adminUser.user.email, tenant.name, /* expiring soon */ false);
     }
   }
 
@@ -59,12 +69,12 @@ export async function GET(req: NextRequest) {
     });
     suspendedIds.push(tenant.id);
 
-    const adminMembership = await db.tenantUser.findFirst({
-      where:   { tenantId: tenant.id, role: "ADMIN" },
+    const adminUser = await db.tenantUser.findFirst({
+      where: { tenantId: tenant.id, role: "ADMIN" },
       include: { user: { select: { email: true, name: true } } },
     });
-    if (adminMembership?.user.email) {
-      await sendTrialExpiredEmail(adminMembership.user.email, tenant.name, /* already expired */ true);
+    if (adminUser?.user?.email) {
+      await sendTrialExpiredEmail(adminUser.user.email, tenant.name, /* already expired */ true);
     }
   }
 

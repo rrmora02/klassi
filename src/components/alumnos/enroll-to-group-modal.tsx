@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { api } from "@/lib/trpc";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 import { GroupLevelBadge } from "@/components/grupos/group-level-badge";
 
 interface Props {
   studentId: string;
+  onEnrollSuccess?: () => void;
 }
 
-export function EnrollToGroupModal({ studentId }: Props) {
+export function EnrollToGroupModal({ studentId, onEnrollSuccess }: Props) {
   const router = useRouter();
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [groupId, setGroupId] = useState("");
 
@@ -27,11 +30,35 @@ export function EnrollToGroupModal({ studentId }: Props) {
     if (!groupId) return;
 
     try {
-      await enroll.mutateAsync({ studentId, groupId, discount: 0 });
-      router.refresh();
+      const result = await enroll.mutateAsync({ studentId, groupId, discount: 0 });
+
+      if (result._isIdempotent) {
+        toast({
+          title: "Ya inscrito",
+          description: "El alumno ya está inscrito en este grupo.",
+        });
+      } else {
+        toast({
+          title: "Inscripción exitosa",
+          description: "El alumno ha sido inscrito al grupo correctamente.",
+        });
+      }
+
       handleClose();
+
+      // Notify parent component to refresh data
+      if (onEnrollSuccess) {
+        onEnrollSuccess();
+      } else {
+        // Fallback: refresh and navigate if no callback provided
+        router.refresh();
+      }
     } catch (err: any) {
-      alert(err.message || "Error al inscribir al alumno.");
+      toast({
+        title: "Error",
+        description: err.message || "No pudimos inscribir al alumno.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -49,10 +76,10 @@ export function EnrollToGroupModal({ studentId }: Props) {
       {isOpen && (
         <div style={{
           position: "fixed", top: 0, left: 0, width: "100%", height: "100%",
-          background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999
+          background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: 16
         }}>
           <div style={{
-            background: "var(--color-background-primary)", width: 500, borderRadius: 12, 
+            background: "var(--color-background-primary)", width: "100%", maxWidth: 500, borderRadius: 12,
             padding: 24, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
             maxHeight: "90vh", display: "flex", flexDirection: "column"
           }}>

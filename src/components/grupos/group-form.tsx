@@ -5,6 +5,7 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { groupFormSchema, groupFormDefaults, type GroupFormValues } from "@/lib/schemas/group.schema";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const inputCls = "w-full rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-sb-light/40 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
 const selectCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house text-gray-900 dark:text-gray-100 px-3.5 py-2.5 text-sm outline-none focus:border-sb-accent dark:focus:border-sb-accent transition-colors";
@@ -107,6 +108,7 @@ export function GroupForm({
   disciplines,
   instructors,
 }: GroupFormProps) {
+  const { toast } = useToast();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -128,8 +130,10 @@ export function GroupForm({
     try {
       await onSubmit(data);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error inesperado a guardar.";
+      const msg = err instanceof Error ? err.message : "Error inesperado al guardar.";
       setServerError(msg);
+      toast({ title: "Error", description: msg, variant: "destructive" });
+      setIsSubmitting(false);
     }
   }
 
@@ -149,8 +153,8 @@ export function GroupForm({
 
       {/* ── Datos generales ──────────────────────────── */}
       <SectionTitle>Datos generales</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <div style={{ gridColumn: "1 / -1", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16 }} className="sm:grid-cols-2">
           <Field label="Nombre del grupo" required error={errors.name?.message}>
             <Input
               {...register("name")}
@@ -172,7 +176,7 @@ export function GroupForm({
           <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 8 }}>
             Modalidad Estratégica
           </label>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }} className="sm:grid-cols-2">
             <label className={cn(
               "block rounded-xl border-[1.5px] p-4 cursor-pointer transition-colors",
               currentType === "FIXED"
@@ -180,8 +184,8 @@ export function GroupForm({
                 : "border-gray-200 dark:border-[rgba(255,255,255,0.15)] bg-white dark:bg-sb-house hover:bg-gray-50 dark:hover:bg-sb-uplift"
             )}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <input type="radio" value="FIXED" {...register("type")} className="mt-1 accent-sb-accent" />
-                <div>
+                <input type="radio" value="FIXED" {...register("type")} className="mt-1 accent-sb-accent" style={{ flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}>
                   <h4 className={cn("m-0 mb-1 text-[13px] font-semibold", currentType === "FIXED" ? "text-sb-green dark:text-sb-light" : "text-gray-800 dark:text-gray-100")}>
                     Estación Fija <span className="text-[11px] font-normal text-sb-accent">(Recomendado)</span>
                   </h4>
@@ -198,8 +202,8 @@ export function GroupForm({
                 : "border-gray-200 dark:border-[rgba(255,255,255,0.15)] bg-white dark:bg-sb-house hover:bg-gray-50 dark:hover:bg-sb-uplift"
             )}>
               <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <input type="radio" value="PROGRESSIVE" {...register("type")} className="mt-1 accent-sb-accent" />
-                <div>
+                <input type="radio" value="PROGRESSIVE" {...register("type")} className="mt-1 accent-sb-accent" style={{ flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}>
                   <h4 className={cn("m-0 mb-1 text-[13px] font-semibold", currentType === "PROGRESSIVE" ? "text-sb-green dark:text-sb-light" : "text-gray-800 dark:text-gray-100")}>
                     Generacional
                   </h4>
@@ -216,7 +220,7 @@ export function GroupForm({
 
       {/* ── Asignación ───────────────────────────────── */}
       <SectionTitle>Asignación</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
         <Field label="Disciplina" required error={errors.disciplineId?.message}>
           <Select {...register("disciplineId")} error={!!errors.disciplineId}>
             <option value="">Selecciona una disciplina</option>
@@ -237,7 +241,7 @@ export function GroupForm({
 
       {/* ── Capacidad y aula ─────────────────────────── */}
       <SectionTitle>Capacidad y aula</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
         <Field label="Capacidad máxima" required error={errors.capacity?.message}>
           <Input
             {...register("capacity", { valueAsNumber: true })}
@@ -272,8 +276,8 @@ export function GroupForm({
                   const newSlot = { day: dayValue as any, startTime: "16:00", endTime: "17:00" };
                   
                   // Copiar horario del último día agregado (si existe) para acelerar data-entry
-                  const lastSlot = field.value[field.value.length - 1];
-                  if (lastSlot) {
+                  if (field.value.length > 0) {
+                     const lastSlot = field.value[field.value.length - 1]!;
                      newSlot.startTime = lastSlot.startTime;
                      newSlot.endTime = lastSlot.endTime;
                   }
@@ -294,14 +298,14 @@ export function GroupForm({
                     const slot = field.value.find(s => s.day === d.value);
                     const isChecked = !!slot;
                     return (
-                      <div key={d.value} style={{ display: "flex", alignItems: "center", minHeight: 38 }}>
+                      <div key={d.value} style={{ display: "flex", flexDirection: "column", gap: 8 }} className="sm:flex-row sm:items-center">
                          {/* Checkbox y Día */}
-                         <label style={{ display: "flex", gap: 10, alignItems: "center", width: 140, cursor: "pointer", opacity: isChecked ? 1 : 0.6 }}>
+                         <label style={{ display: "flex", gap: 10, alignItems: "center", minWidth: "fit-content", cursor: "pointer", opacity: isChecked ? 1 : 0.6 }} className="sm:w-36">
                             <input
                               type="checkbox"
                               checked={isChecked}
                               onChange={(e) => handleToggleDay(d.value, e.target.checked)}
-                              style={{ width: 16, height: 16, cursor: "pointer" }}
+                              style={{ width: 16, height: 16, cursor: "pointer", flexShrink: 0 }}
                             />
                             <span style={{ fontSize: 13, color: "var(--color-text-primary)", fontWeight: isChecked ? 600 : 400 }}>
                               {d.label}
@@ -310,19 +314,19 @@ export function GroupForm({
 
                          {/* Entradas de Tiempo */}
                          {isChecked && slot && (
-                            <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house px-3 py-1.5">
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 rounded-lg border border-gray-200 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-house px-3 py-1.5">
                                <input
                                  type="time"
                                  value={slot.startTime}
                                  onChange={(e) => handleTimeChange(d.value, "startTime", e.target.value)}
-                                 className={timeCls}
+                                 className={cn(timeCls, "w-full sm:w-auto")}
                                />
-                               <span style={{ fontSize: 13, color: "var(--color-text-tertiary)" }}>a</span>
+                               <span style={{ fontSize: 13, color: "var(--color-text-tertiary)", textAlign: "center" }}>a</span>
                                <input
                                  type="time"
                                  value={slot.endTime}
                                  onChange={(e) => handleTimeChange(d.value, "endTime", e.target.value)}
-                                 className={timeCls}
+                                 className={cn(timeCls, "w-full sm:w-auto")}
                                />
                             </div>
                          )}
@@ -347,10 +351,11 @@ export function GroupForm({
         />
       </div>
 
-      {/* ── Cobro mensual ────────────────────────────── */}
-      <SectionTitle>Cobro mensual (opcional)</SectionTitle>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
-        <Field label="Mensualidad (MXN)" error={errors.monthlyFee?.message}>
+      {/* ── Configuración de Cobro ────────────────────────────── */}
+      <SectionTitle>Configuración de cobro (opcional)</SectionTitle>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }} className="sm:grid-cols-2">
+        <Field label="Monto (MXN)" error={errors.monthlyFee?.message}>
           <Input
             {...register("monthlyFee", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
             type="number"
@@ -360,26 +365,106 @@ export function GroupForm({
             error={!!errors.monthlyFee}
           />
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
-            Monto que se cobrará automáticamente cada mes a todos los alumnos del grupo.
+            Monto que se cobrará automáticamente a todos los alumnos del grupo.
           </p>
         </Field>
-        <Field label="Día de cobro" error={errors.billingDay?.message}>
-          <Input
-            {...register("billingDay", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
-            type="number"
-            min={1}
-            max={28}
-            placeholder="Ej: 5"
-            error={!!errors.billingDay}
-          />
+
+        <Field label="Frecuencia de cobro" error={errors.billingFrequency?.message}>
+          <select
+            {...register("billingFrequency")}
+            className="w-full"
+            style={{
+              padding: "8px 12px", borderRadius: 8,
+              border: "0.5px solid var(--color-border-secondary)",
+              background: "var(--color-background-primary)",
+              color: "var(--color-text-primary)",
+              fontSize: 14,
+            }}
+          >
+            <option value="MONTHLY">Mensual</option>
+            <option value="WEEKLY">Semanal</option>
+            <option value="BIWEEKLY">Quincenal</option>
+          </select>
           <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
-            Día del mes en que se generará el cobro (1-28). Deja vacío para no generar cobros automáticos.
+            Define cuándo se generarán los cobros automáticos.
           </p>
         </Field>
       </div>
 
+      {/* Opciones específicas por frecuencia */}
+      {watch("billingFrequency") === "MONTHLY" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }}>
+          <Field label="Día del mes (fecha límite de pago)" error={errors.billingDay?.message}>
+            <Input
+              {...register("billingDay", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
+              type="number"
+              min={1}
+              max={28}
+              placeholder="Ej: 15"
+              error={!!errors.billingDay}
+            />
+            <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+              Día del mes para la fecha límite (1-28). El cobro se generará 2 días antes.
+            </p>
+          </Field>
+        </div>
+      )}
+
+      {watch("billingFrequency") === "WEEKLY" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }}>
+          <Field label="Día de la semana (fecha límite)" error={errors.billingDayOfWeek?.message}>
+            <select
+              {...register("billingDayOfWeek")}
+              style={{
+                width: "100%", padding: "8px 12px", borderRadius: 8,
+                border: "0.5px solid var(--color-border-secondary)",
+                background: "var(--color-background-primary)",
+                color: "var(--color-text-primary)",
+                fontSize: 14,
+              }}
+            >
+              <option value="">Selecciona un día</option>
+              <option value="MON">Lunes</option>
+              <option value="TUE">Martes</option>
+              <option value="WED">Miércoles</option>
+              <option value="THU">Jueves</option>
+              <option value="FRI">Viernes</option>
+              <option value="SAT">Sábado</option>
+              <option value="SUN">Domingo</option>
+            </select>
+            <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+              Día de la semana para la fecha límite. El cobro se generará 2 días antes.
+            </p>
+          </Field>
+        </div>
+      )}
+
+      {watch("billingFrequency") === "BIWEEKLY" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 16, marginBottom: 24 }}>
+          <Field label="Quincena (fecha límite)" error={errors.billingWeekOfMonth?.message}>
+            <select
+              {...register("billingWeekOfMonth", { setValueAs: v => (v === "" || v === null || v === undefined) ? null : Number(v) })}
+              style={{
+                width: "100%", padding: "8px 12px", borderRadius: 8,
+                border: "0.5px solid var(--color-border-secondary)",
+                background: "var(--color-background-primary)",
+                color: "var(--color-text-primary)",
+                fontSize: 14,
+              }}
+            >
+              <option value="">Selecciona una quincena</option>
+              <option value="1">Primera quincena (días 1-15)</option>
+              <option value="2">Segunda quincena (días 16-30)</option>
+            </select>
+            <p style={{ fontSize: 11, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+              Quincena para la fecha límite. El cobro se generará 2 días antes.
+            </p>
+          </Field>
+        </div>
+      )}
+
       {/* ── Acciones ─────────────────────────────────── */}
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, paddingTop: 16, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
+      <div style={{ display: "flex", flexDirection: "column-reverse", gap: 10, paddingTop: 16, borderTop: "0.5px solid var(--color-border-tertiary)" }} className="sm:flex-row sm:justify-end">
         <button
           type="button"
           onClick={onCancel}
@@ -387,8 +472,9 @@ export function GroupForm({
           style={{
             border: "0.5px solid var(--color-border-secondary)", borderRadius: 8,
             padding: "8px 20px", fontSize: 13, background: "transparent",
-            color: "var(--color-text-secondary)", cursor: "pointer",
+            color: "var(--color-text-secondary)", cursor: "pointer", width: "100%"
           }}
+          className="sm:w-auto"
         >
           Cancelar
         </button>
@@ -399,8 +485,9 @@ export function GroupForm({
             background: isSubmitting || (isEdit && !isDirty) ? "#64748b" : "#006241",
             color: "#fff", border: "none", borderRadius: 8,
             padding: "8px 24px", fontSize: 13, fontWeight: 500,
-            cursor: isSubmitting ? "wait" : "pointer",
+            cursor: isSubmitting ? "wait" : "pointer", width: "100%"
           }}
+          className="sm:w-auto"
         >
           {isSubmitting ? "Guardando..." : submitLabel}
         </button>
