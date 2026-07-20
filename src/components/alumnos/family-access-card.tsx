@@ -89,15 +89,15 @@ export function FamilyAccessCard({ studentId }: { studentId: string }) {
           </div>
 
           {link?.userId === parent.userId && (
-            <div style={{ marginTop: 12, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", background: "var(--color-background-secondary)", borderRadius: 10, padding: 14 }}>
+            <div style={{ marginTop: 12, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", background: "var(--color-background-secondary)", borderRadius: 10, padding: 14, minWidth: 0, maxWidth: "100%", overflow: "hidden" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={link.qr} alt="QR de acceso al portal" width={110} height={110} style={{ borderRadius: 8, background: "#fff", padding: 4 }} />
-              <div style={{ flex: 1, minWidth: 220 }}>
+              <img src={link.qr} alt="QR de acceso al portal" width={110} height={110} style={{ borderRadius: 8, background: "#fff", padding: 4, flexShrink: 0 }} />
+              <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                 <p style={{ fontSize: 12, fontWeight: 600, margin: "0 0 6px", color: "var(--color-text-primary)" }}>
                   Escanéalo con el teléfono del tutor, o cópialo y envíaselo:
                 </p>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <code style={{ flex: 1, fontSize: 10.5, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 6, padding: "6px 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
+                  <code style={{ flex: 1, minWidth: 0, maxWidth: "100%", display: "block", fontSize: 10.5, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 6, padding: "6px 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {link.url}
                   </code>
                   <button onClick={handleCopy} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "transparent", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, padding: "6px 10px", fontSize: 11, fontWeight: 600, color: copied ? "#0f766e" : "var(--color-text-secondary)", cursor: "pointer", flexShrink: 0 }}>

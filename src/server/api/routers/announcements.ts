@@ -33,7 +33,13 @@ export const announcementsRouter = createTRPCRouter({
       title:        z.string().min(1, "El título es requerido").max(200),
       body:         z.string().min(1, "El cuerpo es requerido").max(5000),
       targetAll:    z.boolean().default(true),
-      targetGroups: z.array(z.string().cuid()).default([]),
+      // Admite groupIds y alumnos específicos con prefijo "student:<id>"
+      targetGroups: z.array(
+        z.string().refine(
+          (v) => z.string().cuid().safeParse(v.replace(/^student:/, "")).success,
+          "Destinatario inválido",
+        ),
+      ).default([]),
     }))
     .mutation(async ({ ctx, input }) => {
       return ctx.db.announcement.create({
