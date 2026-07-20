@@ -6,6 +6,7 @@ import { api } from "@/lib/trpc";
 import { formatCurrency, formatDate, fullName } from "@/lib/utils";
 import { Clock, Users, DollarSign, CheckCircle, XCircle, Copy, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { ReceiptViewButton } from "@/components/pagos/receipt-view-button";
 
 interface EventDetailClientProps {
   eventId: string;
@@ -304,19 +305,22 @@ export function EventDetailClient({
                       </span>
                     </td>
                     <td className="px-4 py-3 sm:px-5">
-                      <span className="text-xs text-gray-600 dark:text-sb-light/70">
-                        {payment.status === "PAID" ? (
-                          <>
-                            {payment.method === "CASH" && "💵 Efectivo"}
-                            {payment.method === "CARD" && "💳 Tarjeta"}
-                            {payment.method === "TRANSFER" && "🏦 Transferencia"}
-                            {payment.method === "OXXO" && "🏪 OXXO"}
-                            {payment.method === "SPEI" && "📱 SPEI"}
-                          </>
-                        ) : (
-                          "—"
-                        )}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600 dark:text-sb-light/70">
+                          {payment.status === "PAID" ? (
+                            <>
+                              {payment.method === "CASH" && "💵 Efectivo"}
+                              {payment.method === "CARD" && "💳 Tarjeta"}
+                              {payment.method === "TRANSFER" && "🏦 Transferencia"}
+                              {payment.method === "OXXO" && "🏪 OXXO"}
+                              {payment.method === "SPEI" && "📱 SPEI"}
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </span>
+                        {payment.receiptUrl && <ReceiptViewButton kind="event" id={payment.id} />}
+                      </div>
                     </td>
                     <td className="px-4 py-3 sm:px-5">
                       <div className="flex gap-2">

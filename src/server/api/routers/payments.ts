@@ -297,4 +297,37 @@ export const paymentsRouter = createTRPCRouter({
 
       return { exists: !!existingPayment, payment: existingPayment };
     }),
+
+  // ── Comprobante adjuntado por el tutor desde el portal ──────────
+  // receiptUrl guarda la ruta en el bucket privado; aquí se emite la
+  // URL firmada de lectura para que el staff lo revise.
+  getReceiptViewUrl: staffProcedure
+    .input(z.object({ kind: z.enum(["payment", "event"]), id: z.string().cuid() }))
+    .query(async ({ ctx, input }) => {
+      const { createReceiptViewUrl } = await import("@/server/services/storage.service");
+
+      let receiptPath: string | null = null;
+      if (input.kind === "payment") {
+        const payment = await ctx.db.payment.findFirst({
+          where:  { id: input.id, tenantId: ctx.tenantId },
+          select: { receiptUrl: true },
+        });
+        if (!payment) throw new TRPCError({ code: "NOT_FOUND" });
+        receiptPath = payment.receiptUrl;
+      } else {
+        const eventPayment = await ctx.db.eventPayment.findFirst({
+          where:  { id: input.id, event: { tenantId: ctx.tenantId } },
+          select: { receiptUrl: true },
+        });
+        if (!eventPayment) throw new TRPCError({ code: "NOT_FOUND" });
+        receiptPath = eventPayment.receiptUrl;
+      }
+
+      if (!receiptPath) throw new TRPCError({ code: "NOT_FOUND", message: "Este pago no tiene comprobante" });
+      try {
+        return { url: await createReceiptViewUrl(receiptPath) };
+      } catch (err) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: err instanceof Error ? err.message : "Error de almacenamiento" });
+      }
+    }),
 });

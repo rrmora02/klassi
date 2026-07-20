@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MarkAsPaidModal } from "./mark-as-paid-modal";
 import { NewPaymentModal } from "./new-payment-modal";
 import { PaymentStatusBadge } from "./payment-status-badge";
+import { ReceiptViewButton } from "./receipt-view-button";
 import { formatCurrency, formatDate, fullName } from "@/lib/utils";
 import type { PaymentStatus, PaymentMethod } from "@prisma/client";
 
@@ -18,6 +19,7 @@ interface Payment {
   paidAt:         Date | null;
   reference:      string | null;
   discountAmount: number | null;
+  receiptUrl:     string | null;
   student: { firstName: string; lastName: string };
 }
 
@@ -96,14 +98,17 @@ export function PaymentsClient({ payments, students, readOnly = false, readOnlyR
                   <PaymentStatusBadge status={p.status} />
                 </td>
                 <td style={{ padding: "8px 10px", textAlign: "right" }} className="sm:px-3.5 sm:py-2.5">
-                  {(p.status === "PENDING" || p.status === "OVERDUE") && !readOnly && (
-                    <button
-                      onClick={() => setMarkingId(p.id)}
-                      className="inline-flex items-center rounded-full border border-sb-accent/40 dark:border-sb-light/30 bg-sb-light/40 dark:bg-sb-uplift px-2 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light hover:bg-sb-light dark:hover:bg-sb-house transition-colors cursor-pointer whitespace-nowrap"
-                    >
-                      Pagar
-                    </button>
-                  )}
+                  <div style={{ display: "inline-flex", gap: 6, alignItems: "center" }}>
+                    {p.receiptUrl && <ReceiptViewButton kind="payment" id={p.id} />}
+                    {(p.status === "PENDING" || p.status === "OVERDUE") && !readOnly && (
+                      <button
+                        onClick={() => setMarkingId(p.id)}
+                        className="inline-flex items-center rounded-full border border-sb-accent/40 dark:border-sb-light/30 bg-sb-light/40 dark:bg-sb-uplift px-2 py-0.5 text-xs font-medium text-sb-green dark:text-sb-light hover:bg-sb-light dark:hover:bg-sb-house transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        Pagar
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

@@ -62,7 +62,7 @@ export default async function PagosPage({ searchParams }: PageProps) {
     db.payment.findMany({
       where, skip: (page - 1) * pageSize, take: pageSize,
       orderBy: [{ status: "asc" }, { dueDate: "desc" }],
-      select: { id: true, concept: true, amount: true, currency: true, method: true, status: true, dueDate: true, paidAt: true, reference: true, discountAmount: true, student: { select: { firstName: true, lastName: true } } },
+      select: { id: true, concept: true, amount: true, currency: true, method: true, status: true, dueDate: true, paidAt: true, reference: true, discountAmount: true, receiptUrl: true, student: { select: { firstName: true, lastName: true } } },
     }),
     db.payment.count({ where }),
     db.payment.aggregate({
