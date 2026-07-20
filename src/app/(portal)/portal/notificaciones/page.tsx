@@ -4,9 +4,9 @@ import { api } from "@/lib/trpc";
 import { Bell, Megaphone, CreditCard, MessageCircle, CheckCheck } from "lucide-react";
 
 function iconForType(type: string) {
-  if (type === "announcement")     return <Megaphone size={16} style={{ color: "#1D3557" }} />;
-  if (type === "payment.reminder") return <CreditCard size={16} style={{ color: "#b45309" }} />;
-  if (type.startsWith("message"))  return <MessageCircle size={16} style={{ color: "#0f766e" }} />;
+  if (type === "announcement")     return <Megaphone size={16} className="portal-ico-announce" />;
+  if (type === "payment.reminder") return <CreditCard size={16} className="portal-ico-payment" />;
+  if (type.startsWith("message"))  return <MessageCircle size={16} className="portal-ico-message" />;
   return <Bell size={16} style={{ color: "var(--color-text-tertiary)" }} />;
 }
 
@@ -48,7 +48,8 @@ export default function NotificacionesPage() {
           <button
             onClick={() => markAllRead.mutate()}
             disabled={markAllRead.isLoading}
-            style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "0.5px solid var(--color-border-secondary)", borderRadius: 20, padding: "6px 12px", fontSize: 11.5, fontWeight: 600, color: "#1D3557", cursor: "pointer" }}
+            className="portal-accent-text"
+            style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "0.5px solid var(--color-border-secondary)", borderRadius: 20, padding: "6px 12px", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}
           >
             <CheckCheck size={13} /> Marcar leídas
           </button>
@@ -73,16 +74,16 @@ export default function NotificacionesPage() {
               <button
                 key={notification.id}
                 onClick={() => unread && markRead.mutate({ id: notification.id })}
+                className={unread ? "portal-accent-border" : undefined}
                 style={{
                   display: "flex", gap: 10, alignItems: "flex-start", textAlign: "left", cursor: unread ? "pointer" : "default",
                   background: "var(--color-background-primary)",
                   border: "0.5px solid var(--color-border-tertiary)",
-                  borderLeft: unread ? "3px solid #1D3557" : "0.5px solid var(--color-border-tertiary)",
                   borderRadius: 12, padding: "12px 14px", width: "100%",
                   opacity: unread ? 1 : 0.75,
                 }}
               >
-                <span style={{ width: 32, height: 32, borderRadius: 9, background: "var(--color-background-secondary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <span className="portal-icon-bubble" style={{ width: 32, height: 32, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {iconForType(notification.type)}
                 </span>
                 <span style={{ minWidth: 0 }}>

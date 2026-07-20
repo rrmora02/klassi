@@ -81,3 +81,27 @@ body {
     padding: 1rem;
   }
 }
+
+/* ─── Portal de familias — acentos con variante para modo oscuro ──── */
+.portal-accent-text { color: #1D3557; }
+.dark .portal-accent-text { color: #A8C7EA; }
+
+/* !important: los componentes del portal usan estilos inline para el borde base */
+.portal-accent-border { border-left: 3px solid #1D3557 !important; }
+.dark .portal-accent-border { border-left: 3px solid #A8C7EA !important; }
+
+.portal-chip { background: rgba(29, 53, 87, 0.07); color: #1D3557; }
+.dark .portal-chip { background: rgba(255, 255, 255, 0.12); color: #cfe0f5; }
+
+.portal-icon-bubble { background: var(--color-background-secondary); }
+.dark .portal-icon-bubble { background: rgba(255, 255, 255, 0.10); }
+
+.portal-hint { background: rgba(29, 53, 87, 0.06); border: 0.5px solid rgba(29, 53, 87, 0.2); }
+.dark .portal-hint { background: rgba(255, 255, 255, 0.08); border: 0.5px solid rgba(255, 255, 255, 0.18); }
+
+.portal-ico-announce { color: #1D3557; }
+.dark .portal-ico-announce { color: #A8C7EA; }
+.portal-ico-payment { color: #b45309; }
+.dark .portal-ico-payment { color: #f2c078; }
+.portal-ico-message { color: #0f766e; }
+.dark .portal-ico-message { color: #7fd6cb; }

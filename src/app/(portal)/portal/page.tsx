@@ -65,8 +65,7 @@ export default function PortalHomePage() {
               {student.enrollments.length > 0 && (
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
                   {student.enrollments.map((enrollment) => (
-                    <span key={enrollment.id} style={{
-                      background: "rgba(29,53,87,0.07)", color: "#1D3557",
+                    <span key={enrollment.id} className="portal-chip" style={{
                       borderRadius: 20, padding: "3px 10px", fontSize: 11, fontWeight: 500,
                     }}>
                       {enrollment.group.discipline.name} · {enrollment.group.name}
@@ -84,7 +83,7 @@ export default function PortalHomePage() {
         <div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", margin: "6px 0 8px" }}>
             <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>Pagos pendientes</h2>
-            <Link href="/portal/pagos" style={{ fontSize: 12, color: "#1D3557", fontWeight: 600, textDecoration: "none" }}>Ver todos →</Link>
+            <Link href="/portal/pagos" className="portal-accent-text" style={{ fontSize: 12, fontWeight: 600, textDecoration: "none" }}>Ver todos →</Link>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {payments.slice(0, 3).map((payment) => (

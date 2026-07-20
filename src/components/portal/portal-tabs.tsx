@@ -28,10 +28,10 @@ export function PortalTabs() {
         {TABS.map(({ href, label, icon: Icon }) => {
           const active = href === "/portal" ? pathname === "/portal" : pathname.startsWith(href);
           return (
-            <Link key={href} href={href} style={{
+            <Link key={href} href={href} className={active ? "portal-accent-text" : undefined} style={{
               flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
               padding: "10px 0 8px", textDecoration: "none",
-              color: active ? "#1D3557" : "var(--color-text-tertiary)",
+              ...(active ? {} : { color: "var(--color-text-tertiary)" }),
               fontWeight: active ? 600 : 400,
             }}>
               <span style={{ position: "relative" }}>

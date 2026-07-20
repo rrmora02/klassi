@@ -7,7 +7,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { StudentSearchPicker, type StudentOption } from "@/components/shared/student-search-picker";
-import { User } from "lucide-react";
+import { User, Send } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const schema = z.object({
   title: z.string().min(1, "El título es requerido").max(100, "Máximo 100 caracteres"),
@@ -30,8 +31,12 @@ const textareaCls = `${inputCls} resize-y`;
 
 export function AnnouncementForm({ groups, students }: Props) {
   const router  = useRouter();
+  const { toast } = useToast();
   const create  = api.announcements.create.useMutation();
+  const send    = api.announcements.send.useMutation();
 
+  // "Crear" guarda borrador; "Crear y enviar" además lo entrega de inmediato
+  const [sendAfterCreate, setSendAfterCreate] = useState(false);
   const [targetMode,      setTargetMode]      = useState<TargetMode>("all");
   const [selectedGroups,  setSelectedGroups]  = useState<string[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<StudentOption | null>(null);
@@ -63,13 +68,33 @@ export function AnnouncementForm({ groups, students }: Props) {
     }
 
     try {
-      await create.mutateAsync({ title: data.title, body: data.body, targetAll, targetGroups });
+      const created = await create.mutateAsync({ title: data.title, body: data.body, targetAll, targetGroups });
+
+      if (sendAfterCreate) {
+        const result = await send.mutateAsync({ id: created.id });
+        toast({
+          title:       "Comunicado enviado",
+          description: `"${data.title}" se envió a ${result.recipients} ${result.recipients === 1 ? "destinatario" : "destinatarios"}.`,
+        });
+      } else {
+        toast({
+          title:       "Borrador guardado",
+          description: `"${data.title}" quedó listo para enviarse cuando quieras.`,
+        });
+      }
+
       router.push("/dashboard/comunicados");
       router.refresh();
     } catch (err: any) {
-      alert(err.message ?? "Error al crear comunicado");
+      toast({
+        title:       "Error",
+        description: err.message ?? "No se pudo guardar el comunicado",
+        variant:     "destructive",
+      });
     }
   };
+
+  const busy = create.isLoading || send.isLoading;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -163,7 +188,7 @@ export function AnnouncementForm({ groups, students }: Props) {
         )}
       </div>
 
-      <div style={{ display: "flex", gap: 10, paddingTop: 8 }}>
+      <div style={{ display: "flex", gap: 10, paddingTop: 8, flexWrap: "wrap" }}>
         <button
           type="button"
           onClick={() => router.push("/dashboard/comunicados")}
@@ -173,10 +198,20 @@ export function AnnouncementForm({ groups, students }: Props) {
         </button>
         <button
           type="submit"
-          disabled={create.isLoading}
-          style={{ padding: "9px 20px", borderRadius: 8, border: "none", background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500, cursor: create.isLoading ? "not-allowed" : "pointer" }}
+          disabled={busy}
+          onClick={() => setSendAfterCreate(false)}
+          style={{ padding: "9px 20px", borderRadius: 8, border: "1px solid #00754A", background: "transparent", color: "#00754A", fontSize: 13, fontWeight: 500, cursor: busy ? "not-allowed" : "pointer" }}
         >
-          {create.isLoading ? "Guardando..." : "Crear comunicado"}
+          {busy && !sendAfterCreate ? "Guardando..." : "Guardar borrador"}
+        </button>
+        <button
+          type="submit"
+          disabled={busy}
+          onClick={() => setSendAfterCreate(true)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "9px 20px", borderRadius: 8, border: "none", background: "#00754A", color: "#fff", fontSize: 13, fontWeight: 500, cursor: busy ? "not-allowed" : "pointer" }}
+        >
+          <Send size={13} />
+          {busy && sendAfterCreate ? "Enviando..." : "Crear y enviar"}
         </button>
       </div>
     </form>

@@ -84,8 +84,8 @@ export function PushOptIn() {
 
   if (iosNeedsInstall) {
     return (
-      <div style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "rgba(29,53,87,0.06)", border: "0.5px solid rgba(29,53,87,0.2)", borderRadius: 12, padding: "12px 14px" }}>
-        <Bell size={16} style={{ color: "#1D3557", flexShrink: 0, marginTop: 2 }} />
+      <div className="portal-hint" style={{ display: "flex", gap: 10, alignItems: "flex-start", borderRadius: 12, padding: "12px 14px" }}>
+        <Bell size={16} className="portal-accent-text" style={{ flexShrink: 0, marginTop: 2 }} />
         <div style={{ fontSize: 12.5, color: "var(--color-text-secondary)", lineHeight: 1.5 }}>
           <strong style={{ color: "var(--color-text-primary)" }}>Instala la app para recibir avisos.</strong>{" "}
           En iPhone: toca <strong>Compartir</strong> y luego <strong>Añadir a pantalla de inicio</strong>.
