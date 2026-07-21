@@ -19,14 +19,21 @@ export const RECEIPT_CONTENT_TYPES: Record<string, string> = {
 let client: SupabaseClient | null = null;
 
 function getClient(): SupabaseClient {
-  // Una barra final en SUPABASE_URL genera "...supabase.co//storage/..." y
-  // Supabase lo rechaza con "Invalid path specified in request URL"
-  const url = process.env.SUPABASE_URL?.replace(/\/+$/, "");
+  const raw = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
+  if (!raw || !key) {
     throw new Error(
       "Supabase Storage no está configurado. Define SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY.",
     );
+  }
+  // Solo el origen (https://<proyecto>.supabase.co): descarta cualquier sufijo
+  // como /rest/v1, /storage/v1 o barras finales. Un path extra hace que TODAS
+  // las peticiones a Storage fallen con "Invalid path specified in request URL".
+  let url: string;
+  try {
+    url = new URL(raw).origin;
+  } catch {
+    throw new Error("SUPABASE_URL no es una URL válida. Debe ser https://<proyecto>.supabase.co");
   }
   if (!client) {
     client = createClient(url, key, { auth: { persistSession: false } });
