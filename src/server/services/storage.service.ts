@@ -36,6 +36,9 @@ function getStorage() {
 export async function createReceiptUploadUrl(path: string) {
   const { data, error } = await getStorage().createSignedUploadUrl(path);
   if (error || !data) {
+    // "Invalid path" / "Bucket not found" casi siempre = el bucket no existe
+    // o está mal nombrado. Se registra para diagnóstico en el servidor.
+    console.error(`[storage] Falló createSignedUploadUrl. bucket="${RECEIPTS_BUCKET}", path="${path}", error=${error?.message ?? "sin datos"}`);
     throw new Error(`No se pudo preparar la subida del comprobante: ${error?.message ?? "sin datos"}`);
   }
   return { uploadUrl: data.signedUrl, path: data.path };
