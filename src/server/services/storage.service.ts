@@ -18,37 +18,63 @@ export const RECEIPT_CONTENT_TYPES: Record<string, string> = {
 
 let client: SupabaseClient | null = null;
 
-function getStorage() {
+function getClient(): SupabaseClient {
   // Una barra final en SUPABASE_URL genera "...supabase.co//storage/..." y
   // Supabase lo rechaza con "Invalid path specified in request URL"
   const url = process.env.SUPABASE_URL?.replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
     throw new Error(
-      "Supabase Storage no está configurado. Define SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY, y crea el bucket privado 'comprobantes'.",
+      "Supabase Storage no está configurado. Define SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY.",
     );
   }
   if (!client) {
     client = createClient(url, key, { auth: { persistSession: false } });
   }
-  return client.storage.from(RECEIPTS_BUCKET);
+  return client;
+}
+
+// Crea el bucket privado si no existe (idempotente). Registra los buckets
+// existentes para diagnóstico cuando algo no coincide.
+async function ensureBucket(c: SupabaseClient) {
+  const { data: buckets, error: listError } = await c.storage.listBuckets();
+  if (listError) {
+    console.error(`[storage] No se pudieron listar buckets: ${listError.message}`);
+    return;
+  }
+  const names = buckets?.map((b) => b.name) ?? [];
+  if (names.includes(RECEIPTS_BUCKET)) return;
+
+  console.warn(`[storage] El bucket "${RECEIPTS_BUCKET}" no existe (buckets: [${names.join(", ")}]). Creándolo…`);
+  const { error: createError } = await c.storage.createBucket(RECEIPTS_BUCKET, { public: false });
+  if (createError && !/already exists/i.test(createError.message)) {
+    console.error(`[storage] No se pudo crear el bucket "${RECEIPTS_BUCKET}": ${createError.message}`);
+  }
 }
 
 /** URL firmada para que el cliente suba el archivo con un PUT directo. */
 export async function createReceiptUploadUrl(path: string) {
-  const { data, error } = await getStorage().createSignedUploadUrl(path);
-  if (error || !data) {
-    // "Invalid path" / "Bucket not found" casi siempre = el bucket no existe
-    // o está mal nombrado. Se registra para diagnóstico en el servidor.
-    console.error(`[storage] Falló createSignedUploadUrl. bucket="${RECEIPTS_BUCKET}", path="${path}", error=${error?.message ?? "sin datos"}`);
-    throw new Error(`No se pudo preparar la subida del comprobante: ${error?.message ?? "sin datos"}`);
+  const c = getClient();
+
+  let res = await c.storage.from(RECEIPTS_BUCKET).createSignedUploadUrl(path);
+
+  // El fallo más común es que el bucket no exista: asegurarlo y reintentar
+  if (res.error) {
+    await ensureBucket(c);
+    res = await c.storage.from(RECEIPTS_BUCKET).createSignedUploadUrl(path);
   }
-  return { uploadUrl: data.signedUrl, path: data.path };
+
+  if (res.error || !res.data) {
+    console.error(`[storage] Falló createSignedUploadUrl. bucket="${RECEIPTS_BUCKET}", path="${path}", error=${res.error?.message ?? "sin datos"}`);
+    throw new Error(`No se pudo preparar la subida del comprobante: ${res.error?.message ?? "sin datos"}`);
+  }
+  return { uploadUrl: res.data.signedUrl, path: res.data.path };
 }
 
 /** URL firmada de lectura (5 minutos por defecto). */
 export async function createReceiptViewUrl(path: string, expiresInSeconds = 300) {
-  const { data, error } = await getStorage().createSignedUrl(path, expiresInSeconds);
+  const c = getClient();
+  const { data, error } = await c.storage.from(RECEIPTS_BUCKET).createSignedUrl(path, expiresInSeconds);
   if (error || !data) {
     throw new Error(`No se pudo generar el enlace del comprobante: ${error?.message ?? "sin datos"}`);
   }
