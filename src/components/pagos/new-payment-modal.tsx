@@ -169,6 +169,9 @@ export function NewPaymentModal({ students, onClose }: Props) {
       });
 
       if (result.exists && result.payment) {
+        // Sin esto el modal de confirmación no se renderiza (requiere las tres
+        // piezas de estado) y el formulario parecía no hacer nada
+        setExistingMonthlyPayment(result.payment);
         setShowConfirmation(true);
         setPendingPaymentData(data);
         return;
