@@ -3,7 +3,14 @@
  * Precaché completo con Serwist queda como mejora posterior.
  */
 
-const CACHE = "klassi-v1";
+// Subir la versión purga las cachés viejas en 'activate'
+const CACHE = "klassi-v2";
+
+// En desarrollo el service worker no debe cachear: serviría JS/HTML obsoleto
+// que rompe la hidratación y oculta componentes nuevos. Solo actúa en prod.
+const IS_DEV =
+  self.location.hostname === "localhost" ||
+  self.location.hostname === "127.0.0.1";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
@@ -58,6 +65,9 @@ self.addEventListener("notificationclick", (event) => {
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
+
+  // En local: pasar directo a la red, sin caché (evita bundles obsoletos)
+  if (IS_DEV) return;
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
