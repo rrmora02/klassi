@@ -19,7 +19,9 @@ export const RECEIPT_CONTENT_TYPES: Record<string, string> = {
 let client: SupabaseClient | null = null;
 
 function getStorage() {
-  const url = process.env.SUPABASE_URL;
+  // Una barra final en SUPABASE_URL genera "...supabase.co//storage/..." y
+  // Supabase lo rechaza con "Invalid path specified in request URL"
+  const url = process.env.SUPABASE_URL?.replace(/\/+$/, "");
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
     throw new Error(
