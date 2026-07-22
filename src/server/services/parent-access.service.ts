@@ -16,16 +16,14 @@ export function hasRealClerkAccount(clerkId: string) {
   return !clerkId.startsWith("pending_");
 }
 
+type LocalUser = { id: string; name: string; email: string; clerkId: string };
+
 /**
- * Garantiza que el User local tenga una cuenta real en Clerk.
- * Si el correo ya existe en Clerk (p. ej. el tutor ya usa Klassi en otra
- * escuela) se reutiliza esa cuenta; si no, se crea sin contraseña —
- * el tutor entra por enlace mágico y decide después si crea una.
+ * (Re)crea la cuenta de Clerk del tutor a partir de su correo y actualiza el
+ * clerkId local. Si el correo ya existe en Clerk (mismo tutor en otra escuela)
+ * se reutiliza; si no, se crea sin contraseña. Requiere correo real.
  */
-export async function ensureParentClerkAccount(localUserId: string) {
-  const user = await db.user.findUnique({ where: { id: localUserId } });
-  if (!user) throw new Error("Usuario no encontrado");
-  if (hasRealClerkAccount(user.clerkId)) return user;
+async function provisionClerkAccount(user: LocalUser) {
   if (isPlaceholderEmail(user.email)) {
     throw new Error("El tutor no tiene correo registrado. Agrega su correo en la ficha del alumno para generar el acceso.");
   }
@@ -61,19 +59,44 @@ export async function ensureParentClerkAccount(localUserId: string) {
 }
 
 /**
+ * Garantiza que el User local tenga una cuenta real en Clerk.
+ * Si ya la tiene (clerkId no es "pending_"), se asume válida; la verificación
+ * real ocurre al emitir el token (createPortalAccessLink reaprovisiona si está
+ * obsoleta).
+ */
+export async function ensureParentClerkAccount(localUserId: string) {
+  const user = await db.user.findUnique({ where: { id: localUserId } });
+  if (!user) throw new Error("Usuario no encontrado");
+  if (hasRealClerkAccount(user.clerkId)) return user;
+  return provisionClerkAccount(user);
+}
+
+/**
  * Genera un enlace mágico al portal: un solo uso, expira en 7 días,
  * regenerable desde la ficha del alumno cuantas veces haga falta.
  */
 export async function createPortalAccessLink(localUserId: string) {
-  const user = await ensureParentClerkAccount(localUserId);
+  let user = await ensureParentClerkAccount(localUserId);
 
   const { clerkClient } = await import("@clerk/nextjs/server");
   const client = await clerkClient();
 
-  const token = await client.signInTokens.createSignInToken({
-    userId:           user.clerkId,
-    expiresInSeconds: LINK_EXPIRY_DAYS * 24 * 60 * 60,
-  });
+  const mkToken = (clerkId: string) =>
+    client.signInTokens.createSignInToken({
+      userId:           clerkId,
+      expiresInSeconds: LINK_EXPIRY_DAYS * 24 * 60 * 60,
+    });
+
+  let token;
+  try {
+    token = await mkToken(user.clerkId);
+  } catch (err) {
+    // El clerkId guardado puede estar obsoleto (la cuenta se borró en Clerk):
+    // reaprovisionar por correo y reintentar una vez.
+    console.warn(`[parent-access] clerkId obsoleto para user ${user.id}, reaprovisionando:`, err instanceof Error ? err.message : err);
+    user  = await provisionClerkAccount(user);
+    token = await mkToken(user.clerkId);
+  }
 
   const app = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   return {
