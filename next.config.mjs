@@ -29,7 +29,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://img.clerk.com https://*.clerk.com",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://*.sentry.io https://api.stripe.com https://challenges.cloudflare.com wss:",
+      "connect-src 'self' https://*.clerk.com https://*.clerk.accounts.dev https://*.sentry.io https://api.stripe.com https://challenges.cloudflare.com https://*.supabase.co wss:",
       "frame-src 'self' https://js.stripe.com https://*.clerk.com https://challenges.cloudflare.com",
       "worker-src 'self' blob:",
       "object-src 'none'",
