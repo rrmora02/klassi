@@ -5,6 +5,7 @@ import { type Prisma } from "@prisma/client";
 import { loggingService } from "@/server/logging/loggingService";
 import { validateAttendanceToken } from "@/server/utils/attendanceToken";
 import { createNotifications, dispatchPendingDeliveries } from "@/server/services/notification.service";
+import { formatCurrency } from "@/lib/utils";
 
 // ─── Validación ───────────────────────────────────────────────────
 
@@ -474,6 +475,25 @@ export const eventsRouter = createTRPCRouter({
             finalAmount: payment.amount - input.discountAmount,
           },
         });
+      }
+
+      // Notificar al padre que su pago de evento quedó registrado
+      if (oldPayment.status !== "PAID") {
+        const [event, parents] = await Promise.all([
+          db.event.findUnique({ where: { id: updatedPayment.eventId }, select: { name: true } }),
+          db.parentStudent.findMany({ where: { studentId: updatedPayment.studentId }, select: { userId: true } }),
+        ]);
+        if (parents.length > 0) {
+          await createNotifications({
+            tenantId,
+            userIds: parents.map((p) => p.userId),
+            type:    "payment.paid",
+            title:   "Pago registrado",
+            body:    `Tu pago de "${event?.name ?? "el evento"}" (${formatCurrency(updatedPayment.amount - input.discountAmount)}) quedó registrado. ¡Gracias!`,
+            data:    { url: "/portal/pagos" },
+          }).catch((err) => console.error("[events.markAsPaid] notify error:", err));
+          await dispatchPendingDeliveries().catch(() => {});
+        }
       }
 
       return updatedPayment;

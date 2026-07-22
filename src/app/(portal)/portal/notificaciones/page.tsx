@@ -1,12 +1,14 @@
 "use client";
 
 import { api } from "@/lib/trpc";
-import { Bell, Megaphone, CreditCard, MessageCircle, CheckCheck } from "lucide-react";
+import { Bell, Megaphone, CreditCard, MessageCircle, CheckCheck, CheckCircle2, PartyPopper } from "lucide-react";
 
 function iconForType(type: string) {
-  if (type === "announcement")     return <Megaphone size={16} className="portal-ico-announce" />;
-  if (type === "payment.reminder") return <CreditCard size={16} className="portal-ico-payment" />;
-  if (type.startsWith("message"))  return <MessageCircle size={16} className="portal-ico-message" />;
+  if (type === "announcement")       return <Megaphone size={16} className="portal-ico-announce" />;
+  if (type === "payment.paid")       return <CheckCircle2 size={16} className="portal-ico-message" />;
+  if (type.startsWith("payment"))    return <CreditCard size={16} className="portal-ico-payment" />;
+  if (type === "event.invitation")   return <PartyPopper size={16} className="portal-ico-announce" />;
+  if (type.startsWith("message"))    return <MessageCircle size={16} className="portal-ico-message" />;
   return <Bell size={16} style={{ color: "var(--color-text-tertiary)" }} />;
 }
 

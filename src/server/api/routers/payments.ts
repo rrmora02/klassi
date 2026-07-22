@@ -4,6 +4,8 @@ import { mxMonthRange, mxYearMonth } from "@/lib/dates";
 import { TRPCError } from "@trpc/server";
 import { PaymentMethod, PaymentStatus } from "@prisma/client";
 import { loggingService } from "@/server/logging/loggingService";
+import { createNotifications, dispatchPendingDeliveries } from "@/server/services/notification.service";
+import { formatCurrency } from "@/lib/utils";
 
 export const paymentsRouter = createTRPCRouter({
 
@@ -236,6 +238,25 @@ export const paymentsRouter = createTRPCRouter({
       }
 
       await Promise.all(loggingPromises);
+
+      // Notificar al padre que su pago quedó registrado (solo al pasar a PAID)
+      if (oldPayment?.status !== "PAID") {
+        const parents = await ctx.db.parentStudent.findMany({
+          where:  { studentId: updatedPayment.studentId },
+          select: { userId: true },
+        });
+        if (parents.length > 0) {
+          await createNotifications({
+            tenantId: ctx.tenantId,
+            userIds:  parents.map((p) => p.userId),
+            type:     "payment.paid",
+            title:    "Pago registrado",
+            body:     `Tu pago de "${updatedPayment.concept}" (${formatCurrency(updatedPayment.amount - discountAmount, updatedPayment.currency)}) quedó registrado. ¡Gracias!`,
+            data:     { url: "/portal/pagos" },
+          }).catch((err) => console.error("[payments.markAsPaid] notify error:", err));
+          await dispatchPendingDeliveries().catch(() => {});
+        }
+      }
 
       return updatedPayment;
     }),
