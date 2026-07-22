@@ -96,8 +96,8 @@ export function FamilyAccessCard({ studentId }: { studentId: string }) {
                 <p style={{ fontSize: 12, fontWeight: 600, margin: "0 0 6px", color: "var(--color-text-primary)" }}>
                   Escanéalo con el teléfono del tutor, o cópialo y envíaselo:
                 </p>
-                <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0 }}>
-                  <code style={{ flex: 1, minWidth: 0, maxWidth: "100%", display: "block", fontSize: 10.5, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 6, padding: "6px 8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ display: "flex", gap: 8, alignItems: "flex-start", minWidth: 0 }}>
+                  <code style={{ flex: 1, minWidth: 0, maxWidth: "100%", fontSize: 10.5, background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 6, padding: "6px 8px", whiteSpace: "normal", overflowWrap: "anywhere", wordBreak: "break-all", maxHeight: 60, overflowY: "auto" }}>
                     {link.url}
                   </code>
                   <button onClick={handleCopy} style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "transparent", border: "0.5px solid var(--color-border-secondary)", borderRadius: 6, padding: "6px 10px", fontSize: 11, fontWeight: 600, color: copied ? "#0f766e" : "var(--color-text-secondary)", cursor: "pointer", flexShrink: 0 }}>
