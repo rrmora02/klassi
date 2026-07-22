@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { type Prisma } from "@prisma/client";
 import { loggingService } from "@/server/logging/loggingService";
 import { validateAttendanceToken } from "@/server/utils/attendanceToken";
+import { createNotifications, dispatchPendingDeliveries } from "@/server/services/notification.service";
 
 // ─── Validación ───────────────────────────────────────────────────
 
@@ -120,6 +121,23 @@ export const eventsRouter = createTRPCRouter({
         await db.eventPayment.createMany({
           data: eventPayments,
         });
+
+        // Notificar a los padres para que confirmen asistencia desde el portal
+        const parents = await db.parentStudent.findMany({
+          where:  { studentId: { in: studentIds } },
+          select: { userId: true },
+        });
+        if (parents.length > 0) {
+          await createNotifications({
+            tenantId,
+            userIds: parents.map((p) => p.userId),
+            type:    "event.invitation",
+            title:   `Nuevo evento: ${input.name}`,
+            body:    `Confirma en la app si tu alumno asistirá a "${input.name}".`,
+            data:    { url: "/portal/pagos" },
+          }).catch((err) => console.error("[events.create] notify error:", err));
+          await dispatchPendingDeliveries().catch(() => {});
+        }
 
         await loggingService.logAudit({
           tenantId,

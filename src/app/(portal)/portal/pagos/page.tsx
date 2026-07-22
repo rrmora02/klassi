@@ -4,6 +4,7 @@ import { api } from "@/lib/trpc";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { CreditCard, PartyPopper } from "lucide-react";
 import { ReceiptUpload } from "@/components/portal/receipt-upload";
+import { EventPaymentCard } from "@/components/portal/event-payment-card";
 
 const STATUS_STYLE: Record<string, { label: string; bg: string; color: string }> = {
   PENDING:   { label: "Pendiente", bg: "rgba(245,158,11,0.12)", color: "#b45309" },
@@ -90,42 +91,9 @@ export default function PagosPage() {
                 <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>Eventos</h2>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {(eventPayments ?? []).map((eventPayment) => {
-                  const style = STATUS_STYLE[eventPayment.status] ?? STATUS_STYLE.PENDING!;
-                  const total = eventPayment.amount - eventPayment.discountAmount;
-                  return (
-                    <div key={eventPayment.id} style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "13px 14px" }}>
-                      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-                        <div style={{ minWidth: 0 }}>
-                          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>
-                            {eventPayment.event.name}
-                          </p>
-                          <p style={{ fontSize: 11.5, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>
-                            {eventPayment.student.firstName} {eventPayment.student.lastName} · {eventPayment.event.tenant.name}
-                          </p>
-                          <p style={{ fontSize: 11.5, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>
-                            {eventPayment.status === "PAID" && eventPayment.paidAt
-                              ? `Pagado el ${formatDate(eventPayment.paidAt)}`
-                              : `Vence ${formatDate(eventPayment.dueDate)}`}
-                          </p>
-                        </div>
-                        <div style={{ textAlign: "right", flexShrink: 0 }}>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)", margin: 0 }}>
-                            {formatCurrency(total)}
-                          </p>
-                          <span style={{ display: "inline-block", background: style.bg, color: style.color, borderRadius: 20, padding: "1px 8px", fontSize: 10, fontWeight: 600, marginTop: 4 }}>
-                            {style.label}
-                          </span>
-                        </div>
-                      </div>
-                      {eventPayment.status === "PENDING" && (
-                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-                          <ReceiptUpload kind="event" id={eventPayment.id} hasReceipt={!!eventPayment.receiptUrl} onUploaded={refresh} />
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {(eventPayments ?? []).map((eventPayment) => (
+                  <EventPaymentCard key={eventPayment.id} eventPayment={eventPayment} onChange={refresh} />
+                ))}
               </div>
             </>
           )}

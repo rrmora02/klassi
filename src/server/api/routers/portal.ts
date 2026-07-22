@@ -137,15 +137,49 @@ export const portalRouter = createTRPCRouter({
     if (studentIds.length === 0) return [];
 
     return ctx.db.eventPayment.findMany({
-      where:   { studentId: { in: studentIds }, status: { in: ["PENDING", "PAID"] } },
+      where:   { studentId: { in: studentIds }, status: { in: ["PENDING", "PAID", "NOT_ATTENDING"] } },
       orderBy: [{ status: "asc" }, { dueDate: "desc" }],
       take:    50,
       include: {
         student: { select: { id: true, firstName: true, lastName: true } },
-        event:   { select: { name: true, tenant: { select: { name: true } } } },
+        event:   { select: { name: true, description: true, tenant: { select: { name: true } } } },
       },
     });
   }),
+
+  // Confirmar (o rechazar) asistencia a un evento desde la app.
+  // Reemplaza el flujo del enlace público de WhatsApp: aquí el tutor está
+  // autenticado y solo puede confirmar por sus propios hijos.
+  confirmEventAttendance: protectedProcedure
+    .input(z.object({ eventPaymentId: z.string().cuid(), willAttend: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.dbUser) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+      const eventPayment = await ctx.db.eventPayment.findFirst({
+        where: {
+          id:      input.eventPaymentId,
+          student: { parents: { some: { userId: ctx.dbUser.id } } },
+        },
+      });
+      if (!eventPayment) throw new TRPCError({ code: "NOT_FOUND", message: "Evento no encontrado" });
+
+      // Nunca degradar un pago ya realizado; solo actualizar la confirmación
+      const newStatus = eventPayment.status === "PAID"
+        ? "PAID"
+        : input.willAttend ? "PENDING" : "NOT_ATTENDING";
+
+      await ctx.db.eventPayment.update({
+        where: { id: input.eventPaymentId },
+        data: {
+          willAttend:   input.willAttend,
+          status:       newStatus,
+          confirmedAt:  new Date(),
+          confirmedVia: "portal",
+        },
+      });
+
+      return { ok: true, willAttend: input.willAttend };
+    }),
 
   // ── Comprobantes de pago ────────────────────────────────────────
 
