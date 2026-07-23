@@ -1,7 +1,25 @@
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure } from "@/server/api/trpc";
+import type { TRPCContext } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { loggingService } from "@/server/logging/loggingService";
+
+// Un instructor solo puede pasar lista a SUS grupos asignados. El staff
+// (ADMIN/RECEPTIONIST) puede a cualquiera de la escuela. Se valida en el
+// servidor —no solo en la UI— porque el portal expone esto en el teléfono.
+async function assertGroupAccess(ctx: TRPCContext, groupId: string) {
+  const tenantUser = await ctx.db.tenantUser.findFirst({
+    where:  { tenantId: ctx.tenantId!, userId: ctx.dbUser!.id },
+    select: { role: true },
+  });
+  if (tenantUser?.role !== "INSTRUCTOR") return; // staff/admin: sin restricción
+
+  const owned = await ctx.db.group.findFirst({
+    where:  { id: groupId, tenantId: ctx.tenantId!, instructor: { userId: ctx.dbUser!.id } },
+    select: { id: true },
+  });
+  if (!owned) throw new TRPCError({ code: "FORBIDDEN", message: "No tienes este grupo asignado" });
+}
 
 export const attendanceRouter = createTRPCRouter({
 
@@ -50,6 +68,8 @@ export const attendanceRouter = createTRPCRouter({
        dateString: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     }))
     .mutation(async ({ ctx, input }) => {
+       await assertGroupAccess(ctx, input.groupId);
+
        const group = await ctx.db.group.findFirst({
          where: { id: input.groupId, tenantId: ctx.tenantId },
          select: { schedule: true }
@@ -91,6 +111,8 @@ export const attendanceRouter = createTRPCRouter({
        dateString: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     }))
     .query(async ({ ctx, input }) => {
+       await assertGroupAccess(ctx, input.groupId);
+
        const dateObj = new Date(input.dateString + "T00:00:00Z");
 
        // Parallelizar queries 1 y 3 (group + enrollments sin attendances primero)
@@ -183,6 +205,7 @@ export const attendanceRouter = createTRPCRouter({
        if (session.group.tenantId !== ctx.tenantId) {
          throw new TRPCError({ code: "FORBIDDEN" });
        }
+       await assertGroupAccess(ctx, session.groupId);
 
        const newAttendance = await ctx.db.attendance.upsert({
          where: {

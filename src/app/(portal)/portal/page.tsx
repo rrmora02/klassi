@@ -3,18 +3,21 @@
 import { api } from "@/lib/trpc";
 import { formatCurrency, formatDate, fullName } from "@/lib/utils";
 import { PushOptIn } from "@/components/pwa/push-opt-in";
-import { GraduationCap, AlertCircle } from "lucide-react";
+import { GraduationCap, AlertCircle, ClipboardList, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 export default function PortalHomePage() {
   const { data, isLoading } = api.portal.summary.useQuery();
+  const { data: viewer }    = api.portal.viewer.useQuery();
 
   if (isLoading) {
     return <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", textAlign: "center", padding: "48px 0" }}>Cargando…</p>;
   }
 
-  const students = data?.students ?? [];
-  const payments = data?.pendingPayments ?? [];
+  const students   = data?.students ?? [];
+  const payments   = data?.pendingPayments ?? [];
+  const isInstructor = viewer?.isInstructor ?? false;
+  const isParent     = viewer?.isParent ?? students.length > 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -29,8 +32,27 @@ export default function PortalHomePage() {
 
       <PushOptIn />
 
+      {/* Acceso rápido del instructor */}
+      {isInstructor && (
+        <Link href="/portal/asistencia" style={{ textDecoration: "none" }}>
+          <div style={{ background: "#1D3557", borderRadius: 12, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14 }}>
+            <span style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <ClipboardList size={20} style={{ color: "#fff" }} />
+            </span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 14.5, fontWeight: 600, color: "#fff", margin: 0 }}>Pase de lista</p>
+              <p style={{ fontSize: 12, color: "rgba(255,255,255,0.75)", margin: "2px 0 0" }}>
+                Registra la asistencia de tus grupos
+              </p>
+            </div>
+            <ChevronRight size={18} style={{ color: "rgba(255,255,255,0.75)", flexShrink: 0 }} />
+          </div>
+        </Link>
+      )}
+
       {/* Alumnos */}
       {students.length === 0 ? (
+        !isParent && isInstructor ? null : (
         <div style={{ background: "var(--color-background-primary)", border: "0.5px dashed var(--color-border-tertiary)", borderRadius: 12, padding: "40px 20px", textAlign: "center" }}>
           <GraduationCap size={28} style={{ color: "var(--color-text-tertiary)", marginBottom: 8 }} />
           <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-secondary)", margin: 0 }}>
@@ -40,6 +62,7 @@ export default function PortalHomePage() {
             Pide a tu escuela que te envíe una invitación
           </p>
         </div>
+        )
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {students.map((student) => (

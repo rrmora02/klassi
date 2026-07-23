@@ -2,21 +2,30 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bell, CreditCard, User } from "lucide-react";
+import { Home, Bell, CreditCard, User, ClipboardList } from "lucide-react";
 import { api } from "@/lib/trpc";
 
-const TABS = [
-  { href: "/portal",                label: "Inicio",         icon: Home },
-  { href: "/portal/notificaciones", label: "Notificaciones", icon: Bell },
-  { href: "/portal/pagos",          label: "Pagos",          icon: CreditCard },
-  { href: "/portal/cuenta",         label: "Cuenta",         icon: User },
-];
+const HOME    = { href: "/portal",                label: "Inicio",         icon: Home };
+const ASIST   = { href: "/portal/asistencia",     label: "Asistencia",     icon: ClipboardList };
+const NOTIF   = { href: "/portal/notificaciones", label: "Notificaciones", icon: Bell };
+const PAGOS   = { href: "/portal/pagos",          label: "Pagos",          icon: CreditCard };
+const CUENTA  = { href: "/portal/cuenta",         label: "Cuenta",         icon: User };
 
 export function PortalTabs() {
   const pathname = usePathname();
   const { data: unread } = api.notifications.unreadCount.useQuery(undefined, {
     refetchInterval: 60_000,
   });
+  const { data: viewer } = api.portal.viewer.useQuery();
+
+  // Pestañas según el rol: el instructor ve "Asistencia"; el tutor, "Pagos".
+  const TABS = [
+    HOME,
+    ...(viewer?.isInstructor ? [ASIST] : []),
+    NOTIF,
+    ...(viewer?.isParent || !viewer?.isInstructor ? [PAGOS] : []),
+    CUENTA,
+  ];
 
   return (
     <nav style={{

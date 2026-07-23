@@ -69,6 +69,28 @@ const UPLOADABLE_STATUSES = ["PENDING", "OVERDUE"];
 
 export const portalRouter = createTRPCRouter({
 
+  // Quién está viendo el portal: un mismo login puede ser tutor (tiene hijos
+  // vinculados) y/o instructor (rol INSTRUCTOR en su escuela). Con esto el
+  // portal muestra las pestañas correctas (p. ej. "Asistencia" al instructor).
+  viewer: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.dbUser) throw new TRPCError({ code: "UNAUTHORIZED" });
+
+    const [parentLinks, instructorMembership] = await Promise.all([
+      ctx.db.parentStudent.count({ where: { userId: ctx.dbUser.id } }),
+      ctx.db.tenantUser.findFirst({
+        where:   { userId: ctx.dbUser.id, role: "INSTRUCTOR" },
+        select:  { tenant: { select: { name: true } } },
+      }),
+    ]);
+
+    return {
+      name:         ctx.dbUser.name,
+      isParent:     parentLinks > 0,
+      isInstructor: !!instructorMembership,
+      schoolName:   instructorMembership?.tenant.name ?? null,
+    };
+  }),
+
   summary: protectedProcedure.query(async ({ ctx }) => {
     if (!ctx.dbUser) throw new TRPCError({ code: "UNAUTHORIZED" });
 
