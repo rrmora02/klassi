@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Bell, CreditCard } from "lucide-react";
+import { Home, Bell, CreditCard, User } from "lucide-react";
 import { api } from "@/lib/trpc";
 
 const TABS = [
   { href: "/portal",                label: "Inicio",         icon: Home },
   { href: "/portal/notificaciones", label: "Notificaciones", icon: Bell },
   { href: "/portal/pagos",          label: "Pagos",          icon: CreditCard },
+  { href: "/portal/cuenta",         label: "Cuenta",         icon: User },
 ];
 
 export function PortalTabs() {
