@@ -20,6 +20,7 @@ import {
   AlertTriangle,
   Beaker,
   Receipt,
+  Smartphone,
 } from "lucide-react";
 
 const ALL_NAV_ITEMS = [
@@ -32,6 +33,9 @@ const ALL_NAV_ITEMS = [
   { label: "Pagos",        href: "/dashboard/pagos",                    icon: CreditCard,      roles: ["ADMIN", "RECEPTIONIST"] },
   { label: "Reportes",     href: "/dashboard/reportes",                 icon: BarChart2,       roles: ["ADMIN"] },
   { label: "Comunicados",  href: "/dashboard/comunicados",              icon: Bell,            roles: ["ADMIN", "RECEPTIONIST"] },
+  // Solo instructor: acceso directo al portal móvil (pase de lista, cuenta).
+  // El admin autoasignado no lo ve porque entra por el panel.
+  { label: "Abrir portal", href: "/portal",                             icon: Smartphone,      roles: ["INSTRUCTOR"] },
 ];
 
 const ALL_CONFIG_ITEMS = [
@@ -72,11 +76,13 @@ export function Sidebar({ userRole = "RECEPTIONIST", plan, isChild = false }: Si
       {/* Nav principal */}
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-4">
         {NAV_ITEMS.map(({ label, href, icon: Icon }) => {
-          const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/"));
+          const external = href === "/portal"; // portal vive fuera del dashboard: abrir en pestaña nueva
+          const active = !external && (pathname === href || (href !== "/dashboard" && pathname.startsWith(href + "/")));
           return (
             <Link
               key={href}
               href={href}
+              {...(external ? { target: "_blank", rel: "noopener" } : {})}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                 active
