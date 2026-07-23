@@ -3,6 +3,7 @@ import { db } from "@/server/db";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { InstructorAccessCard } from "@/components/instructores/instructor-access-card";
 
 interface PageProps {
   params: { id: string };
@@ -32,6 +33,16 @@ export default async function InstructorDetailPage({ params }: PageProps) {
   if (!instructor) {
     redirect("/dashboard/instructores");
   }
+
+  // Rol del instructor en esta escuela: un ADMIN que se autoasignó entra por
+  // el panel (no se le ofrece el portal). Al INSTRUCTOR sí; si aún no acepta
+  // su invitación no tendrá membresía y el enlace se ofrece deshabilitado.
+  const membership = await db.tenantUser.findUnique({
+    where:  { tenantId_userId: { tenantId: tenant.id, userId: instructor.userId } },
+    select: { role: true },
+  });
+  const showPortalAccess = membership?.role !== "ADMIN";
+  const portalAccessEnabled = membership?.role === "INSTRUCTOR";
 
   return (
     <div>
@@ -100,6 +111,10 @@ export default async function InstructorDetailPage({ params }: PageProps) {
               </div>
             </div>
           </div>
+
+          {showPortalAccess && (
+            <InstructorAccessCard instructorId={instructor.id} enabled={portalAccessEnabled} />
+          )}
         </div>
 
         {/* Panel derecho: Grupos asignados */}

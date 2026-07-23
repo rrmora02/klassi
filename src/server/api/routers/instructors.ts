@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { instructorFormSchema } from "@/lib/schemas/instructor.schema";
 import { sendInstructorInvitation } from "@/server/services/email.service";
 import { canAddInstructor } from "@/server/services/tenant.service";
+import { createPortalAccessLink } from "@/server/services/parent-access.service";
 import { randomBytes, randomUUID } from "crypto";
 
 export const instructorsUpdateSchema = instructorFormSchema.partial().extend({
@@ -335,6 +336,39 @@ export const instructorsRouter = createTRPCRouter({
       }
 
       return ctx.db.instructor.delete({ where: { id: input.id } });
+    }),
+
+  // ── Enlace de acceso al portal (PWA) del instructor ──────────────
+  // Igual que el enlace mágico del tutor: el instructor entra sin
+  // contraseña y luego puede crear una en el portal (pestaña Cuenta).
+  // Solo para instructores con rol INSTRUCTOR: un ADMIN que se autoasignó
+  // ya entra por el panel y no necesita el portal.
+  generatePortalLink: adminProcedure
+    .input(z.object({ id: z.string().cuid("ID inválido") }))
+    .mutation(async ({ ctx, input }) => {
+      const instructor = await ctx.db.instructor.findFirst({
+        where:  { id: input.id, tenantId: ctx.tenantId },
+        select: { userId: true },
+      });
+      if (!instructor) throw new TRPCError({ code: "NOT_FOUND", message: "Instructor no encontrado" });
+
+      const membership = await ctx.db.tenantUser.findUnique({
+        where:  { tenantId_userId: { tenantId: ctx.tenantId, userId: instructor.userId } },
+        select: { role: true },
+      });
+
+      if (membership?.role === "ADMIN") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Este instructor es administrador y entra desde el panel; no necesita el portal." });
+      }
+      if (membership?.role !== "INSTRUCTOR") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "El instructor debe aceptar su invitación por correo antes de acceder al portal." });
+      }
+
+      try {
+        return await createPortalAccessLink(instructor.userId);
+      } catch (err) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: err instanceof Error ? err.message : "No se pudo generar el enlace de acceso" });
+      }
     }),
 
   // ── Admin se registra como Instructor ────────────────────────────
