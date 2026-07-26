@@ -11,8 +11,8 @@ export const announcementsRouter = createTRPCRouter({
 
   list: staffProcedure
     .input(z.object({
-      page:     z.number().default(1),
-      pageSize: z.number().default(20),
+      page:     z.number().int().min(1).default(1),
+      pageSize: z.number().int().min(1).max(100).default(20),
     }))
     .query(async ({ ctx, input }) => {
       const skip = (input.page - 1) * input.pageSize;

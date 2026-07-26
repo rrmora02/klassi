@@ -89,6 +89,15 @@ export async function dispatchPendingDeliveries(limit = 200) {
   let failed = 0;
 
   for (const delivery of deliveries) {
+    // Reclamo optimista: el despacho corre inline Y por cron; si otro proceso
+    // ya tomó esta entrega (attempts/status cambiaron), saltarla evita enviar
+    // el mismo push/email dos veces.
+    const claim = await db.notificationDelivery.updateMany({
+      where: { id: delivery.id, status: delivery.status, attempts: delivery.attempts },
+      data:  { attempts: { increment: 1 } },
+    });
+    if (claim.count === 0) continue;
+
     const { notification } = delivery;
     try {
       if (delivery.channel === "IN_APP") {

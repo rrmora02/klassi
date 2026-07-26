@@ -64,7 +64,9 @@ function shouldGeneratePayments(frequency: BillingFrequency, billingDay?: number
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Sin CRON_SECRET configurado se rechaza todo: comparar contra
+  // "Bearer undefined" dejaría pasar a cualquiera que envíe ese literal.
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   // In production, only accept requests from Vercel's cron infrastructure

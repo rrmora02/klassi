@@ -7,12 +7,12 @@ import { loggingService } from "@/server/logging/loggingService";
 // Un instructor solo puede pasar lista a SUS grupos asignados. El staff
 // (ADMIN/RECEPTIONIST) puede a cualquiera de la escuela. Se valida en el
 // servidor —no solo en la UI— porque el portal expone esto en el teléfono.
-async function assertGroupAccess(ctx: TRPCContext, groupId: string) {
-  const tenantUser = await ctx.db.tenantUser.findFirst({
-    where:  { tenantId: ctx.tenantId!, userId: ctx.dbUser!.id },
-    select: { role: true },
-  });
-  if (tenantUser?.role !== "INSTRUCTOR") return; // staff/admin: sin restricción
+// El rol ya viene verificado en el contexto por tenantProcedure (tenantRole).
+async function assertGroupAccess(
+  ctx: TRPCContext & { tenantRole: import("@prisma/client").UserRole },
+  groupId: string,
+) {
+  if (ctx.tenantRole !== "INSTRUCTOR") return; // staff/admin: sin restricción
 
   const owned = await ctx.db.group.findFirst({
     where:  { id: groupId, tenantId: ctx.tenantId!, instructor: { userId: ctx.dbUser!.id } },
@@ -28,12 +28,8 @@ export const attendanceRouter = createTRPCRouter({
        dateString: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     }))
     .query(async ({ ctx, input }) => {
-       // Obtener el rol del usuario en el tenant
-       const tenantUser = await ctx.db.tenantUser.findFirst({
-          where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id }
-       });
-
-       const userRole = tenantUser?.role || "RECEPTIONIST";
+       // Rol ya verificado por tenantProcedure (sin query extra)
+       const userRole = ctx.tenantRole;
 
        // Obtener todos los grupos (usar índice idx_group_tenant_active para rapidez)
        const groups = await ctx.db.group.findMany({
@@ -204,6 +200,11 @@ export const attendanceRouter = createTRPCRouter({
        }
        if (session.group.tenantId !== ctx.tenantId) {
          throw new TRPCError({ code: "FORBIDDEN" });
+       }
+       // La inscripción debe ser del MISMO grupo de la sesión: sin esto se
+       // puede marcar asistencia de alumnos de otros grupos del tenant.
+       if (enrollment.groupId !== session.groupId) {
+         throw new TRPCError({ code: "BAD_REQUEST", message: "El alumno no pertenece al grupo de esta sesión" });
        }
        await assertGroupAccess(ctx, session.groupId);
 

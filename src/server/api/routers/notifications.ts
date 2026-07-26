@@ -9,8 +9,8 @@ export const notificationsRouter = createTRPCRouter({
 
   list: protectedProcedure
     .input(z.object({
-      page:       z.number().default(1),
-      pageSize:   z.number().max(50).default(20),
+      page:       z.number().int().min(1).default(1),
+      pageSize:   z.number().int().min(1).max(50).default(20),
       unreadOnly: z.boolean().default(false),
     }))
     .query(async ({ ctx, input }) => {
