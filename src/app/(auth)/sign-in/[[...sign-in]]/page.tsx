@@ -8,7 +8,9 @@ export default function SignInPage() {
           <h1 className="text-3xl font-semibold text-sb-green">Klassi</h1>
           <p className="mt-1 text-sm text-gray-500">Inicia sesión para entrar a tu escuela</p>
         </div>
-        <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
+        {/* fallbackRedirectUrl: /entrar despacha según identidad (staff →
+            dashboard, tutor → portal). Un redirect_url explícito lo supera. */}
+        <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" fallbackRedirectUrl="/entrar" />
       </div>
     </main>
   );

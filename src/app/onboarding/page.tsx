@@ -112,9 +112,20 @@ export default async function OnboardingPage({ searchParams }: OnboardingPagePro
   // Determinar si es una escuela adicional para ajustar el copy
   const user = await db.user.findUnique({
     where:  { clerkId: userId },
-    select: { activeTenantId: true },
+    select: {
+      activeTenantId: true,
+      memberships: { select: { tenantId: true }, take: 1 },
+      parentOf:    { select: { studentId: true }, take: 1 },
+    },
   });
   const isAdditionalSchool = !!user?.activeTenantId;
+
+  // Un tutor (con hijos vinculados y sin membresía de escuela) no debe ver
+  // "crea tu escuela": su casa es el portal. El flujo con token de invitación
+  // y el de escuela adicional (Enterprise) no se tocan.
+  if (!invitationToken && user && user.memberships.length === 0 && user.parentOf.length > 0) {
+    redirect("/portal");
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
