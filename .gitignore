@@ -54,3 +54,8 @@ dist/
 .AppleDouble
 .AppleDS_Store
 .claude/worktrees/
+
+# Pruebas E2E
+.env.e2e
+/test-results/
+/playwright-report/

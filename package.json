@@ -18,7 +18,10 @@
     "fix-monthly-fees": "tsx scripts/fix-existing-monthly-fees.ts",
     "fix-payments": "tsx scripts/fix-existing-payments.ts",
     "debug-payments": "tsx scripts/debug-all-payments.ts",
-    "fix-cron-payments": "tsx scripts/fix-cron-payments.ts"
+    "fix-cron-payments": "tsx scripts/fix-cron-payments.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@clerk/localizations": "^4.5.5",
@@ -60,6 +63,8 @@
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@clerk/testing": "^1.14.9",
+    "@playwright/test": "^1.62.0",
     "@types/node": "^20.10.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
