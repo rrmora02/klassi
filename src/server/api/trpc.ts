@@ -8,6 +8,7 @@ import { db } from "@/server/db";
 import { loggingService } from "@/server/logging/loggingService";
 import { formatErrorForLogging } from "@/server/logging/error-parser";
 import { getUserByClerkId } from "@/server/cache/userAuthCache";
+import { getTenantMembership } from "@/server/cache/tenantMembershipCache";
 import { createCacheInvalidationMiddleware } from "@/server/cache/cacheInvalidationMiddleware";
 import { metricsCollector } from "@/server/metrics/metricsCollector";
 
@@ -129,13 +130,9 @@ const hasTenantRole = (allowedRoles?: UserRole[]) =>
 
     // Verificar la membresía real, no solo activeTenantId: al remover a un
     // usuario del equipo su activeTenantId puede seguir apuntando a la escuela.
-    const membership = await ctx.db.tenantUser.findUnique({
-      where:  { tenantId_userId: { tenantId: ctx.tenantId, userId: ctx.dbUser.id } },
-      select: {
-        role: true,
-        tenant: { select: { status: true, trialEndsAt: true, blockChildWrites: true, blockChildWritesReason: true } },
-      },
-    });
+    // Cacheada 60 s (tenantMembershipCache): era la consulta más repetida de
+    // la app — una por CADA llamada tRPC.
+    const membership = await getTenantMembership(ctx.tenantId, ctx.dbUser.id, ctx.db);
     if (!membership) {
       throw new TRPCError({ code: "FORBIDDEN", message: "No perteneces a ninguna escuela" });
     }

@@ -1,5 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { AttendanceClient } from "@/components/asistencia/attendance-client";
 
 interface AsistenciaPageProps {
@@ -7,12 +6,9 @@ interface AsistenciaPageProps {
 }
 
 export default async function AsistenciaPage({ searchParams }: AsistenciaPageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  // Garantizamos acceso
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!user?.activeTenantId) return null;
+  // Garantizamos acceso (identidad compartida del request, React.cache)
+  const ctx = await getCurrentContext();
+  if (!ctx?.user.activeTenantId) return null;
 
   const params = await searchParams;
   const preselectedGroupId = params.groupId;

@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { redirect } from "next/navigation";
 import { formatCurrency, formatDate, fullName } from "@/lib/utils";
 import { mxCurrentMonthRange } from "@/lib/dates";
@@ -21,18 +21,13 @@ const STATUS_TABS: { label: string; value: PaymentStatus | undefined }[] = [
 ];
 
 export default async function PagosPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenant = ctx.activeTenant;
 
   // Solo ADMIN y RECEPTIONIST
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role === "INSTRUCTOR") {
+  if (ctx.activeRole === "INSTRUCTOR") {
     redirect("/dashboard");
   }
 

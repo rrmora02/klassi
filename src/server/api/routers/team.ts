@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, adminProcedure, publicProcedure, protectedProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { invalidateUserCache } from "@/server/cache/userAuthCache";
+import { invalidateTenantMembership } from "@/server/cache/tenantMembershipCache";
 
 export const teamRouter = createTRPCRouter({
   
@@ -131,12 +132,13 @@ export const teamRouter = createTRPCRouter({
        });
 
        // Si esta escuela era su tenant activo, desvincularlo para que no
-       // conserve acceso residual, e invalidar su caché de auth.
+       // conserve acceso residual, e invalidar sus cachés de auth y membresía.
        await ctx.db.user.updateMany({
          where: { id: member.userId, activeTenantId: ctx.tenantId },
          data:  { activeTenantId: null }
        });
        invalidateUserCache(member.user.clerkId);
+       invalidateTenantMembership(ctx.tenantId, member.userId);
 
        return deleted;
     }),

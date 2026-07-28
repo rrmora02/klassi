@@ -1,24 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/server/db";
-import { notFound, redirect } from "next/navigation";
+import { getCurrentContext } from "@/server/request-context";
+import { redirect } from "next/navigation";
 import { TeamClientView } from "./team-client-view";
 
 export default async function EquipoPage() {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  const tenantId = user?.activeTenantId;
-  if (!tenantId) return null;
-
-  const tenant = await db.tenant.findUnique({ where: { id: tenantId } });
-  if (!tenant) notFound();
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
 
   // Solo ADMIN
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role !== "ADMIN") {
+  if (ctx.activeRole !== "ADMIN") {
     redirect("/dashboard");
   }
 

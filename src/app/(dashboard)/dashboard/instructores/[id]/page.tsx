@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight } from "lucide-react";
@@ -10,11 +10,10 @@ interface PageProps {
 }
 
 export default async function InstructorDetailPage({ params }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const loggedUser = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = loggedUser?.activeTenant;
-  if (!tenant) return null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenant = ctx.activeTenant;
 
   const instructor = await db.instructor.findFirst({
     where: { id: params.id, tenantId: tenant.id },

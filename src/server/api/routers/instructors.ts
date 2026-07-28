@@ -5,6 +5,7 @@ import { instructorFormSchema } from "@/lib/schemas/instructor.schema";
 import { sendInstructorInvitation } from "@/server/services/email.service";
 import { canAddInstructor } from "@/server/services/tenant.service";
 import { createPortalAccessLink } from "@/server/services/parent-access.service";
+import { invalidateTenantMembership } from "@/server/cache/tenantMembershipCache";
 import { randomBytes, randomUUID } from "crypto";
 
 export const instructorsUpdateSchema = instructorFormSchema.partial().extend({
@@ -333,6 +334,7 @@ export const instructorsRouter = createTRPCRouter({
         await ctx.db.tenantUser.deleteMany({
           where: { tenantId: ctx.tenantId, userId: instructor.userId, role: "INSTRUCTOR" },
         });
+        invalidateTenantMembership(ctx.tenantId, instructor.userId);
       }
 
       return ctx.db.instructor.delete({ where: { id: input.id } });

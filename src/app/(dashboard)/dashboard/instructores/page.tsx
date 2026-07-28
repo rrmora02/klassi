@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import Link from "next/link";
 import { LockedButton } from "@/components/shared/locked-button";
 import { redirect } from "next/navigation";
@@ -11,17 +11,13 @@ interface PageProps {
 }
 
 export default async function InstructoresPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenant = ctx.activeTenant;
 
   // Solo ADMIN o INSTRUCTOR
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role !== "ADMIN" && tenantUser?.role !== "INSTRUCTOR") {
+  if (ctx.activeRole !== "ADMIN" && ctx.activeRole !== "INSTRUCTOR") {
     redirect("/dashboard");
   }
 
@@ -59,7 +55,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
 
   // Verificar si el usuario actual es instructor
   const currentUserInstructor = await db.instructor.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
+    where: { tenantId: tenant.id, userId: ctx.user.id }
   });
 
   function buildUrl(params: Record<string, string | undefined>) {
@@ -72,7 +68,7 @@ export default async function InstructoresPage({ searchParams }: PageProps) {
   return (
     <div style={{ maxWidth: 1400, margin: "0 auto", paddingLeft: 16, paddingRight: 16 }} className="lg:px-0">
       <AdminInstructorBanner
-        isAdmin={tenantUser.role === "ADMIN"}
+        isAdmin={ctx.activeRole === "ADMIN"}
         isAlreadyInstructor={!!currentUserInstructor}
       />
 

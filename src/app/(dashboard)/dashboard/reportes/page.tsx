@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { redirect } from "next/navigation";
 import { formatCurrency } from "@/lib/utils";
 import { DataExportsClient } from "./data-exports-client";
@@ -7,18 +7,13 @@ import { DataExportsClient } from "./data-exports-client";
 const MONTHS = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
 export default async function ReportesPage() {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenant = ctx.activeTenant;
 
   // Solo ADMIN
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role !== "ADMIN") {
+  if (ctx.activeRole !== "ADMIN") {
     redirect("/dashboard");
   }
 

@@ -1,29 +1,25 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { notFound, redirect } from "next/navigation";
 import { TenantForm } from "./tenant-form";
 
 export default async function EscuelaConfigPage() {
-  const { userId } = await auth();
-  if (!userId) return null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
 
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  const tenantId = user?.activeTenantId;
-  if (!tenantId) return null;
+  // Solo ADMIN
+  if (ctx.activeRole !== "ADMIN") {
+    redirect("/dashboard");
+  }
 
+  // El formulario necesita TODOS los campos del tenant (logo, colores,
+  // contacto…), que el contexto compartido no incluye a propósito.
   const tenant = await db.tenant.findUnique({
-    where: { id: tenantId },
+    where: { id: ctx.activeTenant.id },
   });
 
   if (!tenant) notFound();
-
-  // Solo ADMIN
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role !== "ADMIN") {
-    redirect("/dashboard");
-  }
 
   return (
     <div style={{ maxWidth: 860, margin: "0 auto", paddingLeft: 16, paddingRight: 16, paddingBottom: 40 }} className="lg:px-0">

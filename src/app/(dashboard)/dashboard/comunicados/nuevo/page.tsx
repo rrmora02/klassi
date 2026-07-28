@@ -1,15 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { AnnouncementForm } from "@/components/comunicados/announcement-form";
 import Link from "next/link";
 
 export default async function NuevoComunicadoPage() {
-  const { userId } = await auth();
-  if (!userId) return null;
-
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenant = ctx.activeTenant;
 
   const [groups, students] = await Promise.all([
     db.group.findMany({

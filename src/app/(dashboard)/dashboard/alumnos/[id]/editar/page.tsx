@@ -1,16 +1,15 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import { notFound, redirect } from "next/navigation";
 import { fullName } from "@/lib/utils";
 import Link from "next/link";
 import { StudentEditFormClient } from "@/components/alumnos/student-edit-form-client";
 
 export default async function EditarAlumnoPage({ params }: { params: { id: string } }) {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx) redirect("/sign-in");
+  const tenant = ctx.activeTenant;
   if (!tenant) return null;
 
   const student = await db.student.findFirst({

@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
@@ -8,17 +8,13 @@ interface PageProps {
 }
 
 export default async function DisciplinasPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const user = await db.user.findUnique({ where: { clerkId: userId }, include: { activeTenant: true } });
-  const tenant = user?.activeTenant;
-  if (!tenant) return null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenant = ctx.activeTenant;
 
   // Solo ADMIN
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role !== "ADMIN") {
+  if (ctx.activeRole !== "ADMIN") {
     redirect("/dashboard");
   }
 

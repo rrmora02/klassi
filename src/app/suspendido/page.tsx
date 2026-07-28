@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
-import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 
 export default async function SuspendidoPage() {
-  const { userId } = await auth();
-  const tenant = userId
-    ? await db.user.findUnique({ where: { clerkId: userId } }).then(u => u?.activeTenantId ? db.tenant.findUnique({ where: { id: u.activeTenantId }, select: { name: true, plan: true } }) : null)
-    : null;
+  const ctx = await getCurrentContext();
+  const tenant = ctx?.activeTenant ?? null;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-gray-50">

@@ -1,5 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
 import { db } from "@/server/db";
+import { getCurrentContext } from "@/server/request-context";
 import Link from "next/link";
 import { LockedButton } from "@/components/shared/locked-button";
 import { redirect } from "next/navigation";
@@ -34,18 +34,13 @@ interface PageProps {
 }
 
 export default async function GruposPage({ searchParams }: PageProps) {
-  const { userId } = await auth();
-  if (!userId) return null;
-  const user = await db.user.findUnique({ where: { clerkId: userId } });
-  if (!user) return null;
-  const tenant = user?.activeTenantId ? await db.tenant.findUnique({ where: { id: user.activeTenantId } }) : null;
-  if (!tenant) return null;
+  // Identidad compartida del request (React.cache): el layout ya la pagó
+  const ctx = await getCurrentContext();
+  if (!ctx?.activeTenant) return null;
+  const tenant = ctx.activeTenant;
 
   // Solo ADMIN y RECEPTIONIST
-  const tenantUser = await db.tenantUser.findFirst({
-    where: { tenantId: tenant.id, userId: user.id }
-  });
-  if (tenantUser?.role === "INSTRUCTOR") {
+  if (ctx.activeRole === "INSTRUCTOR") {
     redirect("/dashboard");
   }
 

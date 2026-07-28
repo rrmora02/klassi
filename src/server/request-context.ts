@@ -26,6 +26,8 @@ export const getCurrentContext = cache(async () => {
           pendingPlan: true,
           pendingPlanAt: true,
           parentTenantId: true,
+          blockChildWrites: true,
+          blockChildWritesReason: true,
         },
       },
       memberships: {
