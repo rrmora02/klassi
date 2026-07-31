@@ -15,13 +15,14 @@ test.describe("Instructor", () => {
     await page.goto("/entrar");
     await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
 
-    // Ve lo suyo…
-    await expect(page.getByRole("link", { name: "Asistencia", exact: true })).toBeVisible();
+    // Ve lo suyo… (el menú lateral; el inicio también tiene accesos directos)
+    const nav = page.getByRole("navigation");
+    await expect(nav.getByRole("link", { name: "Asistencia", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Abrir portal" })).toBeVisible();
     // …y NO las secciones administrativas
-    await expect(page.getByRole("link", { name: "Alumnos", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Pagos", exact: true })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Reportes", exact: true })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Alumnos", exact: true })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Pagos", exact: true })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Reportes", exact: true })).toHaveCount(0);
   });
 
   test("las rutas administrativas lo rebotan al inicio", async ({ page }) => {

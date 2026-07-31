@@ -37,8 +37,9 @@ test.describe("Dashboard del staff", () => {
     await page.goto("/dashboard/pagos");
     await expect(page.getByRole("heading", { name: "Pagos" }).first()).toBeVisible();
 
-    for (const tab of ["Pendientes", "Pagados", "Todos"]) {
-      await page.getByRole("link", { name: tab, exact: true }).first().click();
+    // Los tabs incluyen el contador en el nombre accesible ("Pendientes 1")
+    for (const tab of [/^Pendientes/, /^Pagados/, /^Todos/]) {
+      await page.getByRole("link", { name: tab }).first().click();
       await expect(page.getByRole("heading", { name: "Pagos" }).first()).toBeVisible({ timeout: 20_000 });
     }
   });
