@@ -79,6 +79,31 @@ test.describe("Portal del tutor", () => {
     await expect(page.getByText("Nueva", { exact: true })).toHaveCount(sinLeer);
   });
 
+  test("Inicio: lo accionable va antes que los alumnos", async ({ page }) => {
+    await page.goto("/portal");
+    const pagos = page.getByRole("heading", { name: "Pagos por atender" });
+    const alumnos = page.getByRole("heading", { name: "Tus alumnos" });
+    await expect(pagos).toBeVisible({ timeout: 20_000 });
+    await expect(alumnos).toBeVisible();
+    const [a, b] = [await pagos.boundingBox(), await alumnos.boundingBox()];
+    expect(a!.y).toBeLessThan(b!.y);
+  });
+
+  test("Eventos: la pregunta y las respuestas son prominentes y el paso siguiente es visible", async ({ page }) => {
+    await page.goto("/portal/pagos");
+
+    // Evento sin responder: pregunta + dos respuestas con área táctil de 44 px
+    await expect(page.getByText(/¿\w+ asistirá a este evento\?/).first()).toBeVisible({ timeout: 20_000 });
+    for (const name of ["Sí asistirá", "No asistirá"]) {
+      const box = await page.getByRole("button", { name }).first().boundingBox();
+      expect(box!.height, `${name} debe medir al menos 44 px`).toBeGreaterThanOrEqual(44);
+    }
+
+    // Evento con asistencia confirmada: muestra el estado y el paso siguiente
+    await expect(page.getByText("Asistencia confirmada")).toBeVisible();
+    await expect(page.getByText("Para terminar, adjunta tu comprobante de pago.")).toBeVisible();
+  });
+
   test("el tutor NO puede entrar al dashboard del staff", async ({ page }) => {
     await page.goto("/dashboard");
     // El layout lo rebota (onboarding) y el guard de onboarding lo regresa al portal

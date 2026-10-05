@@ -66,11 +66,9 @@
     "color-contrast": 20
   },
   "a11y|portal-instructor|/portal/asistencia|claro": {
-    "label": 1,
     "meta-viewport": 1
   },
   "a11y|portal-instructor|/portal/asistencia|oscuro": {
-    "label": 1,
     "meta-viewport": 1
   },
   "a11y|portal-instructor|/portal|claro": {
@@ -247,8 +245,15 @@
     "contrastLight": 13,
     "contrastDark": 23
   },
+  "ui|portal-instructor|/portal/asistencia#lista|360": {
+    "smallText": 0,
+    "smallTargets": 0,
+    "overflow": 0,
+    "contrastLight": 0,
+    "contrastDark": 0
+  },
   "ui|portal-instructor|/portal/asistencia|360": {
-    "smallText": 1,
+    "smallText": 0,
     "smallTargets": 0,
     "overflow": 0,
     "contrastLight": 0,
@@ -283,8 +288,8 @@
     "contrastDark": 0
   },
   "ui|portal-tutor|/portal|360": {
-    "smallText": 3,
-    "smallTargets": 2,
+    "smallText": 0,
+    "smallTargets": 1,
     "overflow": 0,
     "contrastLight": 0,
     "contrastDark": 0

@@ -49,4 +49,23 @@ test.describe("Instructor", () => {
     await page.goto("/portal");
     await expect(page.getByText("Registra la asistencia de tus grupos")).toBeVisible({ timeout: 20_000 });
   });
+
+  test("pase de lista: muestra el avance y botones de 44 px con el estado elegido accesible", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/portal/asistencia");
+    await page.getByRole("button", { name: /Karate Infantil/ }).click();
+
+    // Avance "N de M marcados" con barra accesible
+    await expect(page.getByText(/^\d+ de \d+ marcados$/)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("progressbar", { name: "Avance del pase de lista" })).toBeVisible();
+
+    // Cada alumno tiene los 4 estados, como botones de al menos 44 px que informan si están elegidos
+    const grupo = page.getByRole("group", { name: /^Asistencia de / }).first();
+    for (const estado of ["Presente", "Ausente", "Tarde", "Justificado"]) {
+      const boton = grupo.getByRole("button", { name: estado });
+      await expect(boton).toHaveAttribute("aria-pressed", /true|false/);
+      const box = await boton.boundingBox();
+      expect(box!.height, `${estado} debe medir al menos 44 px`).toBeGreaterThanOrEqual(44);
+    }
+  });
 });

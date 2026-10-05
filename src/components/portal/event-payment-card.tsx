@@ -4,7 +4,8 @@ import { api } from "@/lib/trpc";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { ReceiptUpload } from "@/components/portal/receipt-upload";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, CalendarCheck } from "lucide-react";
+import { ActionButton, Card, PaymentStatus } from "@/components/shared";
+import { Check, X, CalendarCheck, CalendarX } from "lucide-react";
 
 interface EventPayment {
   id:             string;
@@ -19,105 +20,120 @@ interface EventPayment {
   event:   { name: string; description: string | null; tenant: { name: string } };
 }
 
-const STATUS_STYLE: Record<string, { label: string; bg: string; color: string }> = {
-  PENDING:       { label: "Pendiente",   bg: "rgba(245,158,11,0.12)", color: "#b45309" },
-  PAID:          { label: "Pagado",      bg: "rgba(16,185,129,0.12)", color: "#0f766e" },
-  NOT_ATTENDING: { label: "No asistirá", bg: "rgba(0,0,0,0.06)",      color: "var(--color-text-tertiary)" },
-};
+interface Props {
+  eventPayment: EventPayment;
+  onChange:     () => void;
+  /** Nombra la escuela solo si la familia tiene alumnos en más de una */
+  showSchool?:  boolean;
+}
 
-export function EventPaymentCard({ eventPayment, onChange }: { eventPayment: EventPayment; onChange: () => void }) {
+// Tarjeta de evento del portal. Dos pasos: 1) confirmar si el alumno asiste;
+// 2) si asiste, adjuntar el comprobante. Estado visible en cada paso.
+export function EventPaymentCard({ eventPayment, onChange, showSchool }: Props) {
   const { toast } = useToast();
   const confirm = api.portal.confirmEventAttendance.useMutation({
     onSuccess: (r) => {
       toast({
-        title:       r.willAttend ? "Asistencia confirmada" : "Registrado",
+        title:       r.willAttend ? "Asistencia confirmada" : "Registrado: no asistirá",
         description: r.willAttend
-          ? "Ya puedes adjuntar tu comprobante de pago."
-          : "Marcaste que tu alumno no asistirá. Puedes cambiarlo cuando quieras.",
+          ? "Ahora puedes adjuntar tu comprobante de pago."
+          : "Si cambias de opinión, puedes volver a confirmar desde esta tarjeta.",
       });
       onChange();
     },
-    onError: (e) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+    onError: () =>
+      toast({
+        title:       "No se pudo guardar tu respuesta",
+        description: "Revisa tu conexión e intenta de nuevo.",
+        variant:     "destructive",
+      }),
   });
 
-  const ep    = eventPayment;
-  const style = STATUS_STYLE[ep.status] ?? STATUS_STYLE.PENDING!;
-  const total = ep.amount - ep.discountAmount;
-  const unconfirmed = ep.willAttend === null && ep.status !== "PAID";
-  const attending   = ep.willAttend === true || ep.status === "PAID";
+  const ep          = eventPayment;
+  const total       = ep.amount - ep.discountAmount;
+  const paid        = ep.status === "PAID";
+  const unconfirmed = ep.willAttend === null && !paid;
+  const attending   = (ep.willAttend === true || paid);
+  const declined    = ep.willAttend === false && !paid;
 
   return (
-    <div style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "13px 14px" }}>
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ minWidth: 0 }}>
-          <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>{ep.event.name}</p>
-          <p style={{ fontSize: 11.5, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>
-            {ep.student.firstName} {ep.student.lastName} · {ep.event.tenant.name}
+    <Card>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="m-0 text-sm font-semibold text-[var(--color-text-primary)]">{ep.event.name}</h3>
+          <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+            {ep.student.firstName} {ep.student.lastName}
+            {showSchool && <span className="block">{ep.event.tenant.name}</span>}
           </p>
-          <p style={{ fontSize: 11.5, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>
-            {ep.status === "PAID" && ep.paidAt ? `Pagado el ${formatDate(ep.paidAt)}` : `Vence ${formatDate(ep.dueDate)}`}
+          <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+            {paid && ep.paidAt ? `Pagado el ${formatDate(ep.paidAt)}` : `Vence ${formatDate(ep.dueDate)}`}
           </p>
         </div>
-        <div style={{ textAlign: "right", flexShrink: 0 }}>
-          <p style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)", margin: 0 }}>{formatCurrency(total)}</p>
-          <span style={{ display: "inline-block", background: style.bg, color: style.color, borderRadius: 20, padding: "1px 8px", fontSize: 10, fontWeight: 600, marginTop: 4 }}>
-            {style.label}
-          </span>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          <p className="m-0 text-base font-bold tabular-nums text-[var(--color-text-primary)]">{formatCurrency(total)}</p>
+          <PaymentStatus status={ep.status} />
         </div>
       </div>
 
       {ep.event.description && (
-        <p style={{ fontSize: 11.5, color: "var(--color-text-secondary)", margin: "8px 0 0", lineHeight: 1.45 }}>{ep.event.description}</p>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--color-text-secondary)]">{ep.event.description}</p>
       )}
 
-      {/* Paso 1 — confirmar asistencia */}
+      {/* Paso 1 — responder si asistirá: lo más prominente de la tarjeta */}
       {unconfirmed && (
-        <div style={{ marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-          <p style={{ fontSize: 12, fontWeight: 600, color: "var(--color-text-primary)", margin: "0 0 8px" }}>
+        <div className="mt-3 rounded-lg bg-[var(--brand-tint)] p-3">
+          <p className="m-0 text-base font-semibold text-[var(--color-text-primary)]">
             ¿{ep.student.firstName} asistirá a este evento?
           </p>
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <ActionButton
+              variant="primary"
               onClick={() => confirm.mutate({ eventPaymentId: ep.id, willAttend: true })}
+              loading={confirm.isLoading && confirm.variables?.willAttend === true}
               disabled={confirm.isLoading}
-              style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "#1D3557", color: "#fff", border: "none", borderRadius: 18, padding: "7px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
             >
-              <Check size={13} /> Sí, asistirá
-            </button>
-            <button
+              <Check className="h-4 w-4" aria-hidden="true" /> Sí asistirá
+            </ActionButton>
+            <ActionButton
+              variant="secondary"
               onClick={() => confirm.mutate({ eventPaymentId: ep.id, willAttend: false })}
+              loading={confirm.isLoading && confirm.variables?.willAttend === false}
               disabled={confirm.isLoading}
-              style={{ display: "inline-flex", alignItems: "center", gap: 5, background: "transparent", color: "var(--color-text-secondary)", border: "0.5px solid var(--color-border-secondary)", borderRadius: 18, padding: "7px 14px", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
             >
-              <X size={13} /> No asistirá
-            </button>
+              <X className="h-4 w-4" aria-hidden="true" /> No asistirá
+            </ActionButton>
           </div>
         </div>
       )}
 
-      {/* Paso 2 — ya confirmó que asiste: adjuntar comprobante */}
-      {attending && ep.status !== "PAID" && (
-        <div style={{ marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-          <p style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: "#0f766e", margin: "0 0 8px" }}>
-            <CalendarCheck size={13} /> Asistencia confirmada
+      {/* Paso 2 — asistencia confirmada: adjuntar comprobante */}
+      {attending && !paid && (
+        <div className="mt-3 border-t border-[var(--color-border-tertiary)] pt-3">
+          <p className="m-0 flex items-center gap-1.5 text-sm font-semibold text-[var(--success-fg)]">
+            <CalendarCheck className="h-4 w-4" aria-hidden="true" /> Asistencia confirmada
+          </p>
+          <p className="mb-3 mt-1 text-sm text-[var(--color-text-secondary)]">
+            Para terminar, adjunta tu comprobante de pago.
           </p>
           <ReceiptUpload kind="event" id={ep.id} hasReceipt={!!ep.receiptUrl} onUploaded={onChange} />
         </div>
       )}
 
-      {/* Declinó — permitir cambiar de opinión */}
-      {ep.willAttend === false && ep.status !== "PAID" && (
-        <div style={{ marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-          <button
+      {/* Declinó: se puede cambiar de opinión con un toque */}
+      {declined && (
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--color-border-tertiary)] pt-3">
+          <p className="m-0 flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)]">
+            <CalendarX className="h-4 w-4" aria-hidden="true" /> Marcaste que no asistirá
+          </p>
+          <ActionButton
+            variant="ghost"
             onClick={() => confirm.mutate({ eventPaymentId: ep.id, willAttend: true })}
-            disabled={confirm.isLoading}
-            className="portal-accent-text"
-            style={{ background: "transparent", border: "none", padding: 0, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+            loading={confirm.isLoading}
           >
-            ¿Cambió de opinión? Sí asistirá →
-          </button>
+            Cambiar a: sí asistirá
+          </ActionButton>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

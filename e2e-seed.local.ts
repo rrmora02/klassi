@@ -71,7 +71,7 @@ async function main() {
     },
   });
 
-  await db.student.create({
+  const valentina = await db.student.create({
     data: {
       tenantId: tenant.id,
       firstName: "Valentina",
@@ -151,7 +151,7 @@ async function main() {
   });
   await db.group.update({ where: { id: group.id }, data: { instructorId: instructor.id } });
 
-  await db.event.create({
+  const event = await db.event.create({
     data: {
       tenantId: tenant.id,
       name: "Convivio de verano",
@@ -160,6 +160,18 @@ async function main() {
       isSchoolWide: true,
       amount: 15000,
     },
+  });
+
+  // Dos estados de la tarjeta de evento en el portal: sin responder (Thiago) y
+  // con asistencia confirmada, listo para adjuntar comprobante (Valentina).
+  await db.eventPayment.createMany({
+    data: [
+      { eventId: event.id, studentId: thiago.id, amount: 15000, dueDate: new Date("2026-08-10T00:00:00Z"), status: "PENDING" },
+      {
+        eventId: event.id, studentId: valentina.id, amount: 15000, dueDate: new Date("2026-08-10T00:00:00Z"),
+        status: "PENDING", willAttend: true, confirmedAt: new Date(), confirmedVia: "portal",
+      },
+    ],
   });
 
   console.log("Seed OK:", { tenant: tenant.id, staff: staff.id, parent: parent.id });

@@ -11,6 +11,8 @@ export interface Surface {
   widths: { w: number; h: number }[];
   /** Umbral mínimo (px) para objetivos táctiles/clicables de esa superficie */
   tapMin: number;
+  /** Estados de cliente de una ruta que también se miden (clic y medir de nuevo) */
+  interactions?: { route: string; click: string; name: string }[];
 }
 
 export const SURFACES: Surface[] = [
@@ -27,6 +29,7 @@ export const SURFACES: Surface[] = [
     routes: ["/portal", "/portal/asistencia"],
     widths: [{ w: 360, h: 780 }],
     tapMin: 44,
+    interactions: [{ route: "/portal/asistencia", click: "li button", name: "lista" }],
   },
   {
     name: "dashboard",

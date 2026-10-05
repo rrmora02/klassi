@@ -35,11 +35,11 @@ requisito que cubre · cada tarea termina con la verificación indicada. Una fas
 
 | ID | Tarea | Cubre |
 |---|---|---|
-| T201 | Tarjeta de evento: pregunta y respuestas prominentes, paso siguiente visible, revertir con un toque | H3, RF-002 |
-| T202 [P] | Pase de lista: objetivos amplios, estado elegido inequívoco (claro y oscuro) | H4.1, RF-002 |
-| T203 | Pase de lista: avance "marcados de total" | H4.2, RF-007 |
-| T204 [P] | Inicio: primero lo accionable, después los alumnos | RF-006 |
-| T205 | Pruebas: avance del pase de lista y orden de Inicio | RNF-005 |
+| T201 ✅ | Tarjeta de evento: pregunta y respuestas prominentes, paso siguiente visible, revertir con un toque | H3, RF-002 |
+| T202 ✅ [P] | Pase de lista: objetivos amplios, estado elegido inequívoco (claro y oscuro) | H4.1, RF-002 |
+| T203 ✅ | Pase de lista: avance "marcados de total" | H4.2, RF-007 |
+| T204 ✅ [P] | Inicio: primero lo accionable, después los alumnos | RF-006 |
+| T205 ✅ | Pruebas: avance del pase de lista y orden de Inicio | RNF-005 |
 
 ## Fase 3 — Portal P3: primer uso y Cuenta (H5)
 

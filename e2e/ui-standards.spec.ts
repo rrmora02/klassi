@@ -153,32 +153,42 @@ test.describe("Estándares de interfaz (texto, objetivos táctiles, desborde)", 
       test.skip(!hasCreds(surface.role), `Sin credenciales para ${surface.role}`);
       await signIn(page, surface.role);
 
+      const measureAndCheck = async (key: string) => {
+        const m = await measure(page, surface.tapMin);
+        const contrastLight = await measureContrast(page);
+        await page.evaluate(() => document.documentElement.classList.add("dark"));
+        await page.waitForTimeout(200);
+        const contrastDark = await measureContrast(page);
+        await page.evaluate(() => document.documentElement.classList.remove("dark"));
+        checkAgainstBaseline(
+          key,
+          {
+            smallText: m.smallText.length,
+            smallTargets: m.smallTargets.length,
+            overflow: m.overflow,
+            contrastLight: contrastLight.length,
+            contrastDark: contrastDark.length,
+          },
+          {
+            smallText: m.smallText.slice(0, 8),
+            smallTargets: m.smallTargets.slice(0, 8),
+            contrastLight: contrastLight.slice(0, 8),
+            contrastDark: contrastDark.slice(0, 8),
+          },
+        );
+      };
+
       for (const { w, h } of surface.widths) {
         await page.setViewportSize({ width: w, height: h });
         for (const route of surface.routes) {
           await page.goto(route);
           await settle(page);
-          const m = await measure(page, surface.tapMin);
-          const contrastLight = await measureContrast(page);
-          await page.evaluate(() => document.documentElement.classList.add("dark"));
-          await page.waitForTimeout(200);
-          const contrastDark = await measureContrast(page);
-          checkAgainstBaseline(
-            `ui|${surface.name}|${route}|${w}`,
-            {
-              smallText: m.smallText.length,
-              smallTargets: m.smallTargets.length,
-              overflow: m.overflow,
-              contrastLight: contrastLight.length,
-              contrastDark: contrastDark.length,
-            },
-            {
-              smallText: m.smallText.slice(0, 8),
-              smallTargets: m.smallTargets.slice(0, 8),
-              contrastLight: contrastLight.slice(0, 8),
-              contrastDark: contrastDark.slice(0, 8),
-            },
-          );
+          await measureAndCheck(`ui|${surface.name}|${route}|${w}`);
+          for (const it of (surface.interactions ?? []).filter((x) => x.route === route)) {
+            await page.locator(it.click).first().click();
+            await settle(page);
+            await measureAndCheck(`ui|${surface.name}|${route}#${it.name}|${w}`);
+          }
         }
       }
     });

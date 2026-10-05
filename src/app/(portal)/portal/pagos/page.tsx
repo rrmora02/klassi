@@ -44,7 +44,11 @@ export default function PagosPage() {
     owedEvents.reduce((sum, e) => sum + (e.amount - e.discountAmount), 0);
   const currency = owedPayments[0]?.currency ?? "MXN";
   // Solo se nombra la escuela cuando la familia tiene alumnos en más de una
-  const manySchools = new Set(sorted.map((p) => p.tenant.name)).size > 1;
+  const manySchools =
+    new Set([
+      ...sorted.map((p) => p.tenant.name),
+      ...(eventPayments ?? []).map((e) => e.event.tenant.name),
+    ]).size > 1;
 
   const pendientesTxt = owedCount === 1 ? "1 pago pendiente" : `${owedCount} pagos pendientes`;
   const summaryHint =
@@ -137,7 +141,7 @@ export default function PagosPage() {
               </div>
               <div className="flex flex-col gap-2">
                 {(eventPayments ?? []).map((eventPayment) => (
-                  <EventPaymentCard key={eventPayment.id} eventPayment={eventPayment} onChange={refresh} />
+                  <EventPaymentCard key={eventPayment.id} eventPayment={eventPayment} onChange={refresh} showSchool={manySchools} />
                 ))}
               </div>
             </>

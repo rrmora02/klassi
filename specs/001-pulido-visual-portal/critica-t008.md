@@ -38,6 +38,9 @@ señales de diseño genérico y piso de calidad**.
 
 ## Registrado para las fases siguientes
 
+> Resuelto en la fase 2 (2026-10-05): etiqueta "FECHA" en mayúsculas y texto de 11,5 px del pase de lista; flechas y puntos
+> medios de Inicio y de la tarjeta de evento; estados vacíos con siguiente paso. Pendiente: Cuenta, clases `.portal-*`.
+
 | Dónde | Hallazgo | Fase |
 |---|---|---|
 | Pase de lista (`asistencia`) | Etiqueta "FECHA" en mayúsculas, texto de 11,5 px | 2 |
