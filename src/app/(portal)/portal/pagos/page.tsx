@@ -5,7 +5,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { CreditCard, PartyPopper } from "lucide-react";
 import { ReceiptUpload } from "@/components/portal/receipt-upload";
 import { EventPaymentCard } from "@/components/portal/event-payment-card";
-import { Card, EmptyState, PaymentStatus, Skeleton, SummaryCard } from "@/components/shared";
+import { Card, EmptyState, PaymentStatus, Skeleton, StatusBadge, SummaryCard } from "@/components/shared";
 
 const UPLOADABLE = ["PENDING", "OVERDUE"];
 
@@ -43,6 +43,21 @@ export default function PagosPage() {
     owedPayments.reduce((sum, p) => sum + p.amount, 0) +
     owedEvents.reduce((sum, e) => sum + (e.amount - e.discountAmount), 0);
   const currency = owedPayments[0]?.currency ?? "MXN";
+  // Solo se nombra la escuela cuando la familia tiene alumnos en más de una
+  const manySchools = new Set(sorted.map((p) => p.tenant.name)).size > 1;
+
+  const pendientesTxt = owedCount === 1 ? "1 pago pendiente" : `${owedCount} pagos pendientes`;
+  const summaryHint =
+    owedCount === 0 ? (
+      "Estás al corriente"
+    ) : overdueCount > 0 ? (
+      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {pendientesTxt}
+        <StatusBadge tone="danger">{overdueCount === 1 ? "1 vencido" : `${overdueCount} vencidos`}</StatusBadge>
+      </span>
+    ) : (
+      `${pendientesTxt}, ninguno vencido`
+    );
 
   return (
     <div className="flex flex-col gap-3">
@@ -55,10 +70,7 @@ export default function PagosPage() {
 
       {isLoading ? (
         <div className="flex flex-col gap-2" aria-busy="true" aria-label="Cargando pagos">
-          <div className="grid grid-cols-2 gap-2">
-            <Skeleton className="h-20" />
-            <Skeleton className="h-20" />
-          </div>
+          <Skeleton className="h-24" />
           <Skeleton className="h-28" />
           <Skeleton className="h-28" />
         </div>
@@ -70,21 +82,13 @@ export default function PagosPage() {
         />
       ) : (
         <>
-          {/* Resumen: cuánto debo y qué está vencido */}
-          <div className="grid grid-cols-2 gap-2">
-            <SummaryCard
-              label="Por pagar"
-              value={formatCurrency(owedTotal, currency)}
-              hint={owedCount > 0 ? `${owedCount} ${owedCount === 1 ? "pago pendiente" : "pagos pendientes"}` : "Sin pagos pendientes"}
-              tone={overdueCount > 0 ? "danger" : owedCount > 0 ? "warning" : "success"}
-            />
-            <SummaryCard
-              label="Vencidos"
-              value={overdueCount}
-              hint={overdueCount > 0 ? "Atiéndelos primero" : "Estás al corriente"}
-              tone={overdueCount > 0 ? "danger" : "success"}
-            />
-          </div>
+          {/* Resumen: cuánto debo y, si lo hay, cuánto está vencido */}
+          <SummaryCard
+            label="Por pagar"
+            value={formatCurrency(owedTotal, currency)}
+            hint={summaryHint}
+            tone={overdueCount > 0 ? "danger" : owedCount > 0 ? "warning" : "success"}
+          />
 
           {sorted.length > 0 && (
             <ul className="m-0 flex list-none flex-col gap-2 p-0">
@@ -96,7 +100,8 @@ export default function PagosPage() {
                       <div className="min-w-0">
                         <p className="m-0 text-sm font-semibold text-[var(--color-text-primary)]">{payment.concept}</p>
                         <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
-                          {payment.student.firstName} {payment.student.lastName} · {payment.tenant.name}
+                          {payment.student.firstName} {payment.student.lastName}
+                          {manySchools && <span className="block">{payment.tenant.name}</span>}
                         </p>
                         <p className={`mt-0.5 text-xs ${overdue ? "font-semibold text-[var(--danger-fg)]" : "text-[var(--color-text-secondary)]"}`}>
                           {payment.status === "PAID" && payment.paidAt

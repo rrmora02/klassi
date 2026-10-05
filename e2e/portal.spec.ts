@@ -53,7 +53,9 @@ test.describe("Portal del tutor", () => {
     await page.goto("/portal/pagos");
     const porPagar = page.getByText("Por pagar", { exact: true });
     await expect(porPagar).toBeVisible({ timeout: 20_000 });
-    await expect(page.getByText("Vencidos", { exact: true })).toBeVisible();
+    // El resumen dice cuántos pagos hay y si alguno está vencido (RF-005)
+    await expect(page.getByText(/pagos? pendientes?|Estás al corriente/)).toBeVisible();
+    await expect(page.getByText(/vencid|Estás al corriente/).first()).toBeVisible();
 
     // El resumen muestra un monto en pesos y precede a la primera tarjeta de pago
     await expect(page.getByText(/\$[\d,]+\.\d{2}/).first()).toBeVisible();

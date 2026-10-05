@@ -1,7 +1,7 @@
 import { test } from "@playwright/test";
 import fs from "fs";
 import path from "path";
-import { signIn, hasCreds, type Role } from "./helpers";
+import { signIn, hasCreds, settle, type Role } from "./helpers";
 
 // Capturas de la interfaz para comparar "antes" y "después" (spec 001, criterio 4).
 // Solo corre si se define CAPTURE_DIR; no forma parte de la suite normal.
@@ -80,7 +80,8 @@ test.describe("Capturas de UI", () => {
       const shoot = async (theme: "claro" | "oscuro", { w, h }: { w: number; h: number }) => {
         await page.setViewportSize({ width: w, height: h });
         for (const route of surface.routes) {
-          await page.goto(route, { waitUntil: "networkidle" });
+          await page.goto(route);
+          await settle(page);
           await page.evaluate((dark) => {
             document.documentElement.classList.toggle("dark", dark);
           }, theme === "oscuro");

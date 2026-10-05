@@ -130,6 +130,14 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   subidos a .55 / .62 de alfa en `globals.css`.
 - Pruebas de navegador en sandbox con proxy: importar TODAS las CAs de `/root/.ccr/ca-bundle.crt` al NSS
   (ver `e2e/README.md`); `pkill -f` con el patrón dentro del mismo comando se mata a sí mismo.
+- Las mediciones de UI deben esperar a la carga y fallar si la pantalla se rompe: `settle()` (e2e/helpers.ts) espera
+  a que no quede `aria-busy` y lanza error si ve "Algo salió mal". Con Postgres caído (el contenedor lo detiene) el
+  dashboard mostraba el error y las métricas bajaban a 0 "mejorando" falsamente. Antes de medir: `pg_isready` y
+  `service postgresql start`; después, reiniciar el servidor.
+- `Skeleton` debe usar `--neutral-bg`: con `--color-background-secondary` es del mismo color que el fondo de página
+  y queda invisible.
+- Un plugin habilitado en claude.ai NO se carga en una sesión de la nube ya abierta (`Skill` responde "Unknown skill"):
+  abrir sesión nueva, o leer el SKILL.md del repositorio del plugin. `/plugin` solo existe en terminal local.
 - Tintas translúcidas de marca (`rgba` claro sobre la tarjeta verde en oscuro) bajan el contraste del texto de la insignia
   (3,75:1): en oscuro usar tinta sólida (`--brand-tint`). Calcular antes de elegir (alfa o sólido).
 - Interfaz: 138 usos de texto < 12 px, 1.472 estilos en línea vs 1.002 clases, insignia de estado
@@ -163,9 +171,9 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   pestañas inferiores; todo con las primitivas de `shared/`). Pagos y Notificaciones están en cero en
   todas las métricas de `e2e/ui-baseline.json`; portal completo: 4 textos < 12 px, 6 objetivos pequeños,
   contraste 1/1 (claro/oscuro). Total producto: 164 textos < 12 px, 62 objetivos, contraste 61/155
-  (el resto es dashboard y fases 2–5). T008 (crítica con `frontend-design`) sigue bloqueada: el plugin
-  no estaba habilitado (se instala en claude.ai/customize/plugins; no existe `/plugin` en la nube).
-  Siguiente: fase 2 (eventos, pase de lista con avance, Inicio con lo accionable).
+  (el resto es dashboard y fases 2–5). **T008 hecha** (`critica-t008.md`): plugin `frontend-design`
+  habilitado el 2026-10-05; una sesión ya abierta no lo carga (hay que abrir una nueva), así que se leyó
+  su SKILL.md del repo oficial. Siguiente: fase 2 (eventos, pase de lista con avance, Inicio con lo accionable).
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
   `docs/plan-pruebas-qa.md`, `docs/qa-run-2026-07-31.md`, `DESIGN.md` (dashboard).
 
@@ -173,6 +181,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-05 | rama `001-pulido-visual-portal` | T008: crítica de diseño; Pagos con un solo resumen, textos consistentes; tokens `--fs-*` sin uso eliminados; Skeleton visible; mediciones con `settle()` y guarda contra pantallas rotas |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Fase 1: portal Pagos y Notificaciones, botón de comprobante, pestañas; tokens `--danger-solid`, tinta de marca sólida en oscuro |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Fase 0: entorno reproducible, capturas antes, pruebas ui-standards/a11y con línea base, tokens y primitivas |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Plan aprobado y `tasks.md` (fases 0–6) |

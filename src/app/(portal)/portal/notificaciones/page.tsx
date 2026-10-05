@@ -39,9 +39,9 @@ export default function NotificacionesPage() {
   const markAllRead = api.notifications.markAllRead.useMutation({
     onSuccess: () => {
       invalidate();
-      toast({ title: "Listo", description: "Marcaste todos tus avisos como leídos." });
+      toast({ title: "Marcadas como leídas", description: "Ya no tienes avisos nuevos." });
     },
-    onError: (e) => toast({ title: "No se pudo completar", description: e.message, variant: "destructive" }),
+    onError: () => toast({ title: "No se pudieron marcar como leídas", description: "Revisa tu conexión e intenta de nuevo.", variant: "destructive" }),
   });
 
   const notifications = data?.notifications ?? [];
@@ -58,7 +58,7 @@ export default function NotificacionesPage() {
         </div>
         {unreadCount > 0 && (
           <ActionButton variant="secondary" onClick={() => markAllRead.mutate()} loading={markAllRead.isLoading}>
-            {!markAllRead.isLoading && <CheckCheck className="h-4 w-4" aria-hidden="true" />} Marcar leídas
+            {!markAllRead.isLoading && <CheckCheck className="h-4 w-4" aria-hidden="true" />} Marcar todas como leídas
           </ActionButton>
         )}
       </div>

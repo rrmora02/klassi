@@ -1,5 +1,5 @@
 import { test, type Page } from "@playwright/test";
-import { signIn, hasCreds } from "./helpers";
+import { signIn, hasCreds, settle } from "./helpers";
 import { SURFACES } from "./surfaces";
 import { checkAgainstBaseline, flushBaseline } from "./ui-baseline";
 
@@ -156,8 +156,8 @@ test.describe("Estándares de interfaz (texto, objetivos táctiles, desborde)", 
       for (const { w, h } of surface.widths) {
         await page.setViewportSize({ width: w, height: h });
         for (const route of surface.routes) {
-          await page.goto(route, { waitUntil: "networkidle" });
-          await page.waitForTimeout(300);
+          await page.goto(route);
+          await settle(page);
           const m = await measure(page, surface.tapMin);
           const contrastLight = await measureContrast(page);
           await page.evaluate(() => document.documentElement.classList.add("dark"));

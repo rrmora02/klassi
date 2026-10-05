@@ -17,7 +17,7 @@ requisito que cubre · cada tarea termina con la verificación indicada. Una fas
 | T005 ✅ [P] | `e2e/a11y.spec.ts` con axe (claro y oscuro), mismo esquema de línea base | RNF-003 | Ídem T004 |
 | T006 ✅ [P] | Tokens en `globals.css`: escala tipográfica, `--tap-min`, colores semánticos (éxito, advertencia, peligro, neutro) con valores AA en claro y oscuro, `--brand` por superficie | RF-009, RF-011 | Tabla de contraste calculada (≥ 4.5:1) incluida en el commit |
 | T007 ✅ [P] | Primitivas en `src/components/shared/`: `StatusBadge`, `Card`, `ActionButton`, `Skeleton`, ampliar `StatCard` → `SummaryCard`; modo oscuro desde su origen | RF-003, RF-004, RNF-006 | `tsc` y `build` verdes; sin pantallas migradas |
-| T008 | Crítica de la propuesta visual (tokens y primitivas) con la skill `frontend-design`, dentro del límite conservador | Plan §5 | Ajustes registrados; **bloqueada hasta que la skill esté habilitada** (no se instaló al cierre de T009; se hace cuando aparezca) |
+| T008 ✅ | Crítica de la propuesta visual (tokens y primitivas) con la skill `frontend-design`, dentro del límite conservador | Plan §5 | Ajustes registrados; hecha el 2026-10-05 con el texto de la skill leído del repositorio oficial; ver `critica-t008.md` |
 | T009 | Cierre de fase: línea base final de T004/T005, `MEMORY.md`, commit y push | RNF-004 | E2E 25/25 + pruebas nuevas en verde |
 
 ## Fase 1 — Portal P1: Pagos y Notificaciones (H1, H2)

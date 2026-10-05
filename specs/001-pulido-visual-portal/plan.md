@@ -61,9 +61,10 @@ No hay cambios de datos, de API ni de permisos: no se generan `data-model.md` ni
 La skill `frontend-design` se usa en la fase 0 para criticar y afinar esta propuesta, nunca para
 cambiar la marca ni la estructura.
 
-- **Tipografía:** se conserva la fuente actual. Escala mínima de 12 px: *leyenda* 12, *cuerpo* 14,
-  *subtítulo* 16, *título de pantalla* 20–22, *cifra destacada* 24 con números tabulares. Fechas y
-  datos secundarios pasan de 10–11 a 12 px con peso y contraste suficientes.
+- **Tipografía:** se conserva la fuente actual (Plus Jakarta Sans). Escala = la de Tailwind, con piso de
+  12 px: *leyenda* `text-xs` 12, *cuerpo* `text-sm` 14, *subtítulo* `text-base` 16, *título de pantalla*
+  `text-xl` 20, *cifra destacada* `text-2xl` 24 con números tabulares. No se duplica como variables CSS
+  (se probó y quedaron sin uso, ver `critica-t008.md`). Fechas y datos secundarios pasan de 10–11 a 12 px.
 - **Objetivos táctiles:** variable `--tap-min: 44px`. Portal: todo botón y enlace de acción la usa.
   Dashboard: se aplica bajo `@media (pointer: coarse)`; con puntero se mantienen 36 px.
 - **Color:** cuatro **tokens semánticos** (éxito, advertencia, peligro, neutro), cada uno con

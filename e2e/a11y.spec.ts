@@ -1,6 +1,6 @@
 import { test } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { signIn, hasCreds } from "./helpers";
+import { signIn, hasCreds, settle } from "./helpers";
 import { SURFACES } from "./surfaces";
 import { checkAgainstBaseline, flushBaseline } from "./ui-baseline";
 
@@ -24,7 +24,8 @@ test.describe("Accesibilidad (axe)", () => {
 
       for (const theme of ["claro", "oscuro"] as const) {
         for (const route of surface.routes) {
-          await page.goto(route, { waitUntil: "networkidle" });
+          await page.goto(route);
+          await settle(page);
           await page.evaluate((dark) => document.documentElement.classList.toggle("dark", dark), theme === "oscuro");
           await page.waitForTimeout(300);
 

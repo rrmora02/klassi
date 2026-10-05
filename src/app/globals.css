@@ -20,12 +20,8 @@
   --border-radius-lg:           0.75rem;
 
   /* ── Sistema de diseño (spec 001) ─────────────────────────────────── */
-  /* Escala tipográfica: ningún texto informativo por debajo de --fs-caption */
-  --fs-caption:  12px;
-  --fs-body:     14px;
-  --fs-subtitle: 16px;
-  --fs-title:    20px;
-  --fs-figure:   24px;
+  /* Escala tipográfica: la de Tailwind (xs 12, sm 14, base 16, xl 20, 2xl 24). El piso de
+     12 px lo exige e2e/ui-standards.spec.ts; no se duplica aquí como variables. */
 
   /* Objetivo táctil mínimo; el dashboard lo sube a 44px solo en pantallas táctiles */
   --tap-min: 44px;

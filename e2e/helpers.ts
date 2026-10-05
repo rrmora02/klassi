@@ -81,3 +81,27 @@ export async function signIn(page: Page, role: Role) {
 export async function signOut(page: Page) {
   await clerk.signOut({ page });
 }
+
+/**
+ * Espera a que la pantalla termine de cargar: red en reposo y ningún
+ * contenedor `aria-busy="true"` (esqueletos). Sin esto, las mediciones y
+ * capturas pueden tomar un esqueleto y dar resultados falsamente buenos.
+ */
+export async function settle(page: Page) {
+  await page.waitForLoadState("networkidle");
+  await page
+    .waitForSelector('[aria-busy="true"]', { state: "detached", timeout: 20_000 })
+    .catch(() => {});
+  await page.waitForTimeout(300);
+
+  // Una pantalla de error mide "mejor" (casi sin texto): jamás debe pasar por buena.
+  const crashed = await page
+    .getByText(/Algo salió mal|Application error|Internal Server Error/i)
+    .count();
+  if (crashed > 0) {
+    throw new Error(
+      `La pantalla ${page.url()} muestra un error de la aplicación; no se puede medir. ` +
+        "Revisa el servidor y la base de datos (scripts/e2e-local.sh).",
+    );
+  }
+}
