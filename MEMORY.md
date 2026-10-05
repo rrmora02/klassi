@@ -144,8 +144,8 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 - Rama `001-pulido-visual-portal` (sale de `sdd/constitution`): `specs/001-pulido-visual-portal/` con
   `spec.md` v2 (aprobada: pulido conservador del portal móvil **y** del dashboard, sin cambiar marca
   ni lógica) y `plan.md` (tokens → primitivas en `shared/` → migración por fases 0–6 → pruebas
-  automáticas de tamaño de texto, objetivos táctiles y accesibilidad con axe). Estado: plan en
-  revisión del dueño. Siguiente paso SDD: `tasks.md` y luego fase 0. El plugin `frontend-design` se
+  automáticas de tamaño de texto, objetivos táctiles y accesibilidad con axe). Estado: spec v2 y plan
+  aprobados por el dueño; `tasks.md` escrito (fases 0–6); implementando la fase 0. El plugin `frontend-design` se
   instala desde la tarjeta de claude.ai (no existe `/plugin` en sesiones de la nube); al 2026-10-05
   aún no estaba habilitado.
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
@@ -155,6 +155,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-05 | rama `001-pulido-visual-portal` | Plan aprobado y `tasks.md` (fases 0–6) |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Spec 001 v2 (alcance portal + dashboard, aclaraciones resueltas) y plan técnico |
 | 2026-10-05 | rama `sdd/constitution` | Se crean la constitución (v1.1.0), `MEMORY.md` y `CLAUDE.md`; actualizar la memoria pasa a ser obligatorio |
 | 2026-10-05 | `a6f5438` | `main` recibe todo el trabajo PWA (fast-forward) |
