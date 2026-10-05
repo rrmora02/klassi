@@ -143,6 +143,9 @@ Un cambio está "hecho" solo con evidencia, no con intención:
    (`feat`, `fix`, `perf`, `test`, `docs`, `chore`) y alcance entre paréntesis.
 8. La integración a `main` se hace por solicitud explícita del dueño del proyecto, de preferencia
    mediante pull request.
+9. **Memoria del proyecto:** `MEMORY.md` se lee al iniciar cada sesión y se actualiza en el mismo
+   commit de todo cambio (estado, aprendizajes, deuda y bitácora). Un cambio que deja
+   `MEMORY.md` desactualizado se considera incompleto.
 
 ## Deuda conocida
 
@@ -165,4 +168,5 @@ Estos puntos incumplen principios vigentes y deben tener su propia especificaci�
 - Toda revisión de plan y de código comprueba el cumplimiento; las excepciones se documentan con
   su justificación y fecha de revisión.
 
-**Versión:** 1.0.0 · **Ratificada:** 2026-10-05 · **Última enmienda:** 2026-10-05
+**Versión:** 1.1.0 · **Ratificada:** 2026-10-05 · **Última enmienda:** 2026-10-05
+(1.1.0: se agrega la memoria del proyecto `MEMORY.md` al flujo de trabajo.)
