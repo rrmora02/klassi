@@ -137,8 +137,12 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 - `main` = `a6f5438`: PWA, portal, notificaciones, comprobantes, instructor en portal, auditoría,
   rendimiento y suite E2E (25/25 en verde el 2026-07-31).
-- Rama `sdd/constitution`: constitución v1.1.0, este archivo y `CLAUDE.md` (lo carga cada sesión). Siguiente paso SDD: primera
-  especificación (candidata: envío de comunicados a escala).
+- Rama `sdd/constitution`: constitución v1.1.0, este archivo y `CLAUDE.md` (lo carga cada sesión).
+- Rama `001-pulido-visual-portal` (sale de `sdd/constitution`): especificación en
+  `specs/001-pulido-visual-portal/spec.md` (pulido visual del portal móvil, sin cambiar marca ni
+  lógica). Estado: borrador con 4 aclaraciones pendientes del dueño. Siguiente paso SDD: resolverlas
+  y escribir el plan. El plugin `frontend-design` se instala desde la tarjeta de claude.ai (no existe
+  `/plugin` en sesiones de la nube) y se usará en el plan; al 2026-10-05 aún no estaba habilitado.
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
   `docs/plan-pruebas-qa.md`, `docs/qa-run-2026-07-31.md`, `DESIGN.md` (dashboard).
 
@@ -146,6 +150,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-05 | rama `001-pulido-visual-portal` | Especificación 001: pulido visual del portal móvil (borrador) |
 | 2026-10-05 | rama `sdd/constitution` | Se crean la constitución (v1.1.0), `MEMORY.md` y `CLAUDE.md`; actualizar la memoria pasa a ser obligatorio |
 | 2026-10-05 | `a6f5438` | `main` recibe todo el trabajo PWA (fast-forward) |
 | 2026-08-05 | `a6f5438` | Guía de QA manual completa |
