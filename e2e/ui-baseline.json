@@ -1,0 +1,295 @@
+{
+  "a11y|dashboard|/dashboard/alumnos|claro": {
+    "color-contrast": 1
+  },
+  "a11y|dashboard|/dashboard/alumnos|oscuro": {
+    "color-contrast": 3
+  },
+  "a11y|dashboard|/dashboard/asistencia|claro": {
+    "color-contrast": 1,
+    "label": 1,
+    "select-name": 1
+  },
+  "a11y|dashboard|/dashboard/asistencia|oscuro": {
+    "color-contrast": 2,
+    "label": 1,
+    "select-name": 1
+  },
+  "a11y|dashboard|/dashboard/comunicados/nuevo|claro": {
+    "color-contrast": 1
+  },
+  "a11y|dashboard|/dashboard/comunicados/nuevo|oscuro": {
+    "color-contrast": 3
+  },
+  "a11y|dashboard|/dashboard/comunicados|claro": {
+    "button-name": 1,
+    "color-contrast": 2
+  },
+  "a11y|dashboard|/dashboard/comunicados|oscuro": {
+    "button-name": 1,
+    "color-contrast": 3
+  },
+  "a11y|dashboard|/dashboard/eventos|claro": {
+    "color-contrast": 2
+  },
+  "a11y|dashboard|/dashboard/eventos|oscuro": {
+    "color-contrast": 5
+  },
+  "a11y|dashboard|/dashboard/grupos|claro": {
+    "color-contrast": 2
+  },
+  "a11y|dashboard|/dashboard/grupos|oscuro": {
+    "color-contrast": 5
+  },
+  "a11y|dashboard|/dashboard/instructores|claro": {
+    "color-contrast": 2
+  },
+  "a11y|dashboard|/dashboard/instructores|oscuro": {
+    "color-contrast": 4
+  },
+  "a11y|dashboard|/dashboard/pagos|claro": {
+    "color-contrast": 1
+  },
+  "a11y|dashboard|/dashboard/pagos|oscuro": {
+    "color-contrast": 6
+  },
+  "a11y|dashboard|/dashboard/reportes|claro": {
+    "color-contrast": 2
+  },
+  "a11y|dashboard|/dashboard/reportes|oscuro": {
+    "color-contrast": 8
+  },
+  "a11y|dashboard|/dashboard|claro": {
+    "color-contrast": 10
+  },
+  "a11y|dashboard|/dashboard|oscuro": {
+    "color-contrast": 20
+  },
+  "a11y|portal-instructor|/portal/asistencia|claro": {
+    "label": 1,
+    "meta-viewport": 1
+  },
+  "a11y|portal-instructor|/portal/asistencia|oscuro": {
+    "label": 1,
+    "meta-viewport": 1
+  },
+  "a11y|portal-instructor|/portal|claro": {
+    "meta-viewport": 1
+  },
+  "a11y|portal-instructor|/portal|oscuro": {
+    "meta-viewport": 1
+  },
+  "a11y|portal-tutor|/portal/cuenta|claro": {
+    "color-contrast": 1,
+    "label": 3,
+    "meta-viewport": 1
+  },
+  "a11y|portal-tutor|/portal/cuenta|oscuro": {
+    "color-contrast": 1,
+    "label": 3,
+    "meta-viewport": 1
+  },
+  "a11y|portal-tutor|/portal/notificaciones|claro": {
+    "color-contrast": 2,
+    "meta-viewport": 1
+  },
+  "a11y|portal-tutor|/portal/notificaciones|oscuro": {
+    "color-contrast": 2,
+    "meta-viewport": 1
+  },
+  "a11y|portal-tutor|/portal/pagos|claro": {
+    "meta-viewport": 1
+  },
+  "a11y|portal-tutor|/portal/pagos|oscuro": {
+    "color-contrast": 2,
+    "meta-viewport": 1
+  },
+  "a11y|portal-tutor|/portal|claro": {
+    "meta-viewport": 1
+  },
+  "a11y|portal-tutor|/portal|oscuro": {
+    "meta-viewport": 1
+  },
+  "ui|dashboard|/dashboard/alumnos|1280": {
+    "smallText": 16,
+    "smallTargets": 4,
+    "overflow": 0,
+    "contrastLight": 1,
+    "contrastDark": 4
+  },
+  "ui|dashboard|/dashboard/alumnos|768": {
+    "smallText": 16,
+    "smallTargets": 2,
+    "overflow": 0,
+    "contrastLight": 1,
+    "contrastDark": 4
+  },
+  "ui|dashboard|/dashboard/asistencia|1280": {
+    "smallText": 0,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 4,
+    "contrastDark": 5
+  },
+  "ui|dashboard|/dashboard/asistencia|768": {
+    "smallText": 0,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 4,
+    "contrastDark": 5
+  },
+  "ui|dashboard|/dashboard/comunicados/nuevo|1280": {
+    "smallText": 0,
+    "smallTargets": 5,
+    "overflow": 0,
+    "contrastLight": 1,
+    "contrastDark": 3
+  },
+  "ui|dashboard|/dashboard/comunicados/nuevo|768": {
+    "smallText": 0,
+    "smallTargets": 5,
+    "overflow": 0,
+    "contrastLight": 1,
+    "contrastDark": 3
+  },
+  "ui|dashboard|/dashboard/comunicados|1280": {
+    "smallText": 10,
+    "smallTargets": 3,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 6
+  },
+  "ui|dashboard|/dashboard/comunicados|768": {
+    "smallText": 10,
+    "smallTargets": 3,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 6
+  },
+  "ui|dashboard|/dashboard/eventos|1280": {
+    "smallText": 0,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 5
+  },
+  "ui|dashboard|/dashboard/eventos|768": {
+    "smallText": 0,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 5
+  },
+  "ui|dashboard|/dashboard/grupos|1280": {
+    "smallText": 13,
+    "smallTargets": 4,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 6
+  },
+  "ui|dashboard|/dashboard/grupos|768": {
+    "smallText": 13,
+    "smallTargets": 4,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 6
+  },
+  "ui|dashboard|/dashboard/instructores|1280": {
+    "smallText": 10,
+    "smallTargets": 3,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 5
+  },
+  "ui|dashboard|/dashboard/instructores|768": {
+    "smallText": 10,
+    "smallTargets": 3,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 5
+  },
+  "ui|dashboard|/dashboard/pagos|1280": {
+    "smallText": 8,
+    "smallTargets": 3,
+    "overflow": 0,
+    "contrastLight": 1,
+    "contrastDark": 7
+  },
+  "ui|dashboard|/dashboard/pagos|768": {
+    "smallText": 8,
+    "smallTargets": 3,
+    "overflow": 0,
+    "contrastLight": 1,
+    "contrastDark": 7
+  },
+  "ui|dashboard|/dashboard/reportes|1280": {
+    "smallText": 23,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 13
+  },
+  "ui|dashboard|/dashboard/reportes|768": {
+    "smallText": 23,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 13
+  },
+  "ui|dashboard|/dashboard|1280": {
+    "smallText": 0,
+    "smallTargets": 4,
+    "overflow": 0,
+    "contrastLight": 13,
+    "contrastDark": 23
+  },
+  "ui|dashboard|/dashboard|768": {
+    "smallText": 0,
+    "smallTargets": 4,
+    "overflow": 0,
+    "contrastLight": 13,
+    "contrastDark": 23
+  },
+  "ui|portal-instructor|/portal/asistencia|360": {
+    "smallText": 5,
+    "smallTargets": 0,
+    "overflow": 0,
+    "contrastLight": 0,
+    "contrastDark": 0
+  },
+  "ui|portal-instructor|/portal|360": {
+    "smallText": 4,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 0,
+    "contrastDark": 0
+  },
+  "ui|portal-tutor|/portal/cuenta|360": {
+    "smallText": 5,
+    "smallTargets": 3,
+    "overflow": 0,
+    "contrastLight": 2,
+    "contrastDark": 2
+  },
+  "ui|portal-tutor|/portal/notificaciones|360": {
+    "smallText": 8,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 3,
+    "contrastDark": 3
+  },
+  "ui|portal-tutor|/portal/pagos|360": {
+    "smallText": 12,
+    "smallTargets": 1,
+    "overflow": 0,
+    "contrastLight": 1,
+    "contrastDark": 3
+  },
+  "ui|portal-tutor|/portal|360": {
+    "smallText": 8,
+    "smallTargets": 2,
+    "overflow": 0,
+    "contrastLight": 1,
+    "contrastDark": 1
+  }
+}

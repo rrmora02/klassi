@@ -10,14 +10,14 @@ requisito que cubre · cada tarea termina con la verificación indicada. Una fas
 
 | ID | Tarea | Cubre | Verificación |
 |---|---|---|---|
-| T001 | Script reproducible del entorno de verificación (Postgres local, `prisma db push`, seed, build y servidor) y documentarlo en `e2e/README.md` | RNF-005 | El script deja la app lista y `npm run test:e2e` pasa 25/25 |
-| T002 | Script de capturas (`scripts/capture-ui.ts`) y tomar las capturas **antes** en 360/390/430 px (portal) y 768/1280 px (dashboard), claro y oscuro | Criterio 4 | Carpeta `evidencia/antes/` con todas las pantallas |
-| T003 | Agregar `@axe-core/playwright` (devDependency) | RNF-003 | `npm ci` limpio |
-| T004 | `e2e/ui-standards.spec.ts`: mide texto < 12 px y objetivos táctiles pequeños por ruta; compara contra `e2e/ui-baseline.json` (no puede empeorar; con `UI_STRICT=1` exige cero) | RF-001, RF-002 | Pasa con la línea base actual y falla si se introduce una infracción nueva |
-| T005 [P] | `e2e/a11y.spec.ts` con axe (claro y oscuro), mismo esquema de línea base | RNF-003 | Ídem T004 |
-| T006 [P] | Tokens en `globals.css`: escala tipográfica, `--tap-min`, colores semánticos (éxito, advertencia, peligro, neutro) con valores AA en claro y oscuro, `--brand` por superficie | RF-009, RF-011 | Tabla de contraste calculada (≥ 4.5:1) incluida en el commit |
-| T007 [P] | Primitivas en `src/components/shared/`: `StatusBadge`, `Card`, `ActionButton`, `Skeleton`, ampliar `StatCard` → `SummaryCard`; modo oscuro desde su origen | RF-003, RF-004, RNF-006 | `tsc` y `build` verdes; sin pantallas migradas |
-| T008 | Crítica de la propuesta visual (tokens y primitivas) con la skill `frontend-design`, dentro del límite conservador | Plan §5 | Ajustes registrados; **bloqueada hasta que la skill esté habilitada** |
+| T001 ✅ | Script reproducible del entorno de verificación (Postgres local, `prisma db push`, seed, build y servidor) y documentarlo en `e2e/README.md` | RNF-005 | El script deja la app lista y `npm run test:e2e` pasa 25/25 |
+| T002 ✅ | Barrido de capturas (`e2e/capture.spec.ts`, solo con `CAPTURE_DIR`) y tomar las capturas **antes** en 360/390/430 px (portal) y 768/1280 px (dashboard), claro y oscuro | Criterio 4 | Carpeta `evidencia/antes/` con todas las pantallas |
+| T003 ✅ | Agregar `@axe-core/playwright` (devDependency) | RNF-003 | `npm ci` limpio |
+| T004 ✅ | `e2e/ui-standards.spec.ts`: mide texto < 12 px y objetivos táctiles pequeños por ruta; compara contra `e2e/ui-baseline.json` (no puede empeorar; con `UI_STRICT=1` exige cero) | RF-001, RF-002 | Pasa con la línea base actual y falla si se introduce una infracción nueva |
+| T005 ✅ [P] | `e2e/a11y.spec.ts` con axe (claro y oscuro), mismo esquema de línea base | RNF-003 | Ídem T004 |
+| T006 ✅ [P] | Tokens en `globals.css`: escala tipográfica, `--tap-min`, colores semánticos (éxito, advertencia, peligro, neutro) con valores AA en claro y oscuro, `--brand` por superficie | RF-009, RF-011 | Tabla de contraste calculada (≥ 4.5:1) incluida en el commit |
+| T007 ✅ [P] | Primitivas en `src/components/shared/`: `StatusBadge`, `Card`, `ActionButton`, `Skeleton`, ampliar `StatCard` → `SummaryCard`; modo oscuro desde su origen | RF-003, RF-004, RNF-006 | `tsc` y `build` verdes; sin pantallas migradas |
+| T008 | Crítica de la propuesta visual (tokens y primitivas) con la skill `frontend-design`, dentro del límite conservador | Plan §5 | Ajustes registrados; **bloqueada hasta que la skill esté habilitada** (no se instaló al cierre de T009; se hace cuando aparezca) |
 | T009 | Cierre de fase: línea base final de T004/T005, `MEMORY.md`, commit y push | RNF-004 | E2E 25/25 + pruebas nuevas en verde |
 
 ## Fase 1 — Portal P1: Pagos y Notificaciones (H1, H2)
@@ -47,7 +47,7 @@ requisito que cubre · cada tarea termina con la verificación indicada. Una fas
 |---|---|---|
 | T301 | Invitación a instalar y activar avisos destacada; desaparece al completarse | H5, RF-006 |
 | T302 [P] | Cuenta: formulario y mensajes con las primitivas | RF-003, RF-008 |
-| T303 | Barrido del portal completo: baseline a cero en `UI_STRICT=1` | RF-001, RF-002, RNF-001 |
+| T303 | Barrido del portal completo: baseline a cero en `UI_STRICT=1`; quitar `maximumScale:1` del viewport del portal cuando todo campo mida ≥ 16 px (axe `meta-viewport`) | RF-001, RF-002, RNF-001 |
 
 ## Fase 4 — Dashboard P2: cobros e inicio (H6)
 

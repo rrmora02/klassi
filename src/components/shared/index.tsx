@@ -1,5 +1,13 @@
 import { cn } from "@/lib/utils";
 
+// Primitivas del sistema de diseño (spec 001). Una sola puerta de entrada:
+// import { StatusBadge, Card, ActionButton, … } from "@/components/shared";
+export * from "./status-badge";
+export * from "./card";
+export * from "./action-button";
+export * from "./skeleton";
+export * from "./summary-card";
+
 // ─── Stat Card ────────────────────────────────────────────────────
 
 interface StatCardProps {

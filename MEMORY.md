@@ -29,6 +29,7 @@ Sentry · Vercel (crons en `vercel.json`) · TypeScript estricto (`noUncheckedIn
 npm run dev | build | start | typecheck        # typecheck = tsc --noEmit
 npm run db:generate | db:push | db:migrate | db:studio
 npm run test:e2e | test:e2e:ui | test:e2e:report   # Playwright, solo lectura
+scripts/e2e-local.sh all|setup|build|start|stop       # entorno de verificación (base desechable + semilla + build)
 ```
 
 Build local sin credenciales reales:
@@ -53,6 +54,10 @@ Build local sin credenciales reales:
 - `src/server/cache/` cachés en memoria con TTL: usuario por `clerkId` (10 min) y membresía
   tenant↔usuario (60 s, `tenantMembershipCache`; se invalida al quitar miembros).
 - `src/components/` por dominio (`portal/`, `alumnos/`, `pagos/`, `instructores/`, `pwa/`…).
+- `src/components/shared/` primitivas del sistema de diseño (spec 001): `StatusBadge`/`PaymentStatus`,
+  `Card`, `ActionButton`/`ActionLink`, `Skeleton`, `SummaryCard` (más `StatCard`, `PageHeader`, `Badge`,
+  `EmptyState`, `Spinner` previos). Tokens en `src/app/globals.css` (escala `--fs-*`, `--tap-min`, colores
+  semánticos `--success/warning/danger/neutral-*`, `--brand*` por superficie con `data-surface="portal"`).
 - `public/sw.js` service worker (push + caché básica; no cachea en localhost).
 - `e2e/` suite Playwright · `docs/` arquitectura PWA, guía y plan de QA · `.specify/` SDD.
 
@@ -117,6 +122,14 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 - En contenedores efímeros puede haber TypeScript 6 (avisa de `baseUrl`): usar `npm ci` (lockfile fija 5.9.3).
 - La integración de GitHub de las sesiones no escribe (403); se empuja con token personal. Los
   commits salen "Unverified" por falta de firma. Cualquier token pegado en un chat se considera comprometido.
+- Tras reconstruir con `next build`, reiniciar SIEMPRE el servidor: un `next-server` viejo vivo sirve HTML
+  de un build reemplazado (su CSS da 404 y todo sale sin estilos); mediciones tomadas así son inválidas.
+  `scripts/e2e-local.sh stop` mata también los `next-server` huérfanos.
+- axe NO evalúa texto sobre fondos translúcidos (insignias `rgba`): `e2e/ui-standards.spec.ts` calcula
+  el contraste por su cuenta. Los textos terciarios globales no cumplían AA (2,6:1 claro, 3,5:1 oscuro);
+  subidos a .55 / .62 de alfa en `globals.css`.
+- Pruebas de navegador en sandbox con proxy: importar TODAS las CAs de `/root/.ccr/ca-bundle.crt` al NSS
+  (ver `e2e/README.md`); `pkill -f` con el patrón dentro del mismo comando se mata a sí mismo.
 - Interfaz: 138 usos de texto < 12 px, 1.472 estilos en línea vs 1.002 clases, insignia de estado
   duplicada en 5 archivos y dos colores de marca (verde `#006241` dashboard, azul `#1D3557` portal y
   correos). Se aborda en la especificación 001.
@@ -133,7 +146,8 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 6. Al reemplazar un comprobante, el archivo anterior queda huérfano en el bucket.
 7. `ParentInvitation` sin uso. Hay un 404 en consola en `/sign-in` sin identificar.
 8. Falta validación manual en iPhone/Android reales (instalación PWA y push) y con dos escuelas.
-9. Pendiente confirmar en producción: `DATABASE_URL` por el pooler de Supabase (puerto 6543) y el
+9. El portal bloquea el zoom (`maximumScale:1`; axe `meta-viewport`): quitarlo cuando todo campo mida ≥ 16 px (spec 001, T303).
+10. Pendiente confirmar en producción: `DATABASE_URL` por el pooler de Supabase (puerto 6543) y el
    restablecimiento de contraseña activo en Clerk.
 
 ## 9. Estado y trabajo en curso
@@ -142,12 +156,13 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   rendimiento y suite E2E (25/25 en verde el 2026-07-31).
 - Rama `sdd/constitution`: constitución v1.1.0, este archivo y `CLAUDE.md` (lo carga cada sesión).
 - Rama `001-pulido-visual-portal` (sale de `sdd/constitution`): `specs/001-pulido-visual-portal/` con
-  `spec.md` v2 (aprobada: pulido conservador del portal móvil **y** del dashboard, sin cambiar marca
-  ni lógica) y `plan.md` (tokens → primitivas en `shared/` → migración por fases 0–6 → pruebas
-  automáticas de tamaño de texto, objetivos táctiles y accesibilidad con axe). Estado: spec v2 y plan
-  aprobados por el dueño; `tasks.md` escrito (fases 0–6); implementando la fase 0. El plugin `frontend-design` se
-  instala desde la tarjeta de claude.ai (no existe `/plugin` en sesiones de la nube); al 2026-10-05
-  aún no estaba habilitado.
+  `spec.md` v2, `plan.md` y `tasks.md` aprobados. **Fase 0 (fundaciones) hecha salvo T008**: entorno
+  reproducible, capturas "antes" en `evidencia/antes/`, pruebas `ui-standards` y `a11y` con línea base
+  que no puede empeorar (`e2e/ui-baseline.json`), tokens y primitivas. Línea base: 202 textos < 12 px,
+  64 objetivos pequeños, contraste propio 67 claro / 163 oscuro, axe contrast 91 (182 antes de los
+  tokens). T008 (crítica con la skill `frontend-design`) sigue bloqueada: el plugin no estaba habilitado
+  (se instala desde la tarjeta de claude.ai; no existe `/plugin` en la nube). Siguiente: fase 1 (portal:
+  Pagos y Notificaciones).
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
   `docs/plan-pruebas-qa.md`, `docs/qa-run-2026-07-31.md`, `DESIGN.md` (dashboard).
 
@@ -155,6 +170,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-05 | rama `001-pulido-visual-portal` | Fase 0: entorno reproducible, capturas antes, pruebas ui-standards/a11y con línea base, tokens y primitivas |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Plan aprobado y `tasks.md` (fases 0–6) |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Spec 001 v2 (alcance portal + dashboard, aclaraciones resueltas) y plan técnico |
 | 2026-10-05 | rama `sdd/constitution` | Se crean la constitución (v1.1.0), `MEMORY.md` y `CLAUDE.md`; actualizar la memoria pasa a ser obligatorio |

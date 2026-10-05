@@ -65,3 +65,41 @@ E2E_BASE_URL=http://localhost:3000 npm run test:e2e   # en otra
   español), no por clases CSS: si cambia el texto de la UI, la prueba
   fallará a propósito.
 - Un worker: los flujos comparten la base de prueba y no deben pisarse.
+
+## Entorno local reproducible (build real + datos semilla)
+
+`scripts/e2e-local.sh` prepara una base **desechable**, la siembra (`e2e-seed.local.ts`, ligada a
+los usuarios de prueba de Clerk de desarrollo), construye la app en modo producción y la deja
+corriendo. Rechaza cualquier URL de Supabase.
+
+```bash
+scripts/e2e-local.sh all     # setup + build + start (usa Postgres local si no das E2E_DATABASE_URL)
+scripts/e2e-local.sh stop    # detiene el servidor (mata también procesos next-server huérfanos)
+npm run test:e2e
+```
+
+Tras reconstruir (`build`), **reinicia el servidor con `start`**: un `next-server` viejo vivo
+sirve HTML de un build reemplazado (su CSS da 404 y las páginas salen sin estilos). El script ya
+lo detiene antes de arrancar.
+
+## Estándares de interfaz y accesibilidad (spec 001)
+
+- `ui-standards.spec.ts` mide en el portal y el dashboard: texto menor de 12 px, objetivos
+  táctiles pequeños (44 px portal / 36 px dashboard), desborde horizontal y contraste AA propio en
+  claro y oscuro (axe no evalúa texto sobre fondos translúcidos).
+- `a11y.spec.ts` ejecuta axe (WCAG 2 A/AA) en claro y oscuro.
+- Ambas comparan contra `ui-baseline.json`: **no pueden empeorar**. Si mejoran avisan para bajar la
+  línea base. Comandos útiles:
+
+```bash
+UI_UPDATE_BASELINE=1 npx playwright test ui-standards a11y   # reescribe la línea base (revisa el diff)
+UI_STRICT=1 npx playwright test ui-standards a11y            # exige cero infracciones (meta final)
+CAPTURE_DIR=<carpeta> npx playwright test capture            # capturas de todas las pantallas
+```
+
+## Notas para sandboxes con proxy de salida
+
+Chromium preinstalado: `PLAYWRIGHT_CHROMIUM_PATH=/opt/pw-browsers/chromium`. Para que confíe en el
+gateway de salida hay que importar **todas** las CAs de `/root/.ccr/ca-bundle.crt` al almacén NSS
+(`certutil -d sql:$HOME/.pki/nssdb -A -t "C,," -n <nombre> -i <cert>`, una por certificado; con
+solo la primera sigue fallando con `ERR_CERT_AUTHORITY_INVALID`). `libnss3-tools` aporta `certutil`.

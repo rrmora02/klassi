@@ -59,3 +59,9 @@ dist/
 .env.e2e
 /test-results/
 /playwright-report/
+
+# Entorno E2E local
+.e2e-server.pid
+.e2e-server.log
+/specs/*/evidencia/.tmp/
+.e2e-vapid.env

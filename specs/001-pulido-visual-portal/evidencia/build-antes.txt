@@ -1,0 +1,70 @@
+Route (app)                                           Size     First Load JS
+┌ ○ /                                                 376 B           165 kB
+├ ○ /_not-found                                       1.03 kB         163 kB
+├ ○ /aceptar-invitacion                               3.59 kB         210 kB
+├ ƒ /alumno/[token]                                   331 B           163 kB
+├ ƒ /api/auth/user                                    0 B                0 B
+├ ƒ /api/cron/check-trials                            0 B                0 B
+├ ƒ /api/cron/dispatch-notifications                  0 B                0 B
+├ ƒ /api/cron/generate-payments                       0 B                0 B
+├ ƒ /api/eventos/[eventId]/pdf                        0 B                0 B
+├ ƒ /api/metrics                                      0 B                0 B
+├ ƒ /api/trpc/[trpc]                                  0 B                0 B
+├ ƒ /api/webhooks/clerk                               0 B                0 B
+├ ƒ /api/webhooks/stripe                              0 B                0 B
+├ ƒ /dashboard                                        2.52 kB         197 kB
+├ ƒ /dashboard/alumnos                                2.27 kB         174 kB
+├ ƒ /dashboard/alumnos/[id]                           8.29 kB         212 kB
+├ ƒ /dashboard/alumnos/[id]/editar                    1.02 kB         224 kB
+├ ƒ /dashboard/alumnos/nuevo                          2.89 kB         226 kB
+├ ƒ /dashboard/asistencia                             3.25 kB         188 kB
+├ ƒ /dashboard/billing                                3.44 kB         188 kB
+├ ƒ /dashboard/comunicados                            2.98 kB         190 kB
+├ ƒ /dashboard/comunicados/nuevo                      5.11 kB         223 kB
+├ ƒ /dashboard/configuracion/auditoria                2.53 kB         172 kB
+├ ƒ /dashboard/configuracion/disciplinas              376 B           165 kB
+├ ƒ /dashboard/configuracion/disciplinas/[id]/editar  2.79 kB         213 kB
+├ ƒ /dashboard/configuracion/disciplinas/nuevo        2.46 kB         213 kB
+├ ƒ /dashboard/configuracion/equipo                   5.03 kB         220 kB
+├ ƒ /dashboard/configuracion/escuela                  2.63 kB         211 kB
+├ ƒ /dashboard/enterprise                             376 B           165 kB
+├ ƒ /dashboard/eventos                                376 B           165 kB
+├ ƒ /dashboard/eventos/[id]                           54.9 kB         249 kB
+├ ƒ /dashboard/eventos/[id]/editar                    5.59 kB         193 kB
+├ ƒ /dashboard/eventos/nuevo                          5.61 kB         193 kB
+├ ƒ /dashboard/grupos                                 377 B           165 kB
+├ ƒ /dashboard/grupos/[id]                            3.42 kB         191 kB
+├ ƒ /dashboard/grupos/[id]/editar                     1.28 kB         226 kB
+├ ƒ /dashboard/grupos/nuevo                           1.04 kB         225 kB
+├ ƒ /dashboard/instructores                           2.75 kB         190 kB
+├ ƒ /dashboard/instructores/[id]                      2.08 kB         199 kB
+├ ƒ /dashboard/instructores/[id]/editar               1.07 kB         215 kB
+├ ƒ /dashboard/instructores/nuevo                     891 B           215 kB
+├ ƒ /dashboard/pagos                                  8.37 kB         226 kB
+├ ƒ /dashboard/reportes                               3.85 kB         189 kB
+├ ƒ /dashboard/super-admin/errores                    2.52 kB         172 kB
+├ ƒ /dashboard/test-logging                           331 B           163 kB
+├ ƒ /entrar                                           331 B           163 kB
+├ ƒ /evento/[eventId]/responder                       2.81 kB         188 kB
+├ ○ /manifest.webmanifest                             0 B                0 B
+├ ƒ /onboarding                                       376 B           165 kB
+├ ƒ /portal                                           4.65 kB         199 kB
+├ ○ /portal/acceso                                    1.57 kB         185 kB
+├ ƒ /portal/asistencia                                3.22 kB         188 kB
+├ ƒ /portal/cuenta                                    3.14 kB         186 kB
+├ ƒ /portal/notificaciones                            3.14 kB         188 kB
+├ ƒ /portal/pagos                                     5.57 kB         197 kB
+├ ƒ /select-org/[[...rest]]                           1.77 kB         187 kB
+├ ƒ /sign-in/[[...sign-in]]                           2.13 kB         188 kB
+├ ƒ /sign-up/[[...sign-up]]                           2.13 kB         188 kB
+└ ƒ /suspendido                                       377 B           165 kB
++ First Load JS shared by all                         162 kB
+  ├ chunks/2539-90ecc431cffaa6e8.js                   105 kB
+  ├ chunks/fd9d1056-448d4446c301f72b.js               53.8 kB
+  └ other shared chunks (total)                       3.1 kB
+
+
+ƒ Middleware                                          125 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand

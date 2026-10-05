@@ -23,7 +23,7 @@ export default async function PortalLayout({ children }: { children: React.React
   if (!userId) redirect("/sign-in");
 
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--color-background-secondary)", display: "flex", flexDirection: "column" }}>
+    <div data-surface="portal" style={{ minHeight: "100dvh", background: "var(--color-background-secondary)", display: "flex", flexDirection: "column" }}>
       <ServiceWorkerRegister />
       <main style={{ flex: 1, width: "100%", maxWidth: 520, margin: "0 auto", padding: "16px 16px 80px" }}>
         {children}

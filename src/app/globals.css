@@ -12,12 +12,48 @@
   /* App color tokens — Starbucks palette */
   --color-text-primary:         rgba(0, 0, 0, 0.87);   /* Text Black */
   --color-text-secondary:       rgba(0, 0, 0, 0.58);   /* Text Black Soft */
-  --color-text-tertiary:        rgba(0, 0, 0, 0.38);
+  --color-text-tertiary:        rgba(0, 0, 0, 0.55);   /* AA: 4.6:1 sobre #f2f0eb (antes .38 = 2.6:1) */
   --color-background-primary:   #ffffff;
   --color-background-secondary: #f2f0eb;               /* Neutral Warm */
   --color-border-secondary:     #d6dbde;
   --color-border-tertiary:      #e7e7e7;
   --border-radius-lg:           0.75rem;
+
+  /* ── Sistema de diseño (spec 001) ─────────────────────────────────── */
+  /* Escala tipográfica: ningún texto informativo por debajo de --fs-caption */
+  --fs-caption:  12px;
+  --fs-body:     14px;
+  --fs-subtitle: 16px;
+  --fs-title:    20px;
+  --fs-figure:   24px;
+
+  /* Objetivo táctil mínimo; el dashboard lo sube a 44px solo en pantallas táctiles */
+  --tap-min: 44px;
+
+  /* Colores semánticos (texto sobre fondo ≥ 4.5:1). Se usan para estados de
+     pago/evento y mensajes; no escribir rojos/verdes/ámbares a mano. */
+  --success-fg: #166534;  --success-bg: #dcfce7;  --success-border: #bbf7d0;   /* 6.5:1 */
+  --warning-fg: #92400e;  --warning-bg: #fef3c7;  --warning-border: #fde68a;   /* 6.4:1 */
+  --danger-fg:  #b91c1c;  --danger-bg:  #fee2e2;  --danger-border:  #fecaca;    /* 5.3:1 */
+  --neutral-fg: #475569;  --neutral-bg: #e8edf3;  --neutral-border: #cbd5e1;    /* 6.4:1 */
+
+  /* Marca de la superficie: verde en el dashboard (por defecto) */
+  --brand:      #006241;
+  --brand-fg:   #ffffff;      /* texto sobre --brand */
+  --brand-tint: #d4e9e2;      /* fondo suave de marca */
+  --brand-text: #006241;      /* marca como color de texto/enlace sobre fondo claro */
+}
+
+/* Superficie "portal": azul de marca (se activa con data-surface="portal") */
+[data-surface="portal"] {
+  --brand:      #1D3557;
+  --brand-fg:   #ffffff;
+  --brand-tint: #e4ebf5;
+  --brand-text: #1D3557;
+}
+
+@media (pointer: coarse) {
+  :root { --tap-min: 44px; }
 }
 
 .dark {
@@ -27,11 +63,32 @@
 
   --color-text-primary:         rgba(255, 255, 255, 1);
   --color-text-secondary:       rgba(255, 255, 255, 0.70);
-  --color-text-tertiary:        rgba(255, 255, 255, 0.50);
+  --color-text-tertiary:        rgba(255, 255, 255, 0.62);  /* AA: 4.5:1 sobre #2b5148 (antes .50 = 3.5:1) */
   --color-background-primary:   #2b5148;               /* Green Uplift — cards */
   --color-background-secondary: #1E3932;               /* House Green — table headers */
   --color-border-secondary:     rgba(255, 255, 255, 0.15);
   --color-border-tertiary:      rgba(255, 255, 255, 0.10);
+
+  /* Semánticos en oscuro: texto claro sobre fondo sólido oscuro (≥ 6.9:1). El
+     fondo casi iguala la tarjeta, así que el borde es lo que delimita la insignia. */
+  --success-fg: #bbf7d0;  --success-bg: #14532d;  --success-border: rgba(187, 247, 208, 0.45);
+  --warning-fg: #fde68a;  --warning-bg: #6b3f0a;  --warning-border: rgba(253, 230, 138, 0.45);
+  --danger-fg:  #fecaca;  --danger-bg:  #7f1d1d;  --danger-border:  rgba(254, 202, 202, 0.45);
+  --neutral-fg: #e2e8f0;  --neutral-bg: #334155;  --neutral-border: rgba(226, 232, 240, 0.40);
+
+  --brand:      #d4e9e2;
+  --brand-fg:   #0b1714;
+  --brand-tint: rgba(212, 233, 226, 0.14);
+  --brand-text: #d4e9e2;
+}
+
+/* Portal en oscuro: el azul oscuro se pierde contra la tarjeta (1.4:1), así que
+   la marca pasa a azul claro con texto azul oscuro (7.1:1). */
+.dark [data-surface="portal"] {
+  --brand:      #A8C7EA;
+  --brand-fg:   #1D3557;
+  --brand-tint: rgba(168, 199, 234, 0.16);
+  --brand-text: #A8C7EA;
 }
 
 /* ─── Base ─────────────────────────────────────────────────────────── */
