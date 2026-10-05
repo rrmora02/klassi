@@ -24,12 +24,12 @@ requisito que cubre · cada tarea termina con la verificación indicada. Una fas
 
 | ID | Tarea | Cubre |
 |---|---|---|
-| T101 | Resumen de Pagos: total pendiente y número de vencidos antes de la lista (con `SummaryCard`) | H1.1, RF-005 |
-| T102 [P] | Lista de pagos con `Card` y `StatusBadge` (icono + texto), lo vencido resaltado | H1.2, RF-003, RF-004 |
-| T103 | Botón "Adjuntar comprobante" con `ActionButton` (44 px), ≤ 2 toques desde Pagos | H1.3, RF-002 |
-| T104 [P] | Estado vacío de Pagos con `EmptyState` | H1.4 |
-| T105 [P] | Notificaciones: no leídas inequívocas, texto cómodo, confirmación de "Marcar leídas" | H2, RF-008 |
-| T106 | Pruebas: resumen de Pagos (total y vencidos), no leídas, tamaños; baseline del portal baja | RNF-005 |
+| T101 ✅ | Resumen de Pagos: total pendiente y número de vencidos antes de la lista (con `SummaryCard`) | H1.1, RF-005 |
+| T102 ✅ [P] | Lista de pagos con `Card` y `StatusBadge` (icono + texto), lo vencido resaltado | H1.2, RF-003, RF-004 |
+| T103 ✅ | Botón "Adjuntar comprobante" con `ActionButton` (44 px), ≤ 2 toques desde Pagos | H1.3, RF-002 |
+| T104 ✅ [P] | Estado vacío de Pagos con `EmptyState` | H1.4 |
+| T105 ✅ [P] | Notificaciones: no leídas inequívocas, texto cómodo, confirmación de "Marcar leídas" | H2, RF-008 |
+| T106 ✅ | Pruebas: resumen de Pagos (total y vencidos), no leídas, tamaños; baseline del portal baja | RNF-005 |
 
 ## Fase 2 — Portal P2: Eventos, pase de lista, Inicio (H3, H4)
 

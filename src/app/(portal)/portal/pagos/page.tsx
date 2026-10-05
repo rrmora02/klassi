@@ -5,15 +5,14 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { CreditCard, PartyPopper } from "lucide-react";
 import { ReceiptUpload } from "@/components/portal/receipt-upload";
 import { EventPaymentCard } from "@/components/portal/event-payment-card";
-
-const STATUS_STYLE: Record<string, { label: string; bg: string; color: string }> = {
-  PENDING:   { label: "Pendiente", bg: "rgba(245,158,11,0.12)", color: "#b45309" },
-  OVERDUE:   { label: "Vencido",   bg: "rgba(220,38,38,0.10)",  color: "#dc2626" },
-  PAID:      { label: "Pagado",    bg: "rgba(16,185,129,0.12)", color: "#0f766e" },
-  CANCELLED: { label: "Cancelado", bg: "rgba(0,0,0,0.06)",      color: "var(--color-text-tertiary)" },
-};
+import { Card, EmptyState, PaymentStatus, Skeleton, SummaryCard } from "@/components/shared";
 
 const UPLOADABLE = ["PENDING", "OVERDUE"];
+
+// Lo vencido primero, luego lo pendiente, y al final lo ya resuelto.
+const PRIORITY: Record<string, number> = { OVERDUE: 0, PENDING: 1, PAID: 2, CANCELLED: 3 };
+
+const time = (d: Date | string | null) => (d ? new Date(d).getTime() : 0);
 
 export default function PagosPage() {
   const utils = api.useContext();
@@ -28,69 +27,110 @@ export default function PagosPage() {
   const isLoading = loadingPayments || loadingEvents;
   const hasEvents = (eventPayments?.length ?? 0) > 0;
 
+  const sorted = [...(payments ?? [])].sort((a, b) => {
+    const byStatus = (PRIORITY[a.status] ?? 9) - (PRIORITY[b.status] ?? 9);
+    if (byStatus !== 0) return byStatus;
+    const open = a.status === "OVERDUE" || a.status === "PENDING";
+    return open ? time(a.dueDate) - time(b.dueDate) : time(b.dueDate) - time(a.dueDate);
+  });
+
+  // Resumen: mensualidades por pagar + eventos a los que ya confirmó asistencia
+  const owedPayments = sorted.filter((p) => p.status === "OVERDUE" || p.status === "PENDING");
+  const owedEvents   = (eventPayments ?? []).filter((e) => e.status === "PENDING" && e.willAttend === true);
+  const overdueCount = owedPayments.filter((p) => p.status === "OVERDUE").length;
+  const owedCount    = owedPayments.length + owedEvents.length;
+  const owedTotal =
+    owedPayments.reduce((sum, p) => sum + p.amount, 0) +
+    owedEvents.reduce((sum, e) => sum + (e.amount - e.discountAmount), 0);
+  const currency = owedPayments[0]?.currency ?? "MXN";
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className="flex flex-col gap-3">
       <div>
-        <h1 style={{ fontSize: 20, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>Pagos</h1>
-        <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>
+        <h1 className="m-0 text-xl font-semibold text-[var(--color-text-primary)]">Pagos</h1>
+        <p className="mt-0.5 text-sm text-[var(--color-text-secondary)]">
           Mensualidades y cargos de tus alumnos. Si ya pagaste por transferencia, adjunta tu comprobante.
         </p>
       </div>
 
       {isLoading ? (
-        <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", textAlign: "center", padding: "48px 0" }}>Cargando…</p>
-      ) : (!payments || payments.length === 0) && !hasEvents ? (
-        <div style={{ background: "var(--color-background-primary)", border: "0.5px dashed var(--color-border-tertiary)", borderRadius: 12, padding: "48px 20px", textAlign: "center" }}>
-          <CreditCard size={28} style={{ color: "var(--color-text-tertiary)", marginBottom: 8 }} />
-          <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-secondary)", margin: 0 }}>Sin pagos registrados</p>
+        <div className="flex flex-col gap-2" aria-busy="true" aria-label="Cargando pagos">
+          <div className="grid grid-cols-2 gap-2">
+            <Skeleton className="h-20" />
+            <Skeleton className="h-20" />
+          </div>
+          <Skeleton className="h-28" />
+          <Skeleton className="h-28" />
         </div>
+      ) : sorted.length === 0 && !hasEvents ? (
+        <EmptyState
+          icon={<CreditCard size={28} />}
+          title="Sin pagos registrados"
+          message="Cuando tu escuela genere un cargo, lo verás aquí."
+        />
       ) : (
         <>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {(payments ?? []).map((payment) => {
-              const style = STATUS_STYLE[payment.status] ?? STATUS_STYLE.PENDING!;
-              return (
-                <div key={payment.id} style={{ background: "var(--color-background-primary)", border: "0.5px solid var(--color-border-tertiary)", borderRadius: 12, padding: "13px 14px" }}>
-                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>
-                        {payment.concept}
-                      </p>
-                      <p style={{ fontSize: 11.5, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>
-                        {payment.student.firstName} {payment.student.lastName} · {payment.tenant.name}
-                      </p>
-                      <p style={{ fontSize: 11.5, color: "var(--color-text-tertiary)", margin: "2px 0 0" }}>
-                        {payment.status === "PAID" && payment.paidAt
-                          ? `Pagado el ${formatDate(payment.paidAt)}`
-                          : payment.dueDate ? `Vence ${formatDate(payment.dueDate)}` : ""}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <p style={{ fontSize: 14, fontWeight: 700, color: "var(--color-text-primary)", margin: 0 }}>
-                        {formatCurrency(payment.amount, payment.currency)}
-                      </p>
-                      <span style={{ display: "inline-block", background: style.bg, color: style.color, borderRadius: 20, padding: "1px 8px", fontSize: 10, fontWeight: 600, marginTop: 4 }}>
-                        {style.label}
-                      </span>
-                    </div>
-                  </div>
-                  {UPLOADABLE.includes(payment.status) && (
-                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: "0.5px solid var(--color-border-tertiary)" }}>
-                      <ReceiptUpload kind="payment" id={payment.id} hasReceipt={!!payment.receiptUrl} onUploaded={refresh} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          {/* Resumen: cuánto debo y qué está vencido */}
+          <div className="grid grid-cols-2 gap-2">
+            <SummaryCard
+              label="Por pagar"
+              value={formatCurrency(owedTotal, currency)}
+              hint={owedCount > 0 ? `${owedCount} ${owedCount === 1 ? "pago pendiente" : "pagos pendientes"}` : "Sin pagos pendientes"}
+              tone={overdueCount > 0 ? "danger" : owedCount > 0 ? "warning" : "success"}
+            />
+            <SummaryCard
+              label="Vencidos"
+              value={overdueCount}
+              hint={overdueCount > 0 ? "Atiéndelos primero" : "Estás al corriente"}
+              tone={overdueCount > 0 ? "danger" : "success"}
+            />
           </div>
+
+          {sorted.length > 0 && (
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {sorted.map((payment) => {
+                const overdue = payment.status === "OVERDUE";
+                return (
+                  <Card as="li" key={payment.id} danger={overdue}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="m-0 text-sm font-semibold text-[var(--color-text-primary)]">{payment.concept}</p>
+                        <p className="mt-0.5 text-xs text-[var(--color-text-secondary)]">
+                          {payment.student.firstName} {payment.student.lastName} · {payment.tenant.name}
+                        </p>
+                        <p className={`mt-0.5 text-xs ${overdue ? "font-semibold text-[var(--danger-fg)]" : "text-[var(--color-text-secondary)]"}`}>
+                          {payment.status === "PAID" && payment.paidAt
+                            ? `Pagado el ${formatDate(payment.paidAt)}`
+                            : payment.dueDate
+                              ? `${overdue ? "Venció" : "Vence"} ${formatDate(payment.dueDate)}`
+                              : ""}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-col items-end gap-1.5">
+                        <p className="m-0 text-base font-bold tabular-nums text-[var(--color-text-primary)]">
+                          {formatCurrency(payment.amount, payment.currency)}
+                        </p>
+                        <PaymentStatus status={payment.status} />
+                      </div>
+                    </div>
+                    {UPLOADABLE.includes(payment.status) && (
+                      <div className="mt-3 border-t border-[var(--color-border-tertiary)] pt-3">
+                        <ReceiptUpload kind="payment" id={payment.id} hasReceipt={!!payment.receiptUrl} onUploaded={refresh} />
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </ul>
+          )}
 
           {hasEvents && (
             <>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, margin: "8px 0 0" }}>
-                <PartyPopper size={14} className="portal-accent-text" />
-                <h2 style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>Eventos</h2>
+              <div className="mt-2 flex items-center gap-1.5">
+                <PartyPopper size={16} className="text-[var(--brand-text)]" aria-hidden="true" />
+                <h2 className="m-0 text-sm font-semibold text-[var(--color-text-primary)]">Eventos</h2>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className="flex flex-col gap-2">
                 {(eventPayments ?? []).map((eventPayment) => (
                   <EventPaymentCard key={eventPayment.id} eventPayment={eventPayment} onChange={refresh} />
                 ))}

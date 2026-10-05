@@ -37,6 +37,10 @@
   --danger-fg:  #b91c1c;  --danger-bg:  #fee2e2;  --danger-border:  #fecaca;    /* 5.3:1 */
   --neutral-fg: #475569;  --neutral-bg: #e8edf3;  --neutral-border: #cbd5e1;    /* 6.4:1 */
 
+  /* Peligro sólido (contadores, avisos críticos): texto blanco 6.5:1 en ambos modos */
+  --danger-solid:    #b91c1c;
+  --danger-solid-fg: #ffffff;
+
   /* Marca de la superficie: verde en el dashboard (por defecto) */
   --brand:      #006241;
   --brand-fg:   #ffffff;      /* texto sobre --brand */
@@ -87,7 +91,7 @@
 .dark [data-surface="portal"] {
   --brand:      #A8C7EA;
   --brand-fg:   #1D3557;
-  --brand-tint: rgba(168, 199, 234, 0.16);
+  --brand-tint: #1d3a5c;      /* sólido: texto #A8C7EA 6.6:1 (con alfa .16 sobre la tarjeta daba 3.75:1) */
   --brand-text: #A8C7EA;
 }
 

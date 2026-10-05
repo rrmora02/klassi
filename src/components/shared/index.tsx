@@ -85,13 +85,15 @@ interface EmptyStateProps {
   title:   string;
   message: string;
   action?: React.ReactNode;
+  icon?:   React.ReactNode;
 }
 
-export function EmptyState({ title, message, action }: EmptyStateProps) {
+export function EmptyState({ title, message, action, icon }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-300 dark:border-[rgba(255,255,255,0.20)] bg-white dark:bg-sb-uplift py-16">
-      <p className="font-medium text-gray-600 dark:text-sb-light/80">{title}</p>
-      <p className="mt-1 text-sm text-gray-400 dark:text-sb-light/50">{message}</p>
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-border-secondary)] bg-[var(--color-background-primary)] px-5 py-12 text-center">
+      {icon && <div className="mb-2 text-[var(--color-text-secondary)]" aria-hidden="true">{icon}</div>}
+      <p className="font-medium text-[var(--color-text-primary)]">{title}</p>
+      <p className="mt-1 text-sm text-[var(--color-text-secondary)]">{message}</p>
       {action && <div className="mt-4">{action}</div>}
     </div>
   );

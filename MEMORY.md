@@ -130,6 +130,8 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   subidos a .55 / .62 de alfa en `globals.css`.
 - Pruebas de navegador en sandbox con proxy: importar TODAS las CAs de `/root/.ccr/ca-bundle.crt` al NSS
   (ver `e2e/README.md`); `pkill -f` con el patrón dentro del mismo comando se mata a sí mismo.
+- Tintas translúcidas de marca (`rgba` claro sobre la tarjeta verde en oscuro) bajan el contraste del texto de la insignia
+  (3,75:1): en oscuro usar tinta sólida (`--brand-tint`). Calcular antes de elegir (alfa o sólido).
 - Interfaz: 138 usos de texto < 12 px, 1.472 estilos en línea vs 1.002 clases, insignia de estado
   duplicada en 5 archivos y dos colores de marca (verde `#006241` dashboard, azul `#1D3557` portal y
   correos). Se aborda en la especificación 001.
@@ -156,13 +158,14 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   rendimiento y suite E2E (25/25 en verde el 2026-07-31).
 - Rama `sdd/constitution`: constitución v1.1.0, este archivo y `CLAUDE.md` (lo carga cada sesión).
 - Rama `001-pulido-visual-portal` (sale de `sdd/constitution`): `specs/001-pulido-visual-portal/` con
-  `spec.md` v2, `plan.md` y `tasks.md` aprobados. **Fase 0 (fundaciones) hecha salvo T008**: entorno
-  reproducible, capturas "antes" en `evidencia/antes/`, pruebas `ui-standards` y `a11y` con línea base
-  que no puede empeorar (`e2e/ui-baseline.json`), tokens y primitivas. Línea base: 202 textos < 12 px,
-  64 objetivos pequeños, contraste propio 67 claro / 163 oscuro, axe contrast 91 (182 antes de los
-  tokens). T008 (crítica con la skill `frontend-design`) sigue bloqueada: el plugin no estaba habilitado
-  (se instala desde la tarjeta de claude.ai; no existe `/plugin` en la nube). Siguiente: fase 1 (portal:
-  Pagos y Notificaciones).
+  `spec.md` v2, `plan.md` y `tasks.md` aprobados. **Fase 0 hecha** (salvo T008) y **fase 1 hecha**
+  (portal: Pagos con resumen y lo vencido primero, Notificaciones con "Nueva", botón de comprobante y
+  pestañas inferiores; todo con las primitivas de `shared/`). Pagos y Notificaciones están en cero en
+  todas las métricas de `e2e/ui-baseline.json`; portal completo: 4 textos < 12 px, 6 objetivos pequeños,
+  contraste 1/1 (claro/oscuro). Total producto: 164 textos < 12 px, 62 objetivos, contraste 61/155
+  (el resto es dashboard y fases 2–5). T008 (crítica con `frontend-design`) sigue bloqueada: el plugin
+  no estaba habilitado (se instala en claude.ai/customize/plugins; no existe `/plugin` en la nube).
+  Siguiente: fase 2 (eventos, pase de lista con avance, Inicio con lo accionable).
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
   `docs/plan-pruebas-qa.md`, `docs/qa-run-2026-07-31.md`, `DESIGN.md` (dashboard).
 
@@ -170,6 +173,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-05 | rama `001-pulido-visual-portal` | Fase 1: portal Pagos y Notificaciones, botón de comprobante, pestañas; tokens `--danger-solid`, tinta de marca sólida en oscuro |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Fase 0: entorno reproducible, capturas antes, pruebas ui-standards/a11y con línea base, tokens y primitivas |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Plan aprobado y `tasks.md` (fases 0–6) |
 | 2026-10-05 | rama `001-pulido-visual-portal` | Spec 001 v2 (alcance portal + dashboard, aclaraciones resueltas) y plan técnico |

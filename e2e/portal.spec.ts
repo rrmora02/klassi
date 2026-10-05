@@ -49,6 +49,34 @@ test.describe("Portal del tutor", () => {
     expect(overflow).toBeLessThanOrEqual(1);
   });
 
+  test("Pagos: el resumen va antes de la lista y los estados llevan texto", async ({ page }) => {
+    await page.goto("/portal/pagos");
+    const porPagar = page.getByText("Por pagar", { exact: true });
+    await expect(porPagar).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText("Vencidos", { exact: true })).toBeVisible();
+
+    // El resumen muestra un monto en pesos y precede a la primera tarjeta de pago
+    await expect(page.getByText(/\$[\d,]+\.\d{2}/).first()).toBeVisible();
+    const firstItem = page.locator("li").first();
+    if (await firstItem.count()) {
+      const resumen = await porPagar.boundingBox();
+      const lista = await firstItem.boundingBox();
+      expect(resumen!.y).toBeLessThan(lista!.y);
+    }
+
+    // El estado de cada pago se lee como texto (RF-004), no solo como color
+    await expect(page.getByText(/^(Pendiente|Vencido|Pagado|Cancelado)$/).first()).toBeVisible();
+  });
+
+  test("Notificaciones: las no leídas se identifican con texto, no solo con color", async ({ page }) => {
+    await page.goto("/portal/notificaciones");
+    const resumen = page.getByText(/^(\d+ sin leer|Todo al día)$/);
+    await expect(resumen).toBeVisible({ timeout: 20_000 });
+    const texto = (await resumen.textContent()) ?? "";
+    const sinLeer = Number(texto.match(/^(\d+)/)?.[1] ?? 0);
+    await expect(page.getByText("Nueva", { exact: true })).toHaveCount(sinLeer);
+  });
+
   test("el tutor NO puede entrar al dashboard del staff", async ({ page }) => {
     await page.goto("/dashboard");
     // El layout lo rebota (onboarding) y el guard de onboarding lo regresa al portal

@@ -1,15 +1,17 @@
 "use client";
 
 import { api } from "@/lib/trpc";
+import { useToast } from "@/hooks/use-toast";
 import { Bell, Megaphone, CreditCard, MessageCircle, CheckCheck, CheckCircle2, PartyPopper } from "lucide-react";
+import { ActionButton, Card, EmptyState, Skeleton, StatusBadge } from "@/components/shared";
 
 function iconForType(type: string) {
-  if (type === "announcement")       return <Megaphone size={16} className="portal-ico-announce" />;
-  if (type === "payment.paid")       return <CheckCircle2 size={16} className="portal-ico-message" />;
-  if (type.startsWith("payment"))    return <CreditCard size={16} className="portal-ico-payment" />;
-  if (type === "event.invitation")   return <PartyPopper size={16} className="portal-ico-announce" />;
-  if (type.startsWith("message"))    return <MessageCircle size={16} className="portal-ico-message" />;
-  return <Bell size={16} style={{ color: "var(--color-text-tertiary)" }} />;
+  if (type === "announcement")       return <Megaphone size={18} className="portal-ico-announce" aria-hidden="true" />;
+  if (type === "payment.paid")       return <CheckCircle2 size={18} className="portal-ico-message" aria-hidden="true" />;
+  if (type.startsWith("payment"))    return <CreditCard size={18} className="portal-ico-payment" aria-hidden="true" />;
+  if (type === "event.invitation")   return <PartyPopper size={18} className="portal-ico-announce" aria-hidden="true" />;
+  if (type.startsWith("message"))    return <MessageCircle size={18} className="portal-ico-message" aria-hidden="true" />;
+  return <Bell size={18} className="text-[var(--color-text-secondary)]" aria-hidden="true" />;
 }
 
 function timeAgo(date: Date | string) {
@@ -26,6 +28,7 @@ function timeAgo(date: Date | string) {
 
 export default function NotificacionesPage() {
   const utils = api.useContext();
+  const { toast } = useToast();
   const { data, isLoading } = api.notifications.list.useQuery({ page: 1, pageSize: 50 });
 
   const invalidate = () => {
@@ -33,76 +36,89 @@ export default function NotificacionesPage() {
     utils.notifications.unreadCount.invalidate();
   };
   const markRead    = api.notifications.markRead.useMutation({ onSuccess: invalidate });
-  const markAllRead = api.notifications.markAllRead.useMutation({ onSuccess: invalidate });
+  const markAllRead = api.notifications.markAllRead.useMutation({
+    onSuccess: () => {
+      invalidate();
+      toast({ title: "Listo", description: "Marcaste todos tus avisos como leídos." });
+    },
+    onError: (e) => toast({ title: "No se pudo completar", description: e.message, variant: "destructive" }),
+  });
 
   const notifications = data?.notifications ?? [];
+  const unreadCount   = data?.unread ?? 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 600, color: "var(--color-text-primary)", margin: 0 }}>Notificaciones</h1>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "2px 0 0" }}>
-            {data ? `${data.unread} sin leer` : "…"}
+          <h1 className="m-0 text-xl font-semibold text-[var(--color-text-primary)]">Notificaciones</h1>
+          <p className="mt-0.5 text-sm text-[var(--color-text-secondary)]">
+            {data ? (unreadCount > 0 ? `${unreadCount} sin leer` : "Todo al día") : "…"}
           </p>
         </div>
-        {(data?.unread ?? 0) > 0 && (
-          <button
-            onClick={() => markAllRead.mutate()}
-            disabled={markAllRead.isLoading}
-            className="portal-accent-text"
-            style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: "0.5px solid var(--color-border-secondary)", borderRadius: 20, padding: "6px 12px", fontSize: 11.5, fontWeight: 600, cursor: "pointer" }}
-          >
-            <CheckCheck size={13} /> Marcar leídas
-          </button>
+        {unreadCount > 0 && (
+          <ActionButton variant="secondary" onClick={() => markAllRead.mutate()} loading={markAllRead.isLoading}>
+            {!markAllRead.isLoading && <CheckCheck className="h-4 w-4" aria-hidden="true" />} Marcar leídas
+          </ActionButton>
         )}
       </div>
 
       {isLoading ? (
-        <p style={{ fontSize: 13, color: "var(--color-text-tertiary)", textAlign: "center", padding: "48px 0" }}>Cargando…</p>
-      ) : notifications.length === 0 ? (
-        <div style={{ background: "var(--color-background-primary)", border: "0.5px dashed var(--color-border-tertiary)", borderRadius: 12, padding: "48px 20px", textAlign: "center" }}>
-          <Bell size={28} style={{ color: "var(--color-text-tertiary)", marginBottom: 8 }} />
-          <p style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-secondary)", margin: 0 }}>Sin notificaciones aún</p>
-          <p style={{ fontSize: 12.5, color: "var(--color-text-tertiary)", margin: "4px 0 0" }}>
-            Aquí verás los avisos y recordatorios de tu escuela
-          </p>
+        <div className="flex flex-col gap-2" aria-busy="true" aria-label="Cargando notificaciones">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
         </div>
+      ) : notifications.length === 0 ? (
+        <EmptyState
+          icon={<Bell size={28} />}
+          title="Sin notificaciones aún"
+          message="Aquí verás los avisos y recordatorios de tu escuela."
+        />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {notifications.map((notification) => {
             const unread = !notification.readAt;
-            return (
-              <button
-                key={notification.id}
-                onClick={() => unread && markRead.mutate({ id: notification.id })}
-                className={unread ? "portal-accent-border" : undefined}
-                style={{
-                  display: "flex", gap: 10, alignItems: "flex-start", textAlign: "left", cursor: unread ? "pointer" : "default",
-                  background: "var(--color-background-primary)",
-                  border: "0.5px solid var(--color-border-tertiary)",
-                  borderRadius: 12, padding: "12px 14px", width: "100%",
-                  opacity: unread ? 1 : 0.75,
-                }}
-              >
-                <span className="portal-icon-bubble" style={{ width: 32, height: 32, borderRadius: 9, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            const body = (
+              <>
+                <span className="portal-icon-bubble flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]">
                   {iconForType(notification.type)}
                 </span>
-                <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontSize: 13, fontWeight: unread ? 700 : 500, color: "var(--color-text-primary)" }}>
-                    {notification.title}
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className={`text-sm text-[var(--color-text-primary)] ${unread ? "font-bold" : "font-medium"}`}>
+                      {notification.title}
+                    </span>
+                    {unread && <StatusBadge tone="brand" icon={Bell}>Nueva</StatusBadge>}
                   </span>
-                  <span style={{ display: "block", fontSize: 12.5, color: "var(--color-text-secondary)", marginTop: 2, lineHeight: 1.45 }}>
+                  <span className="mt-1 block text-sm leading-relaxed text-[var(--color-text-secondary)]">
                     {notification.body}
                   </span>
-                  <span style={{ display: "block", fontSize: 10.5, color: "var(--color-text-tertiary)", marginTop: 4 }}>
+                  <span className="mt-1.5 block text-xs text-[var(--color-text-secondary)]">
                     {timeAgo(notification.createdAt)}
                   </span>
                 </span>
-              </button>
+              </>
+            );
+            const rowClass = "flex w-full items-start gap-3 p-4 text-left";
+            return (
+              <Card as="li" key={notification.id} accent={unread} padding="none">
+                {unread ? (
+                  <button
+                    type="button"
+                    onClick={() => markRead.mutate({ id: notification.id })}
+                    aria-label={`Marcar como leída: ${notification.title}`}
+                    className={`${rowClass} min-h-[var(--tap-min)] cursor-pointer rounded-xl bg-transparent`}
+                  >
+                    {body}
+                  </button>
+                ) : (
+                  <div className={rowClass}>{body}</div>
+                )}
+              </Card>
             );
           })}
-        </div>
+        </ul>
       )}
     </div>
   );

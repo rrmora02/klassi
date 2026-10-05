@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import { api } from "@/lib/trpc";
 import { useToast } from "@/hooks/use-toast";
-import { Paperclip, Check, Eye } from "lucide-react";
+import { Paperclip, CheckCircle2, Eye } from "lucide-react";
+import { ActionButton } from "@/components/shared";
 
 interface Props {
   kind: "payment" | "event";
@@ -67,44 +68,32 @@ export function ReceiptUpload({ kind, id, hasReceipt, onUploaded }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+    <div className="flex flex-wrap items-center gap-2">
       <input
         ref={inputRef}
         type="file"
         accept="image/jpeg,image/png,image/webp,application/pdf"
-        style={{ display: "none" }}
+        className="hidden"
         onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f); }}
       />
       {hasReceipt && (
         <>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600, color: "#0f766e" }}>
-            <Check size={12} /> Comprobante enviado
+          <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--success-fg)]">
+            <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> Comprobante enviado
           </span>
-          <button
-            onClick={handleView}
-            style={{ display: "inline-flex", alignItems: "center", gap: 4, background: "transparent", border: "none", padding: 0, fontSize: 11, fontWeight: 600, cursor: "pointer" }}
-            className="portal-accent-text"
-          >
-            <Eye size={12} /> Ver
-          </button>
+          <ActionButton variant="ghost" onClick={handleView}>
+            <Eye className="h-4 w-4" aria-hidden="true" /> Ver
+          </ActionButton>
         </>
       )}
-      <button
+      <ActionButton
+        variant={hasReceipt ? "secondary" : "primary"}
         onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className={hasReceipt ? "portal-accent-text" : undefined}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 5,
-          background: hasReceipt ? "transparent" : "#1D3557",
-          color: hasReceipt ? undefined : "#fff",
-          border: hasReceipt ? "0.5px solid var(--color-border-secondary)" : "none",
-          borderRadius: 16, padding: "5px 12px", fontSize: 11, fontWeight: 600,
-          cursor: uploading ? "wait" : "pointer",
-        }}
+        loading={uploading}
       >
-        <Paperclip size={12} />
+        {!uploading && <Paperclip className="h-4 w-4" aria-hidden="true" />}
         {uploading ? "Subiendo…" : hasReceipt ? "Reemplazar" : "Adjuntar comprobante"}
-      </button>
+      </ActionButton>
     </div>
   );
 }

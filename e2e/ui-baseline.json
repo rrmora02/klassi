@@ -90,18 +90,15 @@
     "meta-viewport": 1
   },
   "a11y|portal-tutor|/portal/notificaciones|claro": {
-    "color-contrast": 2,
     "meta-viewport": 1
   },
   "a11y|portal-tutor|/portal/notificaciones|oscuro": {
-    "color-contrast": 2,
     "meta-viewport": 1
   },
   "a11y|portal-tutor|/portal/pagos|claro": {
     "meta-viewport": 1
   },
   "a11y|portal-tutor|/portal/pagos|oscuro": {
-    "color-contrast": 2,
     "meta-viewport": 1
   },
   "a11y|portal-tutor|/portal|claro": {
@@ -251,45 +248,45 @@
     "contrastDark": 23
   },
   "ui|portal-instructor|/portal/asistencia|360": {
-    "smallText": 5,
+    "smallText": 1,
     "smallTargets": 0,
     "overflow": 0,
     "contrastLight": 0,
     "contrastDark": 0
   },
   "ui|portal-instructor|/portal|360": {
-    "smallText": 4,
+    "smallText": 0,
     "smallTargets": 1,
     "overflow": 0,
     "contrastLight": 0,
     "contrastDark": 0
   },
   "ui|portal-tutor|/portal/cuenta|360": {
-    "smallText": 5,
+    "smallText": 0,
     "smallTargets": 3,
-    "overflow": 0,
-    "contrastLight": 2,
-    "contrastDark": 2
-  },
-  "ui|portal-tutor|/portal/notificaciones|360": {
-    "smallText": 8,
-    "smallTargets": 1,
-    "overflow": 0,
-    "contrastLight": 3,
-    "contrastDark": 3
-  },
-  "ui|portal-tutor|/portal/pagos|360": {
-    "smallText": 12,
-    "smallTargets": 1,
-    "overflow": 0,
-    "contrastLight": 1,
-    "contrastDark": 3
-  },
-  "ui|portal-tutor|/portal|360": {
-    "smallText": 8,
-    "smallTargets": 2,
     "overflow": 0,
     "contrastLight": 1,
     "contrastDark": 1
+  },
+  "ui|portal-tutor|/portal/notificaciones|360": {
+    "smallText": 0,
+    "smallTargets": 0,
+    "overflow": 0,
+    "contrastLight": 0,
+    "contrastDark": 0
+  },
+  "ui|portal-tutor|/portal/pagos|360": {
+    "smallText": 0,
+    "smallTargets": 0,
+    "overflow": 0,
+    "contrastLight": 0,
+    "contrastDark": 0
+  },
+  "ui|portal-tutor|/portal|360": {
+    "smallText": 3,
+    "smallTargets": 2,
+    "overflow": 0,
+    "contrastLight": 0,
+    "contrastDark": 0
   }
 }

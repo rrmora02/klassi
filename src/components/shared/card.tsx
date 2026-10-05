@@ -7,17 +7,20 @@ interface CardProps extends React.HTMLAttributes<HTMLElement> {
   as?:      "div" | "section" | "article" | "li";
   /** Franja de color de marca a la izquierda (p. ej. avisos no leídos) */
   accent?:  boolean;
+  /** Borde de peligro (p. ej. un pago vencido) */
+  danger?:  boolean;
   padding?: "none" | "md" | "lg";
 }
 
 const PADDING = { none: "", md: "p-4", lg: "p-5" } as const;
 
-export function Card({ as: Tag = "div", accent, padding = "md", className, ...rest }: CardProps) {
+export function Card({ as: Tag = "div", accent, danger, padding = "md", className, ...rest }: CardProps) {
   return (
     <Tag
       className={cn(
         "rounded-xl border border-[var(--color-border-tertiary)] bg-[var(--color-background-primary)]",
         accent && "border-l-[3px] border-l-[var(--brand)]",
+        danger && "border-[var(--danger-border)] border-l-[3px] border-l-[var(--danger-fg)]",
         PADDING[padding],
         className,
       )}
