@@ -131,11 +131,16 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   mano (vista previa de invitación, correos) pasa siempre por `escapeHtml` (`src/lib/escape-html.ts`).
 - El bucket `comprobantes` se crea con tope de 10 MB y solo JPEG/PNG/WebP/PDF; si ya existía, aplicar los mismos
   límites a mano en Supabase (Storage → bucket → editar).
+- **Vercel:** los crons de `vercel.json` solo corren en el *Production* de cada proyecto (por eso un proyecto por
+  ambiente); Hobby no sirve (no comercial, crons diarios). `NEXT_PUBLIC_APP_URL` es obligatoria en cada
+  ambiente: si falta, los enlaces y correos apuntan a `https://klassi.io`. `postinstall` ejecuta `prisma generate`.
 - La integración de GitHub de las sesiones no escribe (403); se empuja con token personal. Los
   commits salen "Unverified" por falta de firma. Cualquier token pegado en un chat se considera comprometido.
 
 ## 8. Deuda conocida
 
+0. **No existe migración inicial (baseline)**: `prisma migrate deploy` falla en una BD vacía; los ambientes
+   nuevos se crean con `prisma db push` + el SQL de `security_rls_deny_all`. Resolver con una especificación SDD.
 1. **Los modelos de notificaciones/push/preferencias/`ParentInvitation` no tienen migración**: solo
    están en `schema.prisma`. Hay que generar la migración o aplicar `prisma db push` en producción
    antes de desplegar (si no, `/portal/notificaciones` falla).
@@ -184,6 +189,8 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 - Misma rama, segunda pasada (lista de 19 controles de seguridad): ver bitácora. Cubiertos
   sin cambios: claves ocultas, historial de git limpio, autenticación forzada, acceso por registro, queries
   parametrizadas (sin SQL crudo), cookies/contraseñas (las gestiona Clerk), cabeceras/HTTPS (HSTS, CSP, etc.).
+- Despliegue: `docs/guia-despliegue-vercel.md` (4 proyectos de Vercel —dev/QA/staging/prod— desde el mismo repo,
+  uno por rama; costos; PWA y push en QA). QA es el primer destino. Aún no hay ningún ambiente desplegado.
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
   `docs/plan-pruebas-qa.md`, `docs/qa-run-2026-07-31.md`, `DESIGN.md` (dashboard).
 
@@ -191,6 +198,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-09 | rama `docs/guia-despliegue` | Guía de despliegue por ambientes (Vercel + Supabase), costos y pruebas de PWA; `postinstall: prisma generate` |
 | 2026-10-09 | `main` | `sdd/constitution` + `fix/auditoria-env-rls` integradas a `main` (fast-forward `a6f5438` → `634389b`) |
 | 2026-10-09 | rama `fix/auditoria-env-rls` | Lista de 19 controles: datos mínimos de `User` al cliente, `escapeHtml` en la vista previa de invitación, límite de tasa tRPC, límites del bucket, `poweredByHeader` off, `npm audit fix` (35→15 avisos), Dependabot y CI (typecheck + ESLint + audit) |
 | 2026-10-09 | rama `fix/auditoria-env-rls` | Auditoría env/RLS: `.eslintrc.json` con reglas de frontera cliente/servidor y migración `security_rls_deny_all` (RLS deny-all; verificada en local) |
