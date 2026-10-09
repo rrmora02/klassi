@@ -73,7 +73,7 @@
     "eslint-config-next": "^14.0.0",
     "postcss": "^8.4.0",
     "prisma": "^5.7.0",
-    "typescript": "^5.3.0"
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": "18.x || 20.x"
