@@ -5,7 +5,7 @@ Se lee al iniciar y **se actualiza en cada cambio** (ver "Cómo mantener este ar
 Las reglas de fondo están en `.specify/memory/constitution.md`; aquí está el estado y el
 conocimiento práctico. Si este archivo y el código discrepan, gana el código: corrige el archivo.
 
-**Última actualización:** 2026-10-09 · **`main` en:** `a6f5438`
+**Última actualización:** 2026-10-09 · **`main` en:** `634389b` (+ este commit de documentación)
 
 ## 1. Qué es Klassi
 
@@ -164,10 +164,11 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 ## 9. Estado y trabajo en curso
 
-- `main` = `a6f5438`: PWA, portal, notificaciones, comprobantes, instructor en portal, auditoría,
-  rendimiento y suite E2E (25/25 en verde el 2026-07-31).
-- Rama `sdd/constitution`: constitución v1.1.0, este archivo y `CLAUDE.md` (lo carga cada sesión). Siguiente paso SDD: primera
-  especificación (candidata: envío de comunicados a escala). **Es el punto de partida vigente.**
+- `main` (desde 2026-10-09, fast-forward desde `a6f5438`): PWA, portal, notificaciones, comprobantes,
+  instructor en portal, auditoría, rendimiento y suite E2E (25/25 el 2026-07-31), más la base SDD
+  (constitución v1.1.0, este archivo, `CLAUDE.md`) y la auditoría de seguridad de abajo. Las ramas
+  `sdd/constitution` y `fix/auditoria-env-rls` ya están contenidas en `main`. Siguiente paso SDD: primera
+  especificación (candidata: envío de comunicados a escala, o la migración a Next 15.5+).
 - **Cancelado el 2026-10-09:** la especificación 001 «pulido visual del portal y del dashboard». No se integra y
   no debe retomarse sin una decisión nueva del dueño. El trabajo (spec, plan, tareas, fases 0–2, pruebas de
   interfaz con línea base, tokens y primitivas) quedó **archivado, sin tocar**, en la rama
@@ -175,11 +176,12 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   reutilizables (sección 7: entorno E2E en sandbox, servidor huérfano tras reconstruir, punto ciego de axe con
   fondos translúcidos, plugins no cargados en sesiones de nube ya abiertas). Se puede rescatar algo con
   `git cherry-pick` o `git checkout 001-pulido-visual-portal -- <ruta>`.
-- Rama `fix/auditoria-env-rls` (desde `sdd/constitution`): auditoría de variables en cliente y RLS.
+- Auditoría de variables en cliente y RLS (rama `fix/auditoria-env-rls`, integrada a `main`).
   Resultado: sin secretos en el bundle de cliente (build con valores centinela, `.next/static` limpio), sin
   consultas SQL crudas, mutaciones por `id` precedidas de comprobación de escuela; hallazgo real: ninguna
-  tabla tenía RLS. Se agrega `.eslintrc.json` y la migración `security_rls_deny_all` (pendiente de aplicar).
-- Mismo `fix/auditoria-env-rls`, segunda pasada (lista de 19 controles de seguridad): ver bitácora. Cubiertos
+  tabla tenía RLS. Se agrega `.eslintrc.json` y la migración `security_rls_deny_all` (**integrada en `main` pero
+  NO aplicada en producción**: ver deuda 9; `npm run build` no corre migraciones).
+- Misma rama, segunda pasada (lista de 19 controles de seguridad): ver bitácora. Cubiertos
   sin cambios: claves ocultas, historial de git limpio, autenticación forzada, acceso por registro, queries
   parametrizadas (sin SQL crudo), cookies/contraseñas (las gestiona Clerk), cabeceras/HTTPS (HSTS, CSP, etc.).
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
@@ -189,6 +191,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-09 | `main` | `sdd/constitution` + `fix/auditoria-env-rls` integradas a `main` (fast-forward `a6f5438` → `634389b`) |
 | 2026-10-09 | rama `fix/auditoria-env-rls` | Lista de 19 controles: datos mínimos de `User` al cliente, `escapeHtml` en la vista previa de invitación, límite de tasa tRPC, límites del bucket, `poweredByHeader` off, `npm audit fix` (35→15 avisos), Dependabot y CI (typecheck + ESLint + audit) |
 | 2026-10-09 | rama `fix/auditoria-env-rls` | Auditoría env/RLS: `.eslintrc.json` con reglas de frontera cliente/servidor y migración `security_rls_deny_all` (RLS deny-all; verificada en local) |
 | 2026-10-09 | rama `sdd/constitution` | Se cancela la spec 001 (pulido visual); queda archivada en `001-pulido-visual-portal` y el estado vigente vuelve a este punto |
