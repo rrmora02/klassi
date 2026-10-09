@@ -115,6 +115,13 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 - 16 páginas que consultaban usuario/escuela por su cuenta se migraron a `getCurrentContext()`
   (`onboarding` no: crea el usuario si no existe).
 - En contenedores efímeros puede haber TypeScript 6 (avisa de `baseUrl`): usar `npm ci` (lockfile fija 5.9.3).
+- **Acceso a datos y RLS:** la app solo usa Prisma desde el servidor con el rol dueño/`postgres`
+  (BYPASSRLS), así que RLS no la afecta; el aislamiento entre escuelas lo hace el código (`tenantId`,
+  niveles de procedure, vínculos `ParentStudent`). `supabase-js` solo existe en `storage.service.ts`
+  (service role, servidor). Toda tabla nueva en `public` debe activar RLS en su migración (la Data API
+  de Supabase la expondría con la clave `anon`). `.eslintrc.json` bloquea en `components/`, `hooks/` y
+  `lib/` importar `@/server/*` (salvo `import type`), SDKs de servidor y leer secretos de `process.env`;
+  `layout/actions.ts` y `layout/topbar.tsx` son código de servidor y están exentos.
 - La integración de GitHub de las sesiones no escribe (403); se empuja con token personal. Los
   commits salen "Unverified" por falta de firma. Cualquier token pegado en un chat se considera comprometido.
 
@@ -130,7 +137,12 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 6. Al reemplazar un comprobante, el archivo anterior queda huérfano en el bucket.
 7. `ParentInvitation` sin uso. Hay un 404 en consola en `/sign-in` sin identificar.
 8. Falta validación manual en iPhone/Android reales (instalación PWA y push) y con dos escuelas.
-9. Pendiente confirmar en producción: `DATABASE_URL` por el pooler de Supabase (puerto 6543) y el
+9. **Aplicar en producción `prisma/migrations/security_rls_deny_all`** (RLS deny-all en todas las tablas
+   `public`; verificada en Postgres local, no aplicada) tras comprobar que el usuario de `DATABASE_URL` es
+   `postgres`/dueño o tiene BYPASSRLS, y correr los Advisors de Supabase. Además: el token de asistencia por
+   WhatsApp (`attendanceToken.ts`) es un HMAC sin caducidad (el mensaje dice «expirado»), y los crons comparan
+   `CRON_SECRET` sin tiempo constante (riesgo bajo).
+10. Pendiente confirmar en producción: `DATABASE_URL` por el pooler de Supabase (puerto 6543) y el
    restablecimiento de contraseña activo en Clerk.
 
 ## 9. Estado y trabajo en curso
@@ -146,6 +158,10 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   reutilizables (sección 7: entorno E2E en sandbox, servidor huérfano tras reconstruir, punto ciego de axe con
   fondos translúcidos, plugins no cargados en sesiones de nube ya abiertas). Se puede rescatar algo con
   `git cherry-pick` o `git checkout 001-pulido-visual-portal -- <ruta>`.
+- Rama `fix/auditoria-env-rls` (desde `sdd/constitution`): auditoría de variables en cliente y RLS.
+  Resultado: sin secretos en el bundle de cliente (build con valores centinela, `.next/static` limpio), sin
+  consultas SQL crudas, mutaciones por `id` precedidas de comprobación de escuela; hallazgo real: ninguna
+  tabla tenía RLS. Se agrega `.eslintrc.json` y la migración `security_rls_deny_all` (pendiente de aplicar).
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
   `docs/plan-pruebas-qa.md`, `docs/qa-run-2026-07-31.md`, `DESIGN.md` (dashboard).
 
@@ -153,6 +169,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-09 | rama `fix/auditoria-env-rls` | Auditoría env/RLS: `.eslintrc.json` con reglas de frontera cliente/servidor y migración `security_rls_deny_all` (RLS deny-all; verificada en local) |
 | 2026-10-09 | rama `sdd/constitution` | Se cancela la spec 001 (pulido visual); queda archivada en `001-pulido-visual-portal` y el estado vigente vuelve a este punto |
 | 2026-10-05 | rama `sdd/constitution` | Se crean la constitución (v1.1.0), `MEMORY.md` y `CLAUDE.md`; actualizar la memoria pasa a ser obligatorio |
 | 2026-10-05 | `a6f5438` | `main` recibe todo el trabajo PWA (fast-forward) |

@@ -1,0 +1,25 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": { "ecmaVersion": 2022, "sourceType": "module", "ecmaFeatures": { "jsx": true } },
+  "plugins": ["@typescript-eslint", "@next/next"],
+  "overrides": [
+    {
+      "files": ["src/components/**/*.{ts,tsx}", "src/hooks/**/*.{ts,tsx}", "src/lib/**/*.{ts,tsx}"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": ["error", { "patterns": [
+          { "group": ["@/server/*"], "message": "El código de cliente no debe importar módulos de servidor (usa tRPC o `import type`).", "allowTypeImports": true },
+          { "group": ["@supabase/*", "web-push", "resend", "stripe", "@clerk/backend", "pg"], "message": "SDK de servidor: no importar desde componentes, hooks ni lib." }
+        ]}],
+        "no-restricted-syntax": ["error", {
+          "selector": "MemberExpression[object.object.name='process'][object.property.name='env'][property.name=/SERVICE_ROLE|SECRET|PRIVATE|DATABASE_URL|DIRECT_URL|API_KEY/]",
+          "message": "No leer secretos desde código de cliente; solo NEXT_PUBLIC_* (público por diseño)."
+        }]
+      }
+    },
+    {
+      "files": ["src/components/layout/actions.ts", "src/components/layout/topbar.tsx"],
+      "rules": { "@typescript-eslint/no-restricted-imports": "off" }
+    }
+  ]
+}
