@@ -42,6 +42,8 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // No anunciar el framework en la cabecera X-Powered-By
+  poweredByHeader: false,
   async headers() {
     return [
       {

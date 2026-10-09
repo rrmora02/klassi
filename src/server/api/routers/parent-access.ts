@@ -1,3 +1,4 @@
+import { safeUserSelect } from "@/server/api/selects";
 import { z } from "zod";
 import { createTRPCRouter, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
@@ -13,7 +14,7 @@ export const parentAccessRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const student = await ctx.db.student.findFirst({
         where:   { id: input.studentId, tenantId: ctx.tenantId },
-        include: { parents: { include: { user: true } } },
+        include: { parents: { include: { user: { select: { ...safeUserSelect, clerkId: true } } } } },
       });
       if (!student) throw new TRPCError({ code: "NOT_FOUND", message: "Alumno no encontrado" });
 

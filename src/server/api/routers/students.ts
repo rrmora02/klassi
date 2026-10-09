@@ -1,3 +1,4 @@
+import { safeUserSelect } from "@/server/api/selects";
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
@@ -162,7 +163,7 @@ export const studentsRouter = createTRPCRouter({
               group: {
                 include: {
                   discipline: true,
-                  instructor: { include: { user: true } },
+                  instructor: { include: { user: { select: safeUserSelect } } },
                 },
               },
             },
@@ -173,7 +174,7 @@ export const studentsRouter = createTRPCRouter({
             take:    12,
           },
           parents: {
-            include: { user: true },
+            include: { user: { select: safeUserSelect } },
           },
         },
       });
@@ -372,7 +373,7 @@ export const studentsRouter = createTRPCRouter({
       if (tutorName || tutorEmail || tutorPhone || tutorRelationship) {
         const existingParentLink = await db.parentStudent.findFirst({
           where: { studentId: id },
-          include: { user: true },
+          include: { user: { select: safeUserSelect } },
           orderBy: { createdAt: "asc" }
         });
 

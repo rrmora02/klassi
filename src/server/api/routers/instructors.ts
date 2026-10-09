@@ -1,3 +1,4 @@
+import { safeUserSelect } from "@/server/api/selects";
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure, adminProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
@@ -124,7 +125,7 @@ export const instructorsRouter = createTRPCRouter({
           tenantId,
           user: { email: input.email }
         },
-        include: { user: true }
+        include: { user: { select: safeUserSelect } }
       });
       if (existingInstructorByEmail) {
         return { ...existingInstructorByEmail, _isIdempotent: true };
@@ -166,7 +167,7 @@ export const instructorsRouter = createTRPCRouter({
           bio: input.bio || null,
           isActive: input.isActive,
         },
-        include: { user: true },
+        include: { user: { select: safeUserSelect } },
       });
 
       // Crear invitación y enviar email
@@ -221,7 +222,7 @@ export const instructorsRouter = createTRPCRouter({
 
       const existingInstructor = await db.instructor.findFirst({
         where: { id, tenantId },
-        include: { user: true },
+        include: { user: { select: safeUserSelect } },
       });
 
       if (!existingInstructor) {
@@ -311,7 +312,7 @@ export const instructorsRouter = createTRPCRouter({
       const instructor = await ctx.db.instructor.findFirst({
         where: { id: input.id, tenantId: ctx.tenantId },
         include: {
-          user: true,
+          user: { select: safeUserSelect },
           _count: { select: { groups: true } },
         },
       });
@@ -391,7 +392,7 @@ export const instructorsRouter = createTRPCRouter({
       // Idempotence: Check if already registered as instructor
       const existingInstructor = await ctx.db.instructor.findFirst({
         where: { tenantId: ctx.tenantId, userId: ctx.dbUser!.id },
-        include: { user: true }
+        include: { user: { select: safeUserSelect } }
       });
 
       if (existingInstructor) {
@@ -413,7 +414,7 @@ export const instructorsRouter = createTRPCRouter({
           tenantId: ctx.tenantId,
           userId: ctx.dbUser!.id
         },
-        include: { user: true }
+        include: { user: { select: safeUserSelect } }
       });
     }),
 });

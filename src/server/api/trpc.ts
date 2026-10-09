@@ -10,6 +10,7 @@ import { formatErrorForLogging } from "@/server/logging/error-parser";
 import { getUserByClerkId } from "@/server/cache/userAuthCache";
 import { getTenantMembership } from "@/server/cache/tenantMembershipCache";
 import { createCacheInvalidationMiddleware } from "@/server/cache/cacheInvalidationMiddleware";
+import { rateLimit, clientIp } from "@/server/utils/rateLimit";
 import { metricsCollector } from "@/server/metrics/metricsCollector";
 
 // ─── Contexto ────────────────────────────────────────────────────
@@ -202,14 +203,37 @@ const performanceMetrics = metricsEnabled
     })
   : t.middleware(async ({ next }) => next());
 
+// ─── Límite de tasa ──────────────────────────────────────────────
+// Se evalúa antes que errorHandler para que un abuso no inunde los logs.
+// Públicos: por IP (todo). Autenticados: por usuario, solo mutaciones.
+const PUBLIC_LIMIT   = { max: 30,  windowMs: 60_000 };
+const MUTATION_LIMIT = { max: 120, windowMs: 60_000 };
+
+const limitPublic = t.middleware(async ({ ctx, path, next }) => {
+  if (!rateLimit(`pub:${clientIp(ctx.headers)}:${path}`, PUBLIC_LIMIT.max, PUBLIC_LIMIT.windowMs)) {
+    throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Demasiados intentos. Espera un minuto e inténtalo de nuevo." });
+  }
+  return next();
+});
+
+const limitMutations = t.middleware(async ({ ctx, type, next }) => {
+  if (type === "mutation") {
+    const who = ctx.userId ?? clientIp(ctx.headers);
+    if (!rateLimit(`mut:${who}`, MUTATION_LIMIT.max, MUTATION_LIMIT.windowMs)) {
+      throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Demasiadas acciones seguidas. Espera un momento." });
+    }
+  }
+  return next();
+});
+
 // ─── Exports ─────────────────────────────────────────────────────
 
 export const createTRPCRouter = t.router;
-export const publicProcedure = t.procedure.use(errorHandler).use(performanceMetrics);
-export const protectedProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(isAuthenticated);
-export const tenantProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(hasTenant).use(cacheInvalidation);
+export const publicProcedure = t.procedure.use(limitPublic).use(errorHandler).use(performanceMetrics);
+export const protectedProcedure = t.procedure.use(limitMutations).use(errorHandler).use(performanceMetrics).use(isAuthenticated);
+export const tenantProcedure = t.procedure.use(limitMutations).use(errorHandler).use(performanceMetrics).use(hasTenant).use(cacheInvalidation);
 // Miembros con permisos de gestión (recepción y administración)
-export const staffProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(hasTenantRole(["ADMIN", "RECEPTIONIST"])).use(cacheInvalidation);
+export const staffProcedure = t.procedure.use(limitMutations).use(errorHandler).use(performanceMetrics).use(hasTenantRole(["ADMIN", "RECEPTIONIST"])).use(cacheInvalidation);
 // Solo el administrador de la escuela (facturación, equipo, configuración)
-export const adminProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(hasTenantRole(["ADMIN"])).use(cacheInvalidation);
-export const superAdminProcedure = t.procedure.use(errorHandler).use(performanceMetrics).use(isSuperAdmin);
+export const adminProcedure = t.procedure.use(limitMutations).use(errorHandler).use(performanceMetrics).use(hasTenantRole(["ADMIN"])).use(cacheInvalidation);
+export const superAdminProcedure = t.procedure.use(limitMutations).use(errorHandler).use(performanceMetrics).use(isSuperAdmin);

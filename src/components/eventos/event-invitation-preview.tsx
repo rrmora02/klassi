@@ -1,5 +1,6 @@
 "use client";
 
+import { escapeHtml } from "@/lib/escape-html";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
@@ -30,7 +31,9 @@ function generateInvitationHTML(data: EventInvitationPreviewProps): string {
     currency: "MXN",
   }).format(data.amount / 100);
 
-  const groupsStr = data.groupNames.join(", ");
+  const groupsStr = escapeHtml(data.groupNames.join(", "));
+  const eventNameStr = escapeHtml(data.eventName);
+  const descriptionStr = data.description ? escapeHtml(data.description) : "";
 
   return `
 <style>
@@ -70,7 +73,7 @@ function generateInvitationHTML(data: EventInvitationPreviewProps): string {
 
     <!-- Título evento -->
     <div style="text-align: center; margin-bottom: 24px;">
-      <h2 id="invitation-event-name" style="font-size: 24px; margin: 0; color: #1f2937; font-weight: 600;">${data.eventName}</h2>
+      <h2 id="invitation-event-name" style="font-size: 24px; margin: 0; color: #1f2937; font-weight: 600;">${eventNameStr}</h2>
     </div>
 
     <!-- Línea separadora -->
@@ -102,7 +105,7 @@ function generateInvitationHTML(data: EventInvitationPreviewProps): string {
       ${data.description ? `
       <div style="margin-bottom: 16px;">
         <div id="invitation-label" style="font-weight: 500; color: #4b5563; font-size: 14px;">📝 Descripción:</div>
-        <div id="invitation-value" style="font-size: 14px; color: #1f2937; margin-top: 4px; word-break: break-word;">${data.description}</div>
+        <div id="invitation-value" style="font-size: 14px; color: #1f2937; margin-top: 4px; word-break: break-word;">${descriptionStr}</div>
       </div>
       ` : ""}
 

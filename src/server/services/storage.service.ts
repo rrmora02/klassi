@@ -53,7 +53,13 @@ async function ensureBucket(c: SupabaseClient) {
   if (names.includes(RECEIPTS_BUCKET)) return;
 
   console.warn(`[storage] El bucket "${RECEIPTS_BUCKET}" no existe (buckets: [${names.join(", ")}]). Creándolo…`);
-  const { error: createError } = await c.storage.createBucket(RECEIPTS_BUCKET, { public: false });
+  const { error: createError } = await c.storage.createBucket(RECEIPTS_BUCKET, {
+    public:           false,
+    // Tope en el propio bucket: la subida usa una URL firmada directa, así que
+    // el tipo y el tamaño declarados por el cliente no bastan.
+    fileSizeLimit:    RECEIPT_MAX_BYTES,
+    allowedMimeTypes: Object.keys(RECEIPT_CONTENT_TYPES),
+  });
   if (createError && !/already exists/i.test(createError.message)) {
     console.error(`[storage] No se pudo crear el bucket "${RECEIPTS_BUCKET}": ${createError.message}`);
   }

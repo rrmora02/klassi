@@ -1,3 +1,4 @@
+import { safeUserSelect } from "@/server/api/selects";
 import { z } from "zod";
 import { createTRPCRouter, tenantProcedure, staffProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
@@ -141,7 +142,7 @@ export const groupsRouter = createTRPCRouter({
         where: { id: input.id, tenantId },
         include: {
           discipline: true,
-          instructor: { include: { user: true } },
+          instructor: { include: { user: { select: safeUserSelect } } },
           enrollments: {
             skip:    (input.enrollmentPage - 1) * enrollPageSize,
             take:    enrollPageSize,

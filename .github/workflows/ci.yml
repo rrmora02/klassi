@@ -1,0 +1,22 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run typecheck
+      # Incluye las reglas de frontera cliente/servidor de .eslintrc.json
+      - run: npx eslint --ext .ts,.tsx src
+      # Informativo: las vulnerabilidades abiertas de Next 14 requieren migrar a 15.5+ (ver MEMORY.md)
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true

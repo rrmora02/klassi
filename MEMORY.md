@@ -122,6 +122,15 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   de Supabase la expondría con la clave `anon`). `.eslintrc.json` bloquea en `components/`, `hooks/` y
   `lib/` importar `@/server/*` (salvo `import type`), SDKs de servidor y leer secretos de `process.env`;
   `layout/actions.ts` y `layout/topbar.tsx` son código de servidor y están exentos.
+- **Límite de tasa** (`src/server/utils/rateLimit.ts`, aplicado en `trpc.ts`): ventana fija en memoria. Públicos:
+  30/min por IP y procedimiento; mutaciones autenticadas: 120/min por usuario. En serverless cada instancia
+  cuenta aparte, así que frena ráfagas pero no es un tope global; para uno global, mover el contador a
+  Upstash/Redis manteniendo la firma de `rateLimit`.
+- **Datos mínimos al cliente:** nunca `include: { user: true }` en respuestas (trae `clerkId`, `isSuperAdmin`,
+  `activeTenantId`): usar `user: { select: safeUserSelect }` de `src/server/api/selects.ts`. HTML construido a
+  mano (vista previa de invitación, correos) pasa siempre por `escapeHtml` (`src/lib/escape-html.ts`).
+- El bucket `comprobantes` se crea con tope de 10 MB y solo JPEG/PNG/WebP/PDF; si ya existía, aplicar los mismos
+  límites a mano en Supabase (Storage → bucket → editar).
 - La integración de GitHub de las sesiones no escribe (403); se empuja con token personal. Los
   commits salen "Unverified" por falta de firma. Cualquier token pegado en un chat se considera comprometido.
 
@@ -133,7 +142,8 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 2. `.env.example` incompleto (sección 6).
 3. La caché offline del service worker conserva páginas tras cerrar sesión.
 4. Envío de comunicados en serie: riesgo de agotar el tiempo de la función con muchas familias.
-5. Sin límite de tasa en mutaciones del portal; la CSP permite `unsafe-eval`.
+5. El límite de tasa es en memoria por instancia (mejor esfuerzo, ver sección 7); la CSP permite
+   `unsafe-inline` y `unsafe-eval`.
 6. Al reemplazar un comprobante, el archivo anterior queda huérfano en el bucket.
 7. `ParentInvitation` sin uso. Hay un 404 en consola en `/sign-in` sin identificar.
 8. Falta validación manual en iPhone/Android reales (instalación PWA y push) y con dos escuelas.
@@ -142,7 +152,14 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
    `postgres`/dueño o tiene BYPASSRLS, y correr los Advisors de Supabase. Además: el token de asistencia por
    WhatsApp (`attendanceToken.ts`) es un HMAC sin caducidad (el mensaje dice «expirado»), y los crons comparan
    `CRON_SECRET` sin tiempo constante (riesgo bajo).
-10. Pendiente confirmar en producción: `DATABASE_URL` por el pooler de Supabase (puerto 6543) y el
+10. **Next 14.2.35 tiene avisos abiertos** (`npm audit`: 1 crítico, varios altos; las correcciones están
+    en Next ≥15.5.24 y exigen subir también `@clerk/nextjs`). Es una migración mayor: abrir su propia
+    especificación SDD. Mitigaciones actuales: Vercel como host (el RCE crítico es en Windows), optimizador
+    de imágenes con formatos por defecto, `poweredByHeader` desactivado.
+11. Sin protección anti-bots propia: activar la de Clerk (Bot protection / CAPTCHA en registro) en su panel.
+    Sin cifrado a nivel de campo de datos personales (teléfono, domicilio, notas): hoy dependen del cifrado en
+    reposo de Supabase; decidir con el dueño si hace falta (rompe búsquedas por esos campos).
+12. Pendiente confirmar en producción: `DATABASE_URL` por el pooler de Supabase (puerto 6543) y el
    restablecimiento de contraseña activo en Clerk.
 
 ## 9. Estado y trabajo en curso
@@ -162,6 +179,9 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
   Resultado: sin secretos en el bundle de cliente (build con valores centinela, `.next/static` limpio), sin
   consultas SQL crudas, mutaciones por `id` precedidas de comprobación de escuela; hallazgo real: ninguna
   tabla tenía RLS. Se agrega `.eslintrc.json` y la migración `security_rls_deny_all` (pendiente de aplicar).
+- Mismo `fix/auditoria-env-rls`, segunda pasada (lista de 19 controles de seguridad): ver bitácora. Cubiertos
+  sin cambios: claves ocultas, historial de git limpio, autenticación forzada, acceso por registro, queries
+  parametrizadas (sin SQL crudo), cookies/contraseñas (las gestiona Clerk), cabeceras/HTTPS (HSTS, CSP, etc.).
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
   `docs/plan-pruebas-qa.md`, `docs/qa-run-2026-07-31.md`, `DESIGN.md` (dashboard).
 
@@ -169,6 +189,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-09 | rama `fix/auditoria-env-rls` | Lista de 19 controles: datos mínimos de `User` al cliente, `escapeHtml` en la vista previa de invitación, límite de tasa tRPC, límites del bucket, `poweredByHeader` off, `npm audit fix` (35→15 avisos), Dependabot y CI (typecheck + ESLint + audit) |
 | 2026-10-09 | rama `fix/auditoria-env-rls` | Auditoría env/RLS: `.eslintrc.json` con reglas de frontera cliente/servidor y migración `security_rls_deny_all` (RLS deny-all; verificada en local) |
 | 2026-10-09 | rama `sdd/constitution` | Se cancela la spec 001 (pulido visual); queda archivada en `001-pulido-visual-portal` y el estado vigente vuelve a este punto |
 | 2026-10-05 | rama `sdd/constitution` | Se crean la constitución (v1.1.0), `MEMORY.md` y `CLAUDE.md`; actualizar la memoria pasa a ser obligatorio |
