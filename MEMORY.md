@@ -5,7 +5,7 @@ Se lee al iniciar y **se actualiza en cada cambio** (ver "Cómo mantener este ar
 Las reglas de fondo están en `.specify/memory/constitution.md`; aquí está el estado y el
 conocimiento práctico. Si este archivo y el código discrepan, gana el código: corrige el archivo.
 
-**Última actualización:** 2026-10-05 · **`main` en:** `a6f5438`
+**Última actualización:** 2026-10-09 · **`main` en:** `a6f5438`
 
 ## 1. Qué es Klassi
 
@@ -138,7 +138,14 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 - `main` = `a6f5438`: PWA, portal, notificaciones, comprobantes, instructor en portal, auditoría,
   rendimiento y suite E2E (25/25 en verde el 2026-07-31).
 - Rama `sdd/constitution`: constitución v1.1.0, este archivo y `CLAUDE.md` (lo carga cada sesión). Siguiente paso SDD: primera
-  especificación (candidata: envío de comunicados a escala).
+  especificación (candidata: envío de comunicados a escala). **Es el punto de partida vigente.**
+- **Cancelado el 2026-10-09:** la especificación 001 «pulido visual del portal y del dashboard». No se integra y
+  no debe retomarse sin una decisión nueva del dueño. El trabajo (spec, plan, tareas, fases 0–2, pruebas de
+  interfaz con línea base, tokens y primitivas) quedó **archivado, sin tocar**, en la rama
+  `001-pulido-visual-portal` (último commit `859c064`). Su `MEMORY.md` conserva aprendizajes técnicos
+  reutilizables (sección 7: entorno E2E en sandbox, servidor huérfano tras reconstruir, punto ciego de axe con
+  fondos translúcidos, plugins no cargados en sesiones de nube ya abiertas). Se puede rescatar algo con
+  `git cherry-pick` o `git checkout 001-pulido-visual-portal -- <ruta>`.
 - Documentos de referencia: `docs/arquitectura-pwa-notificaciones.md`, `docs/guia-qa.md`,
   `docs/plan-pruebas-qa.md`, `docs/qa-run-2026-07-31.md`, `DESIGN.md` (dashboard).
 
@@ -146,6 +153,7 @@ prueba es `rrmora02@gmail.com`; el staff `raul.remo02@gmail.com`.
 
 | Fecha | Commit | Cambio |
 |---|---|---|
+| 2026-10-09 | rama `sdd/constitution` | Se cancela la spec 001 (pulido visual); queda archivada en `001-pulido-visual-portal` y el estado vigente vuelve a este punto |
 | 2026-10-05 | rama `sdd/constitution` | Se crean la constitución (v1.1.0), `MEMORY.md` y `CLAUDE.md`; actualizar la memoria pasa a ser obligatorio |
 | 2026-10-05 | `a6f5438` | `main` recibe todo el trabajo PWA (fast-forward) |
 | 2026-08-05 | `a6f5438` | Guía de QA manual completa |
